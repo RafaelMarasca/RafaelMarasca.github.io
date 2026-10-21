@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#111820">
+  <meta name="description" content="Uma cartinha ao luar para Lulu. Sobre carinho, segundas chances e espaço para crescer.">
+  <title>Uma lua para Lulu · Motivos para voltar para seu ex</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🌙%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" href="./lua.css">
+  <link rel="stylesheet" href="./ceu.css">
+  <link rel="stylesheet" href="./snake.css">
+  <link rel="stylesheet" href="./feedback.css">
+  <script src="./site-config.js" defer></script>
+  <script src="./lua.js" defer></script>
+  <script src="./snake.js" defer></script>
+  <script src="./feedback.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#motivos">Pular para a carta</a>
+  <div class="celestial-backdrop" aria-hidden="true"><span class="backdrop-moon backdrop-moon-one">☾</span><span class="backdrop-moon backdrop-moon-two">☽</span><span class="backdrop-moon backdrop-moon-three">☾</span></div>
+  <div class="sky" aria-hidden="true"><i class="shooting-star one"></i><i class="shooting-star two"></i><i class="sky-star s1">✦</i><i class="sky-star s2">✧</i><i class="sky-star s3">✦</i><i class="sky-star s4">·</i><i class="sky-star s5">✧</i></div>
+  <header class="site-header wrap"><a class="brand" href="#inicio"><span aria-hidden="true">☾</span> uma lua para lulu</a><a class="version-link" href="#sua-vez">um recadinho pra você ↓</a></header>
+  <main>
+    <section class="hero wrap" id="inicio" aria-labelledby="site-title">
+      <div class="hero-copy"><p class="eyebrow intro-in">UMA CARTINHA PARA A LULU</p><h1 class="intro-in" id="site-title">motivos para<br>voltar para<br><em>seu ex.</em><span class="small-heart" aria-hidden="true">♡</span></h1><p class="hero-description intro-in">Lulu, eu te amo muito.<br>Fiz esse cantinho para te contar por quê — com carinho, um pouco de coragem e uma quantidade discutível de romantismo.</p><a class="letter-link intro-in" href="#motivos">deixa eu te contar <span aria-hidden="true">↓</span></a></div>
+      <div class="lunar-scene intro-in"><div class="orbit" aria-hidden="true"><span>✦</span></div><button class="moon-button" id="moon-wish" type="button" aria-label="Toque para espalhar estrelas para Lulu"><svg class="moon-svg" viewBox="0 0 300 300" aria-hidden="true"><defs><radialGradient id="moon-light" cx="36%" cy="29%" r="76%"><stop stop-color="#fff6d8"/><stop offset=".55" stop-color="#ded4b3"/><stop offset="1" stop-color="#9d9b87"/></radialGradient><clipPath id="moon-clip"><circle cx="150" cy="150" r="137"/></clipPath><filter id="moon-grain"><feTurbulence type="fractalNoise" baseFrequency=".075" numOctaves="4" seed="8" result="noise"/><feColorMatrix in="noise" type="saturate" values="0"/><feComposite in2="SourceGraphic" operator="in"/><feBlend in="SourceGraphic" mode="soft-light"/></filter></defs><circle cx="150" cy="150" r="137" fill="url(#moon-light)"/><g clip-path="url(#moon-clip)" fill="#777d6b" opacity=".19"><path d="M72 22c-4 25 39 29 37 49-1 18-30 14-40 32-11 20 1 28 29 35 30 8 19 39 37 51 22 15 48 0 61-23 17-29 4-56-16-70-18-14-6-40-35-51-26-10-34-37-73-23Z"/><path d="M207 42c-28 17-22 41-5 53 27 18 11 32 31 46 21 14 53-1 61-24l-8-51Z"/><path d="M37 166c20-9 39 6 34 20-7 23 21 23 25 43 4 19-14 34-36 32l-27-51Z"/><ellipse cx="175" cy="238" rx="32" ry="21"/><circle cx="229" cy="193" r="16"/><circle cx="138" cy="100" r="18"/></g><g clip-path="url(#moon-clip)" fill="none" stroke="#8d917d" opacity=".23"><circle cx="90" cy="204" r="18" stroke-width="3"/><circle cx="220" cy="165" r="12" stroke-width="2"/><circle cx="170" cy="70" r="9" stroke-width="2"/><circle cx="141" cy="257" r="12" stroke-width="2"/><path d="m150 226 55-18m-55 18 34 44m-34-44-32-26m32 26-7 54" stroke-width="1"/></g><circle cx="150" cy="150" r="137" fill="#d8d2ba" opacity=".2" filter="url(#moon-grain)"/></svg></button><span class="moon-prompt handwritten">toque na lua. eu deixei um carinho aí. ↗</span><p class="moon-message" id="moon-message" role="status"></p><figure class="photo-print hero-photo"><div class="photo-slot has-photo" data-photo="retrato"><img src="./assets/ilustracoes/lulu-feliz.webp" width="1000" height="1000" decoding="async" alt="Ilustração de Lulu sorrindo com flores e uma lua dourada."></div><figcaption>minha Lulu, toda florida. ♡</figcaption></figure><span class="scene-coordinate" aria-hidden="true">LADO A / FLOR DE LUA</span></div>
+    </section>
+
+    <div class="music-strip wrap"><span class="music-icon" aria-hidden="true">♫</span><div><span class="music-kicker" id="music-status">A TRILHA DESTA CARTINHA</span><p>Flower Moon <span>· Durand Jones &amp; The Indications</span></p></div><button id="mute-music" type="button" hidden aria-label="Silenciar música">som ligado <span aria-hidden="true">↗</span></button><span class="strip-star" aria-hidden="true">✧</span></div>
+
+    <section class="reasons wrap section" id="motivos" aria-labelledby="reasons-title"><div class="section-heading reveal"><p class="eyebrow">01 / COISAS QUE EU QUERIA TE DIZER</p><h2 id="reasons-title">por que <em>voltar?</em></h2><p>Tenho alguns motivos.<br>O melhor deles ainda é a vontade de estar com você e te ter colada grudadinha.</p></div><div class="reason-list">
+      <article class="reason reveal"><span class="number">01</span><div><h3>Ainda quero ouvir como foi seu dia.</h3><p>A versão completa, com os detalhes, as pequenas coisas, FOFOCAS e o que te deu vontade de revirar os olhos.</p></div><span class="reason-mark" aria-hidden="true">✧</span></article>
+      <article class="reason reveal"><span class="number">02</span><div><h3>Tem um engenheiro bem apaixonado aqui.</h3><p>Engenheiro, mestre e capaz de conversar sobre um monte de coisas que não envolvam computadores. Ainda assim, você consegue me deixar meio sem palavras. Acho bonito isso.</p></div><span class="reason-mark" aria-hidden="true">♡</span></article>
+      <article class="reason reveal"><span class="number">03</span><div><h3>Bonito, carinhoso e modestamente gostoso.</h3><p>O “modestamente” foi uma tentativa de manter a elegância. Mas falando sério: eu queria te fazer rir, te abraçar e cuidar dos nossos dias comuns.</p></div><span class="reason-mark" aria-hidden="true">✳</span></article>
+      <article class="reason reveal"><span class="number">04</span><div><h3>Meu cabelo continua lindo, macio e brilhoso.</h3><p>Um ótimo convite pro cafuné. Você bagunça, eu fico todo bobo, e pronto.</p></div><span class="reason-mark" aria-hidden="true">✦</span></article>
+      <article class="reason reveal"><span class="number">05</span><div><h3>Até o cocô do seu tênis eu limpo.</h3><p>Se o passeio der esse azar, pode deixar comigo que eu cuido desse detalhe.</p></div><span class="reason-mark" aria-hidden="true">♡</span></article>
+      <article class="reason reveal"><span class="number">06</span><div><h3>Agora eu tô um pouquinho mais forte.</h3><p>Já posso me te carregar no colo por todo canto. Você escolhe o destino; eu tento fazer cara de quem não está cansado.</p></div><span class="reason-mark" aria-hidden="true">↗</span></article>
+    </div><div class="memory-row reveal"><figure class="photo-print memory-photo"><div class="photo-slot has-photo" data-photo="cabelo"><img src="./assets/ilustracoes/lulu-bravinha.webp" width="1000" height="1000" loading="lazy" decoding="async" alt="Ilustração de Lulu fazendo uma carinha de brava, com uma margarida na mão."></div><figcaption>até esse biquinho me dá saudade.</figcaption></figure><p class="handwritten memory-note">o romance também pode ser isso:<br>um dia comum que fica melhor<br>porque a gente se encontrou. ♡</p><span class="memory-star" aria-hidden="true">✷</span></div></section>
+
+    <section class="space-section section" id="espaco" aria-labelledby="space-title"><div class="wrap"><div class="space-heading reveal"><p class="eyebrow">02 / ESSA PARTE IMPORTA MUITO</p><h2 id="space-title">perto.<br><em>com espaço.</em></h2><div><p class="space-question">“E a nossa individualidade?<br>E os nossos planos?”</p><p>Eu entendo que isso te preocupe, Lulu. Para mim, tentar de novo incluiria cuidar do espaço de cada um. Quero fazer parte da sua vida e ver essa vida crescer.</p></div></div><div class="space-grid"><article class="reveal"><span class="number">I.</span><h3>Seu tempo continua seu.</h3><p>Suas amizades, projetos e momentos a sós precisam caber na rotina. Podemos combinar tempo para estar juntos e tempo individual, com confiança para viver os dois.</p></article><article class="reveal"><span class="number">II.</span><h3>Quero torcer pelos seus planos.</h3><p>Uma ideia nova, um trabalho de que você se orgulha, uma vontade de aprender. Quero ouvir sobre isso, apoiar quando você pedir e continuar cuidando dos meus próprios caminhos também.</p></article><article class="reveal"><span class="number">III.</span><h3>A gente pode conversar de verdade.</h3><p>Sobre o que precisaria mudar, os limites de cada um e como faríamos isso na prática. Podemos começar com um café, ouvir o que existe hoje e dar um passo de cada vez.</p></article></div><blockquote class="reveal">Eu quero estar perto<br><em>de quem você está se tornando.</em><span class="handwritten">essa parte é sem exagero.</span></blockquote></div></section>
+
+    <section class="cons wrap section" id="porque-nao" aria-labelledby="cons-title">
+      <div class="section-heading reveal"><p class="eyebrow">03 / TEM UNS PORÉNS TAMBÉM</p><h2 id="cons-title">por que <em>não voltar?</em></h2><p>Porque eu venho com umas coisinhas.<br>E achei justo te contar.</p></div>
+      <div class="cons-grid">
+        <article class="reveal"><span aria-hidden="true">♡</span><h3>Posso chorar e pedir um carinho extra.</h3><p>Num dia difícil ou quando a saudade aperta. Nessas horas, vou querer um abraço daqueles que demoram.</p></article>
+        <article class="reveal"><span aria-hidden="true">↗</span><h3>Posso precisar de um puxão de orelha.</h3><p>Meu juízo às vezes precisa ouvir um “Rafo, pelo amor de Deus” pra voltar a funcionar.</p></article>
+        <article class="reveal"><span aria-hidden="true"><svg class="coffee-icon" viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"><path d="M5 11h14v7a5 5 0 0 1-5 5h-4a5 5 0 0 1-5-5z"/><path d="M19 12h2a3.5 3.5 0 0 1 0 7h-2M3 26h20M9 3c-2 2 2 3 0 5m5-6c-2 2 2 3 0 5"/></svg></span><h3>Posso te deixar gorda de tanto te mimar.</h3><p>Começa com um milkshake, aparece um bolinho e, quando você vê, eu já trouxe o jantar e a sobremesa. Meu carinho tem dessas: gosta de te ver feliz e de prato cheio.</p></article>
+        <article class="reveal"><span aria-hidden="true">♫</span><h3>Eu posso morder.</h3><p>Se você chegar muito pertinho, eu não consigo resistir. É realmente igual o Alex mordendo o Martin em madagascar.</p></article>
+        <article class="reveal"><span aria-hidden="true">✦</span><h3>Posso ficar cego com o brilho do seu nariz.</h3><p>Você já chega toda linda. Aí vem esse nariz brilhando e eu preciso admirar de óculos escuros.</p></article>
+        <article class="reveal"><span aria-hidden="true">✧</span><h3>Meu nariz tortinho também dá trabalho.</h3><p>Tô precisando de skincare e de tirar uns pelinhos que você odeia. Aceito beijinhos e risadas durante a manutenção.</p></article>
+        <article class="reveal"><span aria-hidden="true">✳</span><h3>Eu tento ser seu palhacinho particular.</h3><p>Nem toda brincadeira vai ter graça. Se você não gostar, eu aposento a piada e fico só no carinho.</p></article>
+        <article class="reveal"><span aria-hidden="true">♡</span><h3>Você pode ter uma overdose de Rafo e morrer de alergia.</h3><p>Um “bom dia, Lulu” aqui, um abraço ali… quando vê, tem Rafo até na sua playlist.</p></article>
+      </div>
+    </section>
+
+
+
+    <section class="closing letter-experience wrap section reveal" id="cartinha" aria-labelledby="closing-title">
+      <div class="letter-invitation">
+        <p class="eyebrow">P.S. / PRO MEU CHICLETINHO</p>
+        <h2 id="closing-title">uma cartinha<br><em>só sua.</em></h2>
+        <p>Pra você abrir com calma.<br>Tem um pouquinho de nós aqui dentro.</p>
+        <p class="handwritten">guardei um universo de carinho<br>num envelope pra você. ♡</p>
+      </div>
+      <details class="lunar-letter" id="lunar-letter">
+        <summary class="letter-trigger" id="letter-trigger">
+          <span class="envelope-stage" aria-hidden="true">
+            <span class="envelope-back"></span>
+            <span class="envelope-paper"><span>☾</span><i>meu amor por você<br>é infinito.</i></span>
+            <span class="envelope-front"></span>
+            <span class="envelope-address">para Lulu<small>do seu grudinho</small></span>
+            <span class="envelope-flap"></span>
+            <span class="envelope-seal">☾</span>
+            <span class="envelope-star envelope-star-one">✦</span>
+            <span class="envelope-star envelope-star-two">✧</span>
+          </span>
+          <span class="letter-action"><span id="letter-hint">toque para abrir</span><small>uma lua, umas estrelas e um tanto de amor</small></span>
+        </summary>
+        <article class="letter-paper" id="letter-content" tabindex="-1" aria-labelledby="letter-title">
+          <p class="eyebrow">AGORA É SÓ EU FALANDO COM VOCÊ</p>
+          <h3 id="letter-title">meu amor por você<br><em>é infinito.</em></h3>
+          <p>Lulu, quero te pedir desculpa pelas vezes em que estive ausente. Você merecia presença, atenção e carinho, e houve momentos em que não te ofereci isso como deveria. Sinto muito.</p>
+          <p>Eu nunca deixei de te amar. Eu te amo muito, e quero que esse amor apareça nas coisas pequenas, no cuidado e no tempo que dedico a você.</p>
+          <p>Sinto saudade do seu beijo, de pedir comida com você, de te levar pra sair e de simplesmente estar ao seu lado. De não precisar ter nenhum programa especial, só você ali pertinho.</p>
+          <p>Tenho saudade de passar horas escolhendo um filme e acabar vendo um suspense. De passar dias escolhendo um presente, imaginando sua reação. Até das nossas discussões importantíssimas pra decidir as cores dos nossos cabelos.</p>
+          <p>Você é meu chicletinho, Lulu, e eu adoro ser seu grudinho. Gosto de te ter colada grudadinha, do abraço que demora e daquele “só mais cinco minutinhos” antes de desgrudar.</p>
+          <p>E sinto saudade até do que a gente ainda não viveu: dos passeios que faltam, dos lugares que poderíamos conhecer, de um dia qualquer que virasse mais uma lembrança bonita nossa.</p>
+          <p>Meu amor por você é infinito. Essa página é só um pedacinho dele, escrito com saudade e vontade de te dar um abraço, segurar em meus braços, te rodar e dar uma mordidinha no seus lábios.</p>
+          <p class="handwritten">um beijo demorado,<br>seu Rafo. ♡</p>
+          <figure class="photo-print couple-photo"><div class="photo-slot has-photo" data-photo="nosDois"><img src="./assets/ilustracoes/nos-dois-lua.webp" width="1000" height="1000" loading="lazy" decoding="async" alt="Ilustração de Lulu e Rafo abraçadinhos, com flores ao luar."></div><figcaption>ainda gosto da ideia de nós.</figcaption></figure>
+          <button class="fold-letter" id="fold-letter" type="button">guardar a cartinha <span aria-hidden="true">☾</span></button>
+        </article>
+      </details>
+    </section>
+    <section class="snake-section wrap section reveal" id="joguinho" aria-labelledby="snake-title">
+      <div class="snake-intro">
+        <p class="eyebrow">04 / JOGO DO GRUDINHO</p>
+        <h2 id="snake-title">só mais uma<br><em>jogadinha.</em></h2>
+        <p class="snake-dare">Se fizer menos de 10 pontos,<br>tem que voltar pra mim. ♡</p>
+        <p class="snake-disclaimer">O placar é brincadeira.<br>A escolha é sua, sempre.</p>
+        <p class="handwritten">corações, pizza e uma lua<br>levemente suspeita…</p>
+      </div>
+      <div class="snake-game" id="snake-game">
+        <div class="snake-topline"><span>corações, pizzas &amp; luas</span><span id="snake-score">0 / 10</span></div>
+        <div class="snake-board">
+          <canvas id="snake-canvas" width="384" height="384" tabindex="0" aria-label="Jogo da cobrinha. Colete corações, pizzas e luas. Use as setas, os botões ou deslize o dedo.">Seu navegador precisa oferecer suporte a canvas para jogar.</canvas>
+          <div class="snake-finale" id="snake-finale" hidden aria-hidden="true">
+            <span class="finale-orbit"></span>
+            <span class="finale-moon"><svg viewBox="0 0 100 100" aria-hidden="true"><defs><radialGradient id="finale-moon-light" cx="32%" cy="27%" r="80%"><stop stop-color="#fff9dc"/><stop offset=".57" stop-color="#eadcb1"/><stop offset="1" stop-color="#b5b79b"/></radialGradient></defs><circle cx="50" cy="50" r="44" fill="url(#finale-moon-light)"/><g fill="#7f8c75" opacity=".23"><path d="M27 16c-4 6 7 10 4 16-3 7-12 5-12 13s10 8 13 15 11 10 17 4c5-7-2-13 2-20 5-9-3-12-7-17s-8-15-17-11Z"/><ellipse cx="68" cy="32" rx="12" ry="8"/><ellipse cx="66" cy="67" rx="15" ry="10"/><circle cx="38" cy="78" r="6"/></g><g fill="none" stroke="#8f997c" stroke-width="1" opacity=".28"><circle cx="29" cy="61" r="6"/><circle cx="72" cy="47" r="4"/><circle cx="51" cy="21" r="3"/></g><circle cx="50" cy="50" r="44" fill="none" stroke="#fff5ce" stroke-opacity=".6"/></svg></span>
+            <span class="finale-ten">10</span>
+            <div class="finale-sparks"><i>✦</i><i>♡</i><i>✧</i><i>♡</i><i>✦</i><i>✧</i></div>
+            <div class="finale-copy"><strong>quase, Lulu…</strong><p>o 10 fugiu pra Lua.</p></div>
+          </div>
+        </div>
+        <p id="snake-status" class="snake-status" role="status" aria-live="polite">Pronta para uma partidinha, Lulu?</p>
+        <button type="button" class="snake-start" id="snake-start">jogar com o Rafo ☾</button>
+        <div class="snake-controls" aria-label="Direção da cobrinha">
+          <button type="button" data-snake-direction="up" aria-label="Cima">↑</button>
+          <button type="button" data-snake-direction="left" aria-label="Esquerda">←</button>
+          <button type="button" data-snake-direction="down" aria-label="Baixo">↓</button>
+          <button type="button" data-snake-direction="right" aria-label="Direita">→</button>
+        </div>
+        <p class="snake-instructions">deslize o dedo ou use as setinhas ♡</p>
+        <noscript><p>Ative o JavaScript para brincar com a cobrinha.</p></noscript>
+      </div>
+    </section>
+    <section class="feedback wrap section" id="sua-vez" aria-labelledby="feedback-title">
+      <div class="feedback-intro reveal">
+        <p class="eyebrow">05 / TÁ BOM, MAS TEM UMA COISINHA…</p>
+        <h2 id="feedback-title">só volto<br><em>se você…</em></h2>
+        <p>Pode pedir, Lulu.<br>Eu já estou aqui todo bobo mesmo.</p>
+        <p class="handwritten">dessa vez eu fico bem quietinho.<br>bem na direção do seu beijo. ♡</p>
+      </div>
+      <div class="feedback-paper reveal">
+        <fieldset>
+          <legend>Só falta uma coisinha.</legend>
+          <label><input type="radio" name="lulu-feedback" value="beijinhos"><span>Só volto se você não desviar dos beijinhos.</span></label>
+        </fieldset>
+        <div class="no-return-arena" id="no-return-arena">
+          <button type="button" id="no-return" class="no-return">Não volto</button>
+          <p class="no-return-caption" id="no-return-caption" aria-live="polite">tem um botão meio tímido por aqui…</p>
+        </div>
+        <div class="feedback-reply" id="feedback-reply" role="status" hidden><span>UMA RESPOSTINHA PRA VOCÊ</span><p id="feedback-text"></p></div>
+        <button class="reset-feedback" id="reset-feedback" type="button" hidden>pensar mais um pouquinho ↺</button>
+        <p class="feedback-privacy">Uma brincadeira só nossa. Nada é enviado ou salvo.</p>
+      </div>
+    </section>
+  </main>
+  <footer class="wrap"><p>para Luana Caroline de Amorim.<br><span>minha Lulu, com carinho.</span></p><a href="#inicio" aria-label="Voltar ao início">voltar pra lua ↑</a></footer>
+  <div class="stardust" id="stardust" aria-hidden="true"></div>
+  <audio id="love-song" autoplay loop preload="none" aria-label="Flower Moon, trilha sonora desta carta"></audio>
+</body>
+</html>
+

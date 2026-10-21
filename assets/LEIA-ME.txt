@@ -1,0 +1,15 @@
+ILUSTRAÇÕES E MÚSICA
+
+1. O MP3 fornecido (Flower Moon) já foi copiado para nossa-musica.mp3.
+   A página principal usa esse arquivo, com reprodução automática em loop.
+   Se o navegador bloquear som automático, o primeiro clique ou tecla no site
+   permite uma nova tentativa. Não existe botão de play.
+
+2. A pasta ilustracoes já tem três imagens personalizadas em WebP:
+   lulu-feliz.webp, lulu-bravinha.webp e nos-dois-lua.webp.
+   Os retratos de referência não estão incluídos.
+
+3. Para trocar as ilustrações, coloque outros arquivos nesta pasta e altere
+   os três caminhos em ../site-config.js.
+
+Se mudar o nome do MP3, atualize também o campo musica em site-config.js.

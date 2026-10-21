@@ -1,0 +1,79 @@
+/* Um céu discreto que permanece enquanto a cartinha passa por cima. */
+.celestial-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  color: var(--gold, #e8d8a9);
+}
+
+.celestial-backdrop::before,
+.celestial-backdrop::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.celestial-backdrop::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 353 397'%3E%3Cg fill='%23e8d8a9'%3E%3Cpath d='M44 63l1.1 3.9L49 68l-3.9 1.1L44 73l-1.1-3.9L39 68l3.9-1.1Z'/%3E%3Cpath d='M257 272l.7 2.3 2.3.7-2.3.7-.7 2.3-.7-2.3-2.3-.7 2.3-.7Z'/%3E%3C/g%3E%3Cpath fill='%23b9c4ab' d='M177 167l.7 2.3 2.3.7-2.3.7-.7 2.3-.7-2.3-2.3-.7 2.3-.7Z'/%3E%3C/svg%3E");
+  background-size: 353px 397px;
+  opacity: .18;
+  animation: quiet-stars 13s ease-in-out infinite alternate;
+}
+
+.celestial-backdrop::after {
+  background-image:
+    radial-gradient(circle at 23% 37%, #e8d8a9 .6px, transparent 1px),
+    radial-gradient(circle at 79% 63%, #b9c4ab .55px, transparent .95px),
+    radial-gradient(circle at 51% 19%, #eee8d8 .45px, transparent .9px);
+  background-size: 187px 239px, 281px 331px, 421px 263px;
+  opacity: .24;
+  animation: quiet-stars 17s ease-in-out -6s infinite alternate-reverse;
+}
+
+.backdrop-moon {
+  position: absolute;
+  display: block;
+  font-family: Georgia, "Times New Roman", serif;
+  font-weight: 400;
+  font-size: 23px;
+  line-height: 1;
+  opacity: .11;
+  transform: rotate(-15deg);
+  animation: quiet-moon 24s ease-in-out infinite;
+}
+
+.backdrop-moon-one { left: 5%; top: 23%; }
+.backdrop-moon-two { right: 7%; top: 58%; font-size: 28px; opacity: .09; animation-delay: -9s; }
+.backdrop-moon-three { left: 25%; top: 88%; font-size: 18px; opacity: .13; animation-delay: -17s; }
+
+main,
+footer {
+  position: relative;
+  z-index: 1;
+}
+
+@keyframes quiet-stars {
+  from { opacity: .12; }
+  to { opacity: .25; }
+}
+
+@keyframes quiet-moon {
+  0%, 100% { transform: translateY(0) rotate(-15deg); }
+  50% { transform: translateY(-8px) rotate(-7deg); }
+}
+
+@media (max-width: 740px) {
+  .celestial-backdrop::before { background-size: 331px 373px; }
+  .backdrop-moon-one { left: 3%; top: 20%; font-size: 19px; opacity: .1; }
+  .backdrop-moon-two { right: 3%; top: 58%; font-size: 23px; opacity: .1; }
+  .backdrop-moon-three { left: 12%; top: 88%; font-size: 16px; opacity: .09; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .celestial-backdrop::before,
+  .celestial-backdrop::after,
+  .backdrop-moon { animation: none; }
+}

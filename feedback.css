@@ -1,0 +1,82 @@
+.no-return-arena {
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+  min-height: 224px;
+  margin-top: 24px;
+  border: 1px dashed #b9c4ab3d;
+  background: #13202666;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.no-return {
+  position: absolute;
+  left: 12px;
+  top: 20px;
+  min-width: 112px;
+  min-height: 48px;
+  max-width: calc(100% - 24px);
+  padding: 12px 18px;
+  border: 1px solid #b9c4ab8c;
+  border-radius: 2px;
+  background: #25383f;
+  color: var(--paper, #eee8d8);
+  font: 12px/1.5 var(--mono, "Courier New", monospace);
+  cursor: pointer;
+  white-space: nowrap;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.is-evasive .no-return {
+  left: 0;
+  top: 0;
+  transition: transform 140ms ease-out, background 120ms ease;
+}
+
+.no-return:hover {
+  background: #31474c;
+}
+
+.no-return:focus-visible {
+  outline: 2px solid var(--gold, #e8d8a9);
+  outline-offset: 4px;
+}
+
+.no-return-caption {
+  position: absolute;
+  left: 11px;
+  right: 11px;
+  bottom: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 30px;
+  margin: 0;
+  text-align: center;
+  font: 8px/1.8 var(--mono, "Courier New", monospace);
+  color: var(--sage, #b9c4ab);
+  pointer-events: none;
+}
+
+.feedback-paper fieldset > label {
+  padding-top: 19px;
+  padding-bottom: 19px;
+}
+
+@media (max-width: 740px) {
+  .no-return-arena {
+    min-height: 218px;
+    margin-top: 20px;
+  }
+
+  .no-return-caption {
+    font-size: 7px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .is-evasive .no-return {
+    transition: none;
+  }
+}
