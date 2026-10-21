@@ -60,6 +60,22 @@ Depois do jogo, fica apenas “Só volto se você não desviar dos beijinhos” 
 
 ## GitHub Pages
 
+Para atualizar a publicação a partir deste computador, abra o terminal na pasta `New project` (que contém as duas pastas do site) e execute:
+
+```powershell
+.\publicar.cmd
+```
+
+O comando sincroniza `motivos-para-voltar` e `publicacao-github-pages`, atualiza o ZIP, cria um commit quando necessário, envia para a `main` e aguarda a publicação. Você pode editar em qualquer uma das duas pastas. Se o mesmo arquivo tiver edições diferentes nos dois lugares, o comando para antes de sobrescrever qualquer arquivo.
+
+Para apenas conferir, sem copiar ou enviar nada:
+
+```powershell
+.\publicar.cmd --verificar
+```
+
+O comando usa Python, Git e GitHub CLI já instalados neste computador, com a conta `RafaelMarasca` conectada. Os rascunhos e PNGs não utilizados não entram na publicação. Imagens ou músicas novas referenciadas no HTML ou na configuração, dentro de `assets/`, são incluídas.
+
 1. Extraia o ZIP de publicação e envie **seu conteúdo** para a raiz do repositório escolhido. O `index.html` deve ficar ao lado da pasta `assets`, sem uma pasta extra envolvendo os arquivos.
 2. Abra **Settings → Pages**, selecione **Deploy from a branch** e escolha a branch dos arquivos e **/ (root)**.
 3. Salve e aguarde a publicação.
