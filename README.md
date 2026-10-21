@@ -54,9 +54,15 @@ A cartinha começa dentro de um envelope fechado. Ao tocar, o selo sai, a aba se
 
 A cobrinha coleta corações, pizzas e luas. Funciona com deslizes, botões de direção e setas do teclado. Aos 9 pontos, o número 10 aparece e é puxado para a Lua numa animação com órbita, estrelas e corações. A lua cheia cresce e ganha um halo luminoso; o placar fica em 9. O final diz “quase, Lulu…” em destaque e “o 10 fugiu pra Lua.” Com movimento reduzido, o resultado aparece diretamente. É uma pegadinha romântica com a frase “Se fizer menos de 10 pontos, tem que voltar pra mim”, acompanhada de um recadinho deixando a escolha com a Lulu. O jogo pausa ao sair da tela e não salva placares nem envia dados.
 
+## Moonlander — até a Lua com você
+
+Um segundo jogo, antes do feedback, leva Lulu e Rafo numa navinha até uma plataforma na Lua. Segure **impulso** para subir ou frear a descida e use os botões laterais para ajustar a direção. No teclado, use as setas ou A/D e espaço/W. O pouso precisa ser suave e dentro da plataforma iluminada. É possível pausar e tentar de novo.
+
+Os sprites cartunescos da nave e dos dois astronautas ficam em `assets/moonlander/`, com versões WebP para o celular. O jogo pausa ao sair da tela ou trocar de aba e respeita movimento reduzido nas animações decorativas. Tudo funciona no navegador, sem salvar ou enviar dados.
+
 ## Feedback final
 
-Depois do jogo, fica apenas “Só volto se você não desviar dos beijinhos” e um botão “Não volto” que foge do mouse e do toque dentro do próprio quadrinho. Pelo teclado, o botão pode ser ativado normalmente. A preferência de movimento reduzido desliga a transição. A brincadeira não envia ou salva nada.
+Depois dos jogos, fica apenas “Só volto se você não desviar dos beijinhos” e um botão “Não volto” que foge do mouse e do toque dentro do próprio quadrinho. Pelo teclado, o botão pode ser ativado normalmente. A preferência de movimento reduzido desliga a transição. A brincadeira não envia ou salva nada.
 
 ## GitHub Pages
 

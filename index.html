@@ -10,10 +10,12 @@
   <link rel="stylesheet" href="./lua.css">
   <link rel="stylesheet" href="./ceu.css">
   <link rel="stylesheet" href="./snake.css">
+  <link rel="stylesheet" href="./moonlander.css">
   <link rel="stylesheet" href="./feedback.css">
   <script src="./site-config.js" defer></script>
   <script src="./lua.js" defer></script>
   <script src="./snake.js" defer></script>
+  <script src="./moonlander.js" defer></script>
   <script src="./feedback.js" defer></script>
 </head>
 <body>
@@ -126,9 +128,31 @@
         <noscript><p>Ative o JavaScript para brincar com a cobrinha.</p></noscript>
       </div>
     </section>
+    <section class="moonlander-section wrap section reveal" id="moonlander" aria-labelledby="moonlander-title">
+      <div class="moonlander-intro">
+        <p class="eyebrow">05 / UM POUSINHO A DOIS</p>
+        <h2 id="moonlander-title">até a Lua.<br><em>com você.</em></h2>
+        <p>Uma navinha, dois grudadinhos<br>e um cantinho na Lua pra pousar.</p>
+        <p class="handwritten">vai devagarinho, piloto.<br>tem amor a bordo. ♡</p>
+      </div>
+      <div class="moonlander-game" id="moonlander-game">
+        <div class="moonlander-topline"><span>MISSÃO: NOSSO CANTINHO ☾</span><button type="button" id="moonlander-pause" aria-label="Pausar missão" disabled>pausar</button></div>
+        <div class="moonlander-hud" aria-label="Instrumentos da nave"><span>altura <b id="moonlander-altitude">—</b></span><span>velocidade <b id="moonlander-speed">—</b></span><span>carinho <b id="moonlander-fuel">100%</b></span></div>
+        <canvas id="moonlander-canvas" width="720" height="820" tabindex="0" aria-label="Pouse Lulu e Rafo na plataforma iluminada. Segure impulso para frear a queda e as setas para ajustar a direção.">Seu navegador precisa oferecer suporte a canvas para jogar.</canvas>
+        <p id="moonlander-status" class="moonlander-status" role="status" aria-live="polite">Lulu + Rafo. Destino: um pousinho bem juntinhos.</p>
+        <button type="button" class="moonlander-start" id="moonlander-start">embarcar com você ♡</button>
+        <div class="moonlander-controls" role="group" aria-label="Controles da nave">
+          <button type="button" data-lander-control="left" aria-label="Mover para a esquerda">←</button>
+          <button type="button" data-lander-control="thrust" aria-label="Dar impulso"><span aria-hidden="true">↑</span> impulso</button>
+          <button type="button" data-lander-control="right" aria-label="Mover para a direita">→</button>
+        </div>
+        <p class="moonlander-help">segure impulso para subir e frear · setinhas para guiar</p>
+        <noscript>Ative o JavaScript para jogar.</noscript>
+      </div>
+    </section>
     <section class="feedback wrap section" id="sua-vez" aria-labelledby="feedback-title">
       <div class="feedback-intro reveal">
-        <p class="eyebrow">05 / TÁ BOM, MAS TEM UMA COISINHA…</p>
+        <p class="eyebrow">06 / TÁ BOM, MAS TEM UMA COISINHA…</p>
         <h2 id="feedback-title">só volto<br><em>se você…</em></h2>
         <p>Pode pedir, Lulu.<br>Eu já estou aqui todo bobo mesmo.</p>
         <p class="handwritten">dessa vez eu fico bem quietinho.<br>bem na direção do seu beijo. ♡</p>
