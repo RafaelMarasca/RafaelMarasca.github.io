@@ -112,9 +112,9 @@ window.ALBUM_PAGES = [
   },
   {
     "id": "foto-11",
-    "src": "./assets/album/foto-11.webp",
-    "width": 1200,
-    "height": 1600,
+    "src": "./assets/album/foto-11-hd.webp",
+    "width": 1500,
+    "height": 2000,
     "chapter": "perto é melhor",
     "caption": "Você me abraça e eu já acho que sou fortão.",
     "alt": "Lulu abraça Rafa diante do espelho enquanto ele flexiona o braço numa pose engraçada.",
