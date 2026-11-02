@@ -80,7 +80,7 @@ window.ALBUM_PAGES = [
     "chapter": "a gente do nosso jeito",
     "caption": "A gente combina até nas caretas.",
     "alt": "Lulu e Rafa fazem biquinho numa selfie vista de baixo, com o céu ao fundo.",
-    "note": "zero pose, muito amor",
+    "note": "dois bobinhos juntos",
     "date": "2025-08-30",
     "dateSource": "capture"
   },
