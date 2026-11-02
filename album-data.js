@@ -8,7 +8,9 @@ window.ALBUM_PAGES = [
     "chapter": "você, todinha você",
     "caption": "Flores pra você. Esse sorriso pra mim.",
     "alt": "Lulu sorri segurando um buquê de flores cor-de-rosa diante da cortina.",
-    "note": "pra minha florzinha"
+    "note": "pra minha florzinha",
+    "date": "2025-10-10",
+    "dateSource": "capture"
   },
   {
     "id": "foto-15",
@@ -18,7 +20,9 @@ window.ALBUM_PAGES = [
     "chapter": "você, todinha você",
     "caption": "Um docinho segurando outro. Pronto, falei.",
     "alt": "Lulu segura um macaron rosa perto da boca e olha para a câmera.",
-    "note": "meu docinho"
+    "note": "meu docinho",
+    "date": "2025-08-25",
+    "dateSource": "filename"
   },
   {
     "id": "foto-24",
@@ -28,7 +32,9 @@ window.ALBUM_PAGES = [
     "chapter": "você, todinha você",
     "caption": "Minha princesa até de chapéu improvisado.",
     "alt": "Lulu faz uma pose divertida com uma peça trançada sobre a cabeça.",
-    "note": "eu adoro esse seu jeito"
+    "note": "eu adoro esse seu jeito",
+    "date": "2025-10-19",
+    "dateSource": "filename"
   },
   {
     "id": "foto-25",
@@ -38,7 +44,9 @@ window.ALBUM_PAGES = [
     "chapter": "você, todinha você",
     "caption": "Uma piscadinha sua e eu já fico bobo.",
     "alt": "Lulu aparece bem de pertinho, piscando um olho e mostrando a língua.",
-    "note": "pronto, me ganhou"
+    "note": "pronto, me ganhou",
+    "date": "2025-09-09",
+    "dateSource": "capture"
   },
   {
     "id": "foto-17",
@@ -48,7 +56,9 @@ window.ALBUM_PAGES = [
     "chapter": "você, todinha você",
     "caption": "Até pela tela, a gente dá um jeito de ficar perto.",
     "alt": "Lulu e Rafa aparecem em duas telas de uma chamada, formando um coração com as mãos.",
-    "note": "um coração em duas telas"
+    "note": "um coração em duas telas",
+    "date": "2025-09-15",
+    "dateSource": "filename"
   },
   {
     "id": "foto-02",
@@ -58,7 +68,9 @@ window.ALBUM_PAGES = [
     "chapter": "a gente do nosso jeito",
     "caption": "Você sorri e eu acompanho sem perceber.",
     "alt": "Lulu e Rafa sorriem lado a lado ao ar livre, com uma palmeira ao fundo.",
-    "note": "um dia bom com você"
+    "note": "um dia bom com você",
+    "date": "2025-08-30",
+    "dateSource": "capture"
   },
   {
     "id": "foto-03",
@@ -68,7 +80,9 @@ window.ALBUM_PAGES = [
     "chapter": "a gente do nosso jeito",
     "caption": "A gente combina até nas caretas.",
     "alt": "Lulu e Rafa fazem biquinho numa selfie vista de baixo, com o céu ao fundo.",
-    "note": "zero pose, muito amor"
+    "note": "zero pose, muito amor",
+    "date": "2025-08-30",
+    "dateSource": "capture"
   },
   {
     "id": "foto-23",
@@ -78,7 +92,9 @@ window.ALBUM_PAGES = [
     "chapter": "a gente do nosso jeito",
     "caption": "Você toda estilosa. Eu colaborando desse jeito.",
     "alt": "Lulu usa óculos escuros enquanto Rafa faz uma careta ao seu lado, ao ar livre.",
-    "note": "sem nenhuma seriedade"
+    "note": "sem nenhuma seriedade",
+    "date": "2025-09-23",
+    "dateSource": "filename"
   },
   {
     "id": "foto-04",
@@ -88,7 +104,9 @@ window.ALBUM_PAGES = [
     "chapter": "a gente do nosso jeito",
     "caption": "Você se arruma. Eu já tô admirando.",
     "alt": "Lulu sorri sentada diante de um espelho, com Rafa fotografando atrás dela.",
-    "note": "gosto desses minutos também"
+    "note": "gosto desses minutos também",
+    "date": "2025-09-12",
+    "dateSource": "capture"
   },
   {
     "id": "foto-06",
@@ -98,7 +116,9 @@ window.ALBUM_PAGES = [
     "chapter": "perto é melhor",
     "caption": "Eu arrumo qualquer desculpa pra te abraçar.",
     "alt": "Lulu e Rafa estão abraçados diante do espelho; ela sorri e ele segura o celular.",
-    "note": "grudinho em serviço"
+    "note": "grudinho em serviço",
+    "date": "2025-09-12",
+    "dateSource": "capture"
   },
   {
     "id": "foto-05",
@@ -108,7 +128,9 @@ window.ALBUM_PAGES = [
     "chapter": "perto é melhor",
     "caption": "Um beijinho seu e eu esqueço da pose.",
     "alt": "Lulu beija o rosto de Rafa enquanto os dois se abraçam para uma foto no espelho.",
-    "note": "fica mais um beijinho"
+    "note": "fica mais um beijinho",
+    "date": "2025-09-12",
+    "dateSource": "capture"
   },
   {
     "id": "foto-11",
@@ -118,7 +140,9 @@ window.ALBUM_PAGES = [
     "chapter": "perto é melhor",
     "caption": "Você me abraça e eu já acho que sou fortão.",
     "alt": "Lulu abraça Rafa diante do espelho enquanto ele flexiona o braço numa pose engraçada.",
-    "note": "fortão, sim. um pouquinho."
+    "note": "fortão, sim. um pouquinho.",
+    "date": "2025-09-20",
+    "dateSource": "capture"
   },
   {
     "id": "foto-13",
@@ -128,7 +152,9 @@ window.ALBUM_PAGES = [
     "chapter": "perto é melhor",
     "caption": "Meu colo fica muito melhor com você.",
     "alt": "Lulu e Rafa aparecem sentados juntinhos numa foto no espelho, com ela no colo dele.",
-    "note": "reservado pra Lulu"
+    "note": "reservado pra Lulu",
+    "date": "2025-10-27",
+    "dateSource": "capture"
   },
   {
     "id": "foto-14",
@@ -138,7 +164,9 @@ window.ALBUM_PAGES = [
     "chapter": "perto é melhor",
     "caption": "Pra variar, a gente resolveu fazer biquinho.",
     "alt": "Lulu e Rafa, de roupas pretas, fazem biquinhos abraçados diante do espelho.",
-    "note": "duas caras de beijo"
+    "note": "duas caras de beijo",
+    "date": "2025-11-07",
+    "dateSource": "capture"
   },
   {
     "id": "foto-07",
@@ -148,7 +176,9 @@ window.ALBUM_PAGES = [
     "chapter": "nossos passeios",
     "caption": "Minha parte favorita do jantar era segurar sua mão.",
     "alt": "As mãos de Lulu e Rafa estão entrelaçadas sobre uma mesa com taça e luminária.",
-    "note": "mão na mão"
+    "note": "mão na mão",
+    "date": "2025-09-12",
+    "dateSource": "capture"
   },
   {
     "id": "foto-08",
@@ -158,7 +188,9 @@ window.ALBUM_PAGES = [
     "chapter": "nossos passeios",
     "caption": "Você linda. E eu tentando me segurar pra não explodir.",
     "alt": "Lulu sorri ao lado de Rafa, que faz uma expressão de olhos arregalados numa selfie à noite.",
-    "note": "mais uma noite nossa"
+    "note": "mais uma noite nossa",
+    "date": "2025-09-19",
+    "dateSource": "capture"
   },
   {
     "id": "foto-09",
@@ -168,7 +200,9 @@ window.ALBUM_PAGES = [
     "chapter": "nossos passeios",
     "caption": "Meu lugar na foto é bem pertinho de você.",
     "alt": "Lulu e Rafa encostam os rostos e sorriem numa selfie ao ar livre à noite.",
-    "note": "deixa eu ficar aqui"
+    "note": "deixa eu ficar aqui",
+    "date": "2025-09-19",
+    "dateSource": "capture"
   },
   {
     "id": "foto-10",
@@ -178,7 +212,9 @@ window.ALBUM_PAGES = [
     "chapter": "nossos passeios",
     "caption": "Se for com você, eu fico mais um pouquinho.",
     "alt": "Os pés e as pernas dos dois aparecem sobre a grama diante de um lago com luzes refletidas.",
-    "note": "pés pra cima, você do lado"
+    "note": "pés pra cima, você do lado",
+    "date": "2025-09-19",
+    "dateSource": "capture"
   },
   {
     "id": "foto-20",
@@ -188,7 +224,9 @@ window.ALBUM_PAGES = [
     "chapter": "nossos passeios",
     "caption": "Sem pressa. Só a gente e o céu mudando.",
     "alt": "Rafa aparece em silhueta ao lado de Lulu, com o céu iluminado ao fundo.",
-    "note": "o tempo podia esperar"
+    "note": "o tempo podia esperar",
+    "date": "2025-09-23",
+    "dateSource": "filename"
   },
   {
     "id": "foto-19",
@@ -198,7 +236,9 @@ window.ALBUM_PAGES = [
     "chapter": "os dias que eu guardo",
     "caption": "Bobbie Goods, canetinhas e você do meu lado.",
     "alt": "Rafa está concentrado entre canetinhas e um caderno de colorir Bobbie Goods sobre uma mesa.",
-    "note": "as cores a gente escolhe junto"
+    "note": "as cores a gente escolhe junto",
+    "date": "2025-09-23",
+    "dateSource": "filename"
   },
   {
     "id": "foto-16",
@@ -208,7 +248,9 @@ window.ALBUM_PAGES = [
     "chapter": "os dias que eu guardo",
     "caption": "Até no carro, meu lugar favorito é do seu lado.",
     "alt": "Lulu e Rafa encostam os rostos e fazem uma selfie dentro do carro.",
-    "note": "pertinho, onde for"
+    "note": "pertinho, onde for",
+    "date": "2025-08-30",
+    "dateSource": "filename"
   },
   {
     "id": "foto-21",
@@ -218,7 +260,9 @@ window.ALBUM_PAGES = [
     "chapter": "os dias que eu guardo",
     "caption": "Essa sua risada é uma das minhas coisas favoritas.",
     "alt": "Lulu ri apoiada numa almofada, com Rafa sorrindo bem perto dela.",
-    "note": "olha a gente ♡"
+    "note": "olha a gente ♡",
+    "date": "2025-09-23",
+    "dateSource": "filename"
   },
   {
     "id": "foto-18",
@@ -228,7 +272,9 @@ window.ALBUM_PAGES = [
     "chapter": "os dias que eu guardo",
     "caption": "Você faz biquinho. Eu aproveito pra chegar perto.",
     "alt": "Lulu faz biquinho deitada, enquanto Rafa encosta o rosto nela por trás.",
-    "note": "fica mais um pouquinho"
+    "note": "fica mais um pouquinho",
+    "date": "2025-09-23",
+    "dateSource": "filename"
   },
   {
     "id": "foto-22",
@@ -238,7 +284,9 @@ window.ALBUM_PAGES = [
     "chapter": "os dias que eu guardo",
     "caption": "Meu chicletinho. Seu grudinho. Amo tanto a gente.",
     "alt": "Num abraço fotografado de cabeça para baixo, Rafa esconde o rosto junto de Lulu.",
-    "note": "com todo o meu amor, Rafo"
+    "note": "com todo o meu amor, Rafo",
+    "date": "2025-09-23",
+    "dateSource": "filename"
   },
   {
     "id": "proximos-capitulos",

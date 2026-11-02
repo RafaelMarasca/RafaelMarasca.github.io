@@ -123,6 +123,20 @@
         image.addEventListener('load', imageReady, { once: true });
         image.addEventListener('error', imageFailed, { once: true });
         mount.append(image);
+        const dateParts = text(data.date).match(/^(\d{4})-(\d{2})-(\d{2})$/);
+        if (dateParts) {
+          const [, year, month, day] = dateParts;
+          const photoDate = element('time', 'photo-date', `${day}.${month}.${year}`);
+          photoDate.dateTime = dateParts[0];
+          if (data.dateSource === 'filename') {
+            photoDate.title = 'Data do arquivo (sem data de captura disponível)';
+            photoDate.setAttribute('aria-label', `Data do arquivo: ${day}/${month}/${year}`);
+          } else {
+            photoDate.setAttribute('aria-label', `Data da foto: ${day}/${month}/${year}`);
+          }
+          mount.classList.add('has-date');
+          mount.append(photoDate);
+        }
         startImage = () => {
           const source = text(data.src).trim();
           if (source) image.src = source;
@@ -140,9 +154,7 @@
       bottomline.append(element('span', 'page-note', text(data.note) || 'Lulu & Rafo'));
       const moon = element('span', 'page-symbol', '☾');
       moon.setAttribute('aria-hidden', 'true');
-      const footerMeta = element('span', 'page-footer-meta');
-      footerMeta.append(moon, element('span', 'page-number', `${pageNumber(pageIndex)} / ${pages.length}`));
-      bottomline.append(footerMeta);
+      bottomline.append(moon);
       article.append(topline, figure, bottomline);
       if (startImage) startImage();
       return article;
