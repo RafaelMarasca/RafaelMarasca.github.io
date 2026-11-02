@@ -73,6 +73,8 @@ button:active:not(:disabled){-webkit-tap-highlight-color:transparent}
 .page-topline,.page-bottomline{display:flex;align-items:center;justify-content:space-between;gap:10px;min-width:0}
 .page-chapter{font:7px var(--mono);text-transform:uppercase;letter-spacing:1px;color:#847b88}
 .page-number{font:7px var(--mono);letter-spacing:1px;color:#948591;white-space:nowrap}
+.page-footer-meta{display:flex;align-items:center;gap:10px;flex:none}
+.page-footer-meta .page-number{font:9px var(--mono);letter-spacing:.5px;color:#8e7e8a}
 .page-note{font:14px var(--hand);color:#96838a;transform:rotate(-2deg)}
 .page-symbol{font:23px Georgia,serif;color:#a18c9e}
 .memory{min-height:0;min-width:0;margin:6px 0 7px;display:grid;grid-template-rows:minmax(0,1fr) auto;gap:12px;align-items:center;justify-items:center}

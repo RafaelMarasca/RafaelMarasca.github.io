@@ -72,7 +72,6 @@
 
       const topline = element('div', 'page-topline');
       topline.append(element('span', 'page-chapter', text(data.chapter, 'Lulu & Rafo')));
-      topline.append(element('span', 'page-number', `${pageNumber(pageIndex)} / ${pages.length}`));
 
       const figure = element('figure', 'memory');
       const mount = element('div', isFuture ? 'photo-mount future-mount' : 'photo-mount is-loading');
@@ -141,7 +140,9 @@
       bottomline.append(element('span', 'page-note', text(data.note) || 'Lulu & Rafo'));
       const moon = element('span', 'page-symbol', '☾');
       moon.setAttribute('aria-hidden', 'true');
-      bottomline.append(moon);
+      const footerMeta = element('span', 'page-footer-meta');
+      footerMeta.append(moon, element('span', 'page-number', `${pageNumber(pageIndex)} / ${pages.length}`));
+      bottomline.append(footerMeta);
       article.append(topline, figure, bottomline);
       if (startImage) startImage();
       return article;
