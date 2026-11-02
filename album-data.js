@@ -116,7 +116,7 @@ window.ALBUM_PAGES = [
     "chapter": "perto é melhor",
     "caption": "Eu arrumo qualquer desculpa pra te abraçar.",
     "alt": "Lulu e Rafa estão abraçados diante do espelho; ela sorri e ele segura o celular.",
-    "note": "grudinho em serviço",
+    "note": "meu abraço favorito",
     "date": "2025-09-12",
     "dateSource": "capture"
   },
@@ -128,7 +128,7 @@ window.ALBUM_PAGES = [
     "chapter": "perto é melhor",
     "caption": "Um beijinho seu e eu esqueço da pose.",
     "alt": "Lulu beija o rosto de Rafa enquanto os dois se abraçam para uma foto no espelho.",
-    "note": "fica mais um beijinho",
+    "note": "só mais um beijinho",
     "date": "2025-09-12",
     "dateSource": "capture"
   },
