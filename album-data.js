@@ -1,0 +1,253 @@
+// Gerado a partir dos dados editáveis e do inventário de fotografias do álbum.
+window.ALBUM_PAGES = [
+  {
+    "id": "foto-12",
+    "src": "./assets/album/foto-12.webp",
+    "width": 1200,
+    "height": 1600,
+    "chapter": "você, todinha você",
+    "caption": "Flores pra você. Esse sorriso pra mim.",
+    "alt": "Lulu sorri segurando um buquê de flores cor-de-rosa diante da cortina.",
+    "note": "pra minha florzinha"
+  },
+  {
+    "id": "foto-15",
+    "src": "./assets/album/foto-15.webp",
+    "width": 736,
+    "height": 1599,
+    "chapter": "você, todinha você",
+    "caption": "Um docinho segurando outro. Pronto, falei.",
+    "alt": "Lulu segura um macaron rosa perto da boca e olha para a câmera.",
+    "note": "meu docinho"
+  },
+  {
+    "id": "foto-24",
+    "src": "./assets/album/foto-24.webp",
+    "width": 515,
+    "height": 344,
+    "chapter": "você, todinha você",
+    "caption": "Minha princesa até de chapéu improvisado.",
+    "alt": "Lulu faz uma pose divertida com uma peça trançada sobre a cabeça.",
+    "note": "eu adoro esse seu jeito"
+  },
+  {
+    "id": "foto-25",
+    "src": "./assets/album/foto-25.webp",
+    "width": 1077,
+    "height": 1600,
+    "chapter": "você, todinha você",
+    "caption": "Uma piscadinha sua e eu já fico bobo.",
+    "alt": "Lulu aparece bem de pertinho, piscando um olho e mostrando a língua.",
+    "note": "pronto, me ganhou"
+  },
+  {
+    "id": "foto-17",
+    "src": "./assets/album/foto-17.webp",
+    "width": 1371,
+    "height": 387,
+    "chapter": "você, todinha você",
+    "caption": "Até pela tela, a gente dá um jeito de ficar perto.",
+    "alt": "Lulu e Rafa aparecem em duas telas de uma chamada, formando um coração com as mãos.",
+    "note": "um coração em duas telas"
+  },
+  {
+    "id": "foto-02",
+    "src": "./assets/album/foto-02.webp",
+    "width": 1600,
+    "height": 722,
+    "chapter": "a gente do nosso jeito",
+    "caption": "Você sorri e eu acompanho sem perceber.",
+    "alt": "Lulu e Rafa sorriem lado a lado ao ar livre, com uma palmeira ao fundo.",
+    "note": "um dia bom com você"
+  },
+  {
+    "id": "foto-03",
+    "src": "./assets/album/foto-03.webp",
+    "width": 722,
+    "height": 1600,
+    "chapter": "a gente do nosso jeito",
+    "caption": "A gente combina até nas caretas.",
+    "alt": "Lulu e Rafa fazem biquinho numa selfie vista de baixo, com o céu ao fundo.",
+    "note": "zero pose, muito amor"
+  },
+  {
+    "id": "foto-23",
+    "src": "./assets/album/foto-23.webp",
+    "width": 1599,
+    "height": 736,
+    "chapter": "a gente do nosso jeito",
+    "caption": "Você toda estilosa. Eu colaborando desse jeito.",
+    "alt": "Lulu usa óculos escuros enquanto Rafa faz uma careta ao seu lado, ao ar livre.",
+    "note": "sem nenhuma seriedade"
+  },
+  {
+    "id": "foto-04",
+    "src": "./assets/album/foto-04.webp",
+    "width": 1200,
+    "height": 1600,
+    "chapter": "a gente do nosso jeito",
+    "caption": "Você se arruma. Eu já tô admirando.",
+    "alt": "Lulu sorri sentada diante de um espelho, com Rafa fotografando atrás dela.",
+    "note": "gosto desses minutos também"
+  },
+  {
+    "id": "foto-06",
+    "src": "./assets/album/foto-06.webp",
+    "width": 1200,
+    "height": 1600,
+    "chapter": "perto é melhor",
+    "caption": "Eu arrumo qualquer desculpa pra te abraçar.",
+    "alt": "Lulu e Rafa estão abraçados diante do espelho; ela sorri e ele segura o celular.",
+    "note": "grudinho em serviço"
+  },
+  {
+    "id": "foto-05",
+    "src": "./assets/album/foto-05.webp",
+    "width": 1200,
+    "height": 1600,
+    "chapter": "perto é melhor",
+    "caption": "Um beijinho seu e eu esqueço da pose.",
+    "alt": "Lulu beija o rosto de Rafa enquanto os dois se abraçam para uma foto no espelho.",
+    "note": "fica mais um beijinho"
+  },
+  {
+    "id": "foto-11",
+    "src": "./assets/album/foto-11.webp",
+    "width": 1200,
+    "height": 1600,
+    "chapter": "perto é melhor",
+    "caption": "Você me abraça e eu já acho que sou fortão.",
+    "alt": "Lulu abraça Rafa diante do espelho enquanto ele flexiona o braço numa pose engraçada.",
+    "note": "fortão, sim. um pouquinho."
+  },
+  {
+    "id": "foto-13",
+    "src": "./assets/album/foto-13.webp",
+    "width": 1200,
+    "height": 1600,
+    "chapter": "perto é melhor",
+    "caption": "Meu colo fica muito melhor com você.",
+    "alt": "Lulu e Rafa aparecem sentados juntinhos numa foto no espelho, com ela no colo dele.",
+    "note": "reservado pra Lulu"
+  },
+  {
+    "id": "foto-14",
+    "src": "./assets/album/foto-14.webp",
+    "width": 1200,
+    "height": 1600,
+    "chapter": "perto é melhor",
+    "caption": "Pra variar, a gente resolveu fazer biquinho.",
+    "alt": "Lulu e Rafa, de roupas pretas, fazem biquinhos abraçados diante do espelho.",
+    "note": "duas caras de beijo"
+  },
+  {
+    "id": "foto-07",
+    "src": "./assets/album/foto-07.webp",
+    "width": 1200,
+    "height": 1600,
+    "chapter": "nossos passeios",
+    "caption": "Minha parte favorita do jantar era segurar sua mão.",
+    "alt": "As mãos de Lulu e Rafa estão entrelaçadas sobre uma mesa com taça e luminária.",
+    "note": "mão na mão"
+  },
+  {
+    "id": "foto-08",
+    "src": "./assets/album/foto-08.webp",
+    "width": 1200,
+    "height": 1600,
+    "chapter": "nossos passeios",
+    "caption": "Você linda. E eu tentando me segurar pra não explodir.",
+    "alt": "Lulu sorri ao lado de Rafa, que faz uma expressão de olhos arregalados numa selfie à noite.",
+    "note": "mais uma noite nossa"
+  },
+  {
+    "id": "foto-09",
+    "src": "./assets/album/foto-09.webp",
+    "width": 1200,
+    "height": 1600,
+    "chapter": "nossos passeios",
+    "caption": "Meu lugar na foto é bem pertinho de você.",
+    "alt": "Lulu e Rafa encostam os rostos e sorriem numa selfie ao ar livre à noite.",
+    "note": "deixa eu ficar aqui"
+  },
+  {
+    "id": "foto-10",
+    "src": "./assets/album/foto-10.webp",
+    "width": 1200,
+    "height": 1600,
+    "chapter": "nossos passeios",
+    "caption": "Se for com você, eu fico mais um pouquinho.",
+    "alt": "Os pés e as pernas dos dois aparecem sobre a grama diante de um lago com luzes refletidas.",
+    "note": "pés pra cima, você do lado"
+  },
+  {
+    "id": "foto-20",
+    "src": "./assets/album/foto-20.webp",
+    "width": 1599,
+    "height": 736,
+    "chapter": "nossos passeios",
+    "caption": "Sem pressa. Só a gente e o céu mudando.",
+    "alt": "Rafa aparece em silhueta ao lado de Lulu, com o céu iluminado ao fundo.",
+    "note": "o tempo podia esperar"
+  },
+  {
+    "id": "foto-19",
+    "src": "./assets/album/foto-19.webp",
+    "width": 896,
+    "height": 1600,
+    "chapter": "os dias que eu guardo",
+    "caption": "Bobbie Goods, canetinhas e você do meu lado.",
+    "alt": "Rafa está concentrado entre canetinhas e um caderno de colorir Bobbie Goods sobre uma mesa.",
+    "note": "as cores a gente escolhe junto"
+  },
+  {
+    "id": "foto-16",
+    "src": "./assets/album/foto-16.webp",
+    "width": 736,
+    "height": 1599,
+    "chapter": "os dias que eu guardo",
+    "caption": "Até no carro, meu lugar favorito é do seu lado.",
+    "alt": "Lulu e Rafa encostam os rostos e fazem uma selfie dentro do carro.",
+    "note": "pertinho, onde for"
+  },
+  {
+    "id": "foto-21",
+    "src": "./assets/album/foto-21.webp",
+    "width": 736,
+    "height": 1599,
+    "chapter": "os dias que eu guardo",
+    "caption": "Essa sua risada é uma das minhas coisas favoritas.",
+    "alt": "Lulu ri apoiada numa almofada, com Rafa sorrindo bem perto dela.",
+    "note": "olha a gente ♡"
+  },
+  {
+    "id": "foto-18",
+    "src": "./assets/album/foto-18.webp",
+    "width": 736,
+    "height": 1599,
+    "chapter": "os dias que eu guardo",
+    "caption": "Você faz biquinho. Eu aproveito pra chegar perto.",
+    "alt": "Lulu faz biquinho deitada, enquanto Rafa encosta o rosto nela por trás.",
+    "note": "fica mais um pouquinho"
+  },
+  {
+    "id": "foto-22",
+    "src": "./assets/album/foto-22.webp",
+    "width": 736,
+    "height": 1599,
+    "chapter": "os dias que eu guardo",
+    "caption": "Meu chicletinho. Seu grudinho. Amo tanto a gente.",
+    "alt": "Num abraço fotografado de cabeça para baixo, Rafa esconde o rosto junto de Lulu.",
+    "note": "com todo o meu amor, Rafo"
+  },
+  {
+    "id": "proximos-capitulos",
+    "kind": "future",
+    "width": 900,
+    "height": 1100,
+    "chapter": "ainda tem tanto de nós",
+    "caption": "Pros próximos capítulos que a gente vai viver.",
+    "alt": "Um espaço vazio no álbum, reservado para as próximas lembranças.",
+    "note": "com amor, seu Rafo"
+  }
+];

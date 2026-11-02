@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#111b20">
+  <meta name="robots" content="noindex, nofollow, noarchive">
+  <meta name="referrer" content="same-origin">
+  <meta name="description" content="Nossos dias, guardados de pertinho. Um álbum para Lulu, com amor do Rafo.">
+  <title>Nós, de pertinho · Lulu &amp; Rafo</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Cpath d='M54 12a28 28 0 1 0 14 43A27 27 0 0 1 54 12Z' fill='%23e6d3a2'/%3E%3C/svg%3E">
+  <link rel="preload" href="./assets/album/fonts/caveat.woff" as="font" type="font/woff" crossorigin>
+  <link rel="preload" href="./assets/album/fonts/cormorant-garamond.woff" as="font" type="font/woff" crossorigin>
+  <link rel="stylesheet" href="./album.css">
+  <script src="./album-data.js" defer></script>
+  <script src="./album.js" defer></script>
+</head>
+<body>
+  <div class="album-sky" aria-hidden="true">
+    <span class="sky-moon">☾</span>
+    <span class="sky-spark spark-one">✦</span>
+    <span class="sky-spark spark-two">✧</span>
+    <span class="sky-spark spark-three">✦</span>
+    <span class="sky-spark spark-four">✧</span>
+    <span class="sky-spark spark-five">✦</span>
+    <span class="sky-orbit"></span>
+  </div>
+
+  <header class="album-header">
+    <p class="album-brand"><span aria-hidden="true">☾</span> um lugar nosso</p>
+    <button class="music-button" id="album-music-button" type="button" aria-label="Ativar a música Minha Lua" aria-pressed="false" disabled>
+      <span class="music-bars" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+      <span class="music-copy"><span class="music-song">Minha Lua</span><span data-music-label>som desligado</span></span>
+      <svg class="music-speaker" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4V5Z"/><path d="M15 8a6 6 0 0 1 0 8m3-11a10 10 0 0 1 0 14"/></svg>
+    </button>
+  </header>
+
+  <main class="album-main">
+    <div class="album-intro"><span class="intro-rule" aria-hidden="true"></span><p>LULU &amp; RAFO <span aria-hidden="true">/</span> NOSSAS LEMBRANÇAS</p><span class="intro-rule" aria-hidden="true"></span></div>
+
+    <div class="album-stage">
+      <div class="book-shadow" aria-hidden="true"></div>
+      <div class="book-ribbon" aria-hidden="true"></div>
+      <div class="album-book" id="album-book" data-state="cover" data-page-index="-1" aria-label="Álbum de fotografias de Lulu e Rafo">
+        <div class="book-leaves" aria-hidden="true"></div>
+        <div class="book-spine" aria-hidden="true"><span>nós, de pertinho</span></div>
+
+        <section class="album-cover" id="album-cover" aria-labelledby="album-title">
+          <div class="cover-frame" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+          <p class="cover-edition">LULU &amp; RAFO</p>
+          <svg class="cover-moon" viewBox="0 0 180 132" fill="none" aria-hidden="true">
+            <circle cx="90" cy="66" r="52" stroke="currentColor" stroke-width=".7" opacity=".3"/>
+            <circle cx="90" cy="66" r="60" stroke="currentColor" stroke-width=".5" stroke-dasharray="1 6" opacity=".45"/>
+            <path d="M105 32a37 37 0 1 0 18 64A36 36 0 0 1 105 32Z" fill="currentColor" opacity=".9"/>
+            <path d="m128 31 2.5 7.5L138 41l-7.5 2.5L128 51l-2.5-7.5L118 41l7.5-2.5L128 31Z" fill="currentColor"/>
+            <path d="m45 80 1.5 4.5L51 86l-4.5 1.5L45 92l-1.5-4.5L39 86l4.5-1.5L45 80Z" fill="currentColor"/>
+            <circle cx="136" cy="75" r="1.7" fill="currentColor"/><circle cx="51" cy="47" r="1.2" fill="currentColor"/>
+          </svg>
+          <h1 id="album-title">nós,<br><em>de pertinho.</em></h1>
+          <p class="cover-dedication">para o meu chicletinho</p>
+          <div class="cover-small-heart" aria-hidden="true">♡</div>
+          <button class="cover-open" id="album-open" type="button">abrir nosso álbum <span aria-hidden="true">↗</span></button>
+          <p class="cover-bottom">AS HISTÓRIAS QUE A GENTE GUARDA</p>
+        </section>
+
+        <div class="album-current" id="album-current" hidden></div>
+        <div class="album-turn-layer" id="album-turn-layer" aria-hidden="true" inert></div>
+      </div>
+      <span class="stage-spark stage-spark-left" aria-hidden="true">✧</span>
+      <span class="stage-spark stage-spark-right" aria-hidden="true">✦</span>
+      <p class="side-note" aria-hidden="true">eu guardo a gente<br>com tanto carinho.</p>
+    </div>
+
+    <nav class="album-navigation" aria-label="Páginas do álbum">
+      <button class="page-button" id="album-prev" type="button" aria-label="Página anterior" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" aria-hidden="true"><path d="m14 5-7 7 7 7M7 12h14"/></svg></button>
+      <div class="navigation-center">
+        <p class="album-chapter" id="album-chapter">um álbum inteiro de nós</p>
+        <p class="album-counter" id="album-counter" hidden>01 <span>/ 25</span></p>
+        <div class="album-progress" id="album-progress" role="progressbar" aria-label="Progresso do álbum" aria-valuemin="0" aria-valuemax="25" aria-valuenow="0"><span id="album-progress-fill"></span></div>
+      </div>
+      <button class="page-button" id="album-next" type="button" aria-label="Próxima página" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" aria-hidden="true"><path d="m10 5 7 7-7 7M17 12H3"/></svg></button>
+    </nav>
+    <p class="album-gesture-hint"><span aria-hidden="true">↔</span> passe as páginas devagarinho</p>
+    <p class="visually-hidden" id="album-status" role="status" aria-live="polite" aria-atomic="true"></p>
+    <noscript><p class="no-script">Ative o JavaScript para folhear o nosso álbum.</p></noscript>
+  </main>
+
+  <footer class="album-footer"><span>feito de dias comuns. e de você.</span><span class="footer-heart" aria-label="com amor">♡</span><span>com amor, seu Rafo</span></footer>
+  <audio id="album-audio" src="./assets/album/minha-lua.mp3" loop autoplay preload="metadata" aria-label="Minha Lua, trilha do álbum"></audio>
+</body>
+</html>
