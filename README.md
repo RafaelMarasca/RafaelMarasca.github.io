@@ -38,7 +38,7 @@ A chave `cabelo` foi mantida por compatibilidade e representa a segunda ilustra�
 
 ## Nosso GIF
 
-O GIF original do beijinho aparece logo abaixo da abertura da página inicial, em `assets/beijinho-lulu.gif`. O botão permite pausar e retomar a animação; quem prefere movimento reduzido recebe o quadro estático `assets/beijinho-lulu-parado.webp`. Os dois arquivos entram automaticamente na publicação.
+O GIF original do beijinho aparece logo abaixo da abertura da página inicial, em `assets/beijinho-lulu.gif`. Quem prefere movimento reduzido recebe o quadro estático `assets/beijinho-lulu-parado.webp`. Os dois arquivos entram automaticamente na publicação.
 
 ## Música
 

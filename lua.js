@@ -189,22 +189,3 @@ mute.addEventListener('click', () => {
   musicStatus.textContent = audio.muted ? 'UM POUQUINHO DE SILÊNCIO' : 'TOCANDO EM LOOP, COM CARINHO';
   document.querySelector('.music-icon').classList.toggle('playing', !audio.muted);
 });
-
-const kissImage = document.getElementById('kiss-image');
-const kissToggle = document.getElementById('kiss-toggle');
-if (kissImage && kissToggle) {
-  let kissPaused = false;
-  function updateKissAnimation() {
-    const paused = kissPaused || reduceMotion.matches;
-    kissImage.src = paused ? './assets/beijinho-lulu-parado.webp' : './assets/beijinho-lulu.gif';
-    kissToggle.hidden = reduceMotion.matches;
-    kissToggle.textContent = kissPaused ? 'retomar animação' : 'pausar animação';
-    kissToggle.setAttribute('aria-pressed', String(kissPaused));
-  }
-  kissToggle.addEventListener('click', () => {
-    kissPaused = !kissPaused;
-    updateKissAnimation();
-  });
-  reduceMotion.addEventListener('change', updateKissAnimation);
-  updateKissAnimation();
-}

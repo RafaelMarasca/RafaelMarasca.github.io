@@ -66,13 +66,9 @@
 .kiss-moment figcaption p { margin: 0; font: 2rem/1.25 var(--serif); color: var(--paper); }
 .kiss-moment figcaption em { color: var(--gold); font-weight: 400; }
 .kiss-moment figcaption p > span { color: var(--sage); font-size: 1.5rem; }
-.kiss-moment button { display: inline-flex; align-items: center; min-height: 44px; margin-top: 15px; padding: 8px 0; border: 0; border-bottom: 1px solid var(--line); background: none; color: var(--muted); font: .875rem/1.4 var(--mono); }
-.kiss-moment button[hidden] { display: none; }
-.kiss-moment button:hover { color: var(--gold); }
 @media (max-width: 500px) {
   .kiss-moment { flex-direction: column; gap: 25px; margin-block: 12px 36px; }
   .kiss-frame { width: min(230px, 65vw); }
   .kiss-moment figcaption { text-align: center; }
   .kiss-moment figcaption p { font-size: 1.75rem; }
-  .kiss-moment button { margin-top: 10px; }
 }
