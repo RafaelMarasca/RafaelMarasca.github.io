@@ -21,15 +21,15 @@ a:focus-visible { outline: 2px solid var(--gold); outline-offset: 6px; }
 .wrap { width: min(740px, calc(100% - 40px)); margin-inline: auto; }
 .skip-link { position: absolute; left: 1rem; top: -6rem; padding: .8rem 1rem; background: var(--paper); color: #111820; z-index: 20; }
 .skip-link:focus { top: 1rem; }
-.poetry-sky { position: fixed; inset: 0; z-index: -1; pointer-events: none; background-image: radial-gradient(circle at 13% 24%, #d9d1ad45 .6px, transparent 1px), radial-gradient(circle at 62% 73%, #d9d1ad28 .7px, transparent 1px); background-size: 337px 391px, 441px 483px; }
 .poetry-main { padding-block: 64px 44px; }
-h1 { font-size: clamp(3rem, 6vw, 4.5rem); font-weight: 400; line-height: 1; letter-spacing: -.03em; margin: 0 0 48px; color: var(--gold); }
+h1 { font-size: clamp(3rem, 6vw, 4.5rem); font-weight: 400; line-height: 1; letter-spacing: -.03em; margin: 0 0 38px; padding-bottom: 28px; border-bottom: 1px solid #e8d8a947; color: var(--gold); }
 .poem h2 { font-size: clamp(2rem, 4vw, 2.75rem); font-weight: 400; line-height: 1.15; letter-spacing: -.02em; margin: 0 0 30px; color: var(--paper); }
 .poem-body { font-size: 1.625rem; line-height: 1.7; }
 .poem-body p { margin: 0 0 1.4em; }
 .poem-body p:last-child { margin-bottom: 0; }
-.poem + .poem { margin-top: 64px; padding-top: 64px; border-top: 1px solid var(--line); }
-footer { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px 20px; padding-block: 25px; border-top: 1px solid var(--line); color: var(--muted); font: .875rem/1.6 var(--mono); }
+.poem { padding-bottom: 48px; border-bottom: 1px solid #e8d8a947; }
+.poem + .poem { margin-top: 48px; }
+footer { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px 20px; padding-block: 25px; color: var(--muted); font: .875rem/1.6 var(--mono); }
 footer p { margin: 0; }
 footer a { display: flex; align-items: center; min-height: 44px; text-decoration: none; }
 @media (max-width: 740px) {

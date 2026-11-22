@@ -68,7 +68,7 @@ Depois dos jogos, fica apenas “Só volto se você não desviar dos beijinhos�
 
 `poemas.html` apresenta cada poema com seu próprio título, sem apresentações adicionais. O título fica em um `h2`, seguido pelo texto em um `article.poem`, com seus parágrafos preservados. Para adicionar mais poemas, acrescente outro `article.poem` dentro de `.poems`, com título e identificadores próprios. A aparência fica em `poemas.css`.
 
-As três páginas publicadas usam o mesmo fundo e a navegação superior “início”, “nosso álbum” e “poemas”, definidos em `site-nav.css`. O controle de música do álbum fica abaixo da navegação. A publicação inclui os arquivos automaticamente, sem dependências.
+As três páginas publicadas usam o mesmo fundo e a navegação superior “início”, “nosso álbum” e “poemas”. A cor de fundo e a navegação ficam em `site-nav.css`; as estrelas, luas e a textura compartilhadas ficam em `ceu.css`. A página de poemas inclui uma linha abaixo do título da página e separadores após cada poema. O controle de música do álbum fica abaixo da navegação. A publicação inclui os arquivos automaticamente, sem dependências.
 
 ## GitHub Pages
 

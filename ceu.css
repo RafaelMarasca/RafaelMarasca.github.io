@@ -1,11 +1,42 @@
-/* Um céu discreto que permanece enquanto a cartinha passa por cima. */
+/* Fundo compartilhado pelas páginas Início, Nosso álbum e Poemas. */
+.site-page { min-height: 100svh; isolation: isolate; }
+.site-page::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 8;
+  opacity: .028;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 160 160' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Cpath fill='%23fff' filter='url(%23n)' d='M0 0h160v160H0z'/%3E%3C/svg%3E");
+}
+.site-page .sky {
+  position: absolute;
+  inset: 0 0 auto;
+  z-index: 0;
+  height: 940px;
+  overflow: hidden;
+  pointer-events: none;
+  background-image: radial-gradient(circle at 12% 23%, #e9debe88 .7px, transparent 1px), radial-gradient(circle at 80% 51%, #e9debe55 .8px, transparent 1px), radial-gradient(circle at 45% 7%, #e9debe44 .6px, transparent 1px);
+  background-size: 193px 217px, 277px 319px, 337px 253px;
+  mask-image: linear-gradient(#000 65%, transparent);
+}
+.sky-star { position: absolute; color: #e8d8a9; font-style: normal; animation: twinkle 6s ease-in-out infinite; }
+.s1 { top: 115px; left: 5%; font-size: 12px; }
+.s2 { top: 210px; right: 9%; font-size: 21px; animation-delay: -2s; }
+.s3 { top: 590px; left: 48%; font-size: 16px; animation-delay: -4s; }
+.s4 { top: 70px; left: 61%; font-size: 25px; }
+.s5 { top: 760px; right: 20%; font-size: 12px; animation-delay: -1s; }
+.shooting-star { position: absolute; width: 100px; height: 1px; background: linear-gradient(90deg, transparent, #e8d8a9); opacity: 0; transform: rotate(32deg); animation: shoot 14s ease-in infinite; top: 16%; left: 45%; }
+.shooting-star.two { animation-delay: 6s; animation-duration: 19s; top: 38%; left: 2%; width: 75px; }
+@keyframes twinkle { 0%, 100% { opacity: .3; transform: scale(.8); } 50% { opacity: .9; transform: scale(1.1); } }
+@keyframes shoot { 0%, 78%, 100% { opacity: 0; transform: translate(0, 0) rotate(32deg); } 80% { opacity: .8; } 86% { opacity: 0; transform: translate(340px, 210px) rotate(32deg); } }
 .celestial-backdrop {
   position: fixed;
   inset: 0;
   z-index: 0;
   overflow: hidden;
   pointer-events: none;
-  color: var(--gold, #e8d8a9);
+  color: #e8d8a9;
 }
 
 .celestial-backdrop::before,
@@ -66,6 +97,10 @@ footer {
 }
 
 @media (max-width: 740px) {
+  .site-page .sky { height: 1100px; }
+  .s2 { top: 105px; right: 13px; font-size: 13px; }
+  .s3 { left: 7%; top: 470px; font-size: 11px; }
+  .s5 { top: 930px; }
   .celestial-backdrop::before { background-size: 331px 373px; }
   .backdrop-moon-one { left: 3%; top: 20%; font-size: 19px; opacity: .1; }
   .backdrop-moon-two { right: 3%; top: 58%; font-size: 23px; opacity: .1; }
@@ -73,6 +108,7 @@ footer {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .sky-star, .shooting-star { animation: none; }
   .celestial-backdrop::before,
   .celestial-backdrop::after,
   .backdrop-moon { animation: none; }
