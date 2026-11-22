@@ -36,6 +36,10 @@ fotos: {
 
 A chave `cabelo` foi mantida por compatibilidade e representa a segunda ilustração. As imagens padrão também aparecem sem JavaScript. Os PNGs originais foram preservados localmente; o ZIP usa apenas os WebPs. O conjunto completo de prompts está em `assets/ilustracoes/prompts.txt`.
 
+## Nosso GIF
+
+O GIF original do beijinho aparece logo abaixo da abertura da página inicial, em `assets/beijinho-lulu.gif`. O botão permite pausar e retomar a animação; quem prefere movimento reduzido recebe o quadro estático `assets/beijinho-lulu-parado.webp`. Os dois arquivos entram automaticamente na publicação.
+
 ## Música
 
 O MP3 fornecido, **Durand Jones & The Indications — Flower Moon**, já está em `assets/nossa-musica.mp3`, em loop e sem botão de play. Há um controle discreto para silenciar.

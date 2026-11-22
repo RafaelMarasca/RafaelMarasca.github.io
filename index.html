@@ -7,14 +7,14 @@
   <meta name="description" content="Uma cartinha ao luar para Lulu. Sobre carinho, segundas chances e espaço para crescer.">
   <title>Uma lua para Lulu · Início</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🌙%3C/text%3E%3C/svg%3E">
-  <link rel="stylesheet" href="./lua.css">
+  <link rel="stylesheet" href="./lua.css?v=3">
   <link rel="stylesheet" href="./ceu.css?v=3">
   <link rel="stylesheet" href="./snake.css">
   <link rel="stylesheet" href="./moonlander.css">
   <link rel="stylesheet" href="./feedback.css">
   <link rel="stylesheet" href="./site-nav.css?v=2">
   <script src="./site-config.js" defer></script>
-  <script src="./lua.js" defer></script>
+  <script src="./lua.js?v=3" defer></script>
   <script src="./snake.js" defer></script>
   <script src="./moonlander.js" defer></script>
   <script src="./feedback.js" defer></script>
@@ -29,6 +29,17 @@
       <div class="hero-copy"><p class="eyebrow intro-in">UMA CARTINHA PARA A LULU</p><h1 class="intro-in" id="site-title">uma lua<br>para <em>Lulu.</em><span class="small-heart" aria-hidden="true">♡</span></h1><p class="hero-description intro-in">Lulu, eu te amo muito.<br>Fiz esse cantinho para te contar por quê, com muito carinho.</p><a class="letter-link intro-in" href="#motivos">deixa eu te contar <span aria-hidden="true">↓</span></a></div>
       <div class="lunar-scene intro-in"><div class="orbit" aria-hidden="true"><span>✦</span></div><button class="moon-button" id="moon-wish" type="button" aria-label="Toque para espalhar estrelas para Lulu"><svg class="moon-svg" viewBox="0 0 300 300" aria-hidden="true"><defs><radialGradient id="moon-light" cx="36%" cy="29%" r="76%"><stop stop-color="#fff6d8"/><stop offset=".55" stop-color="#ded4b3"/><stop offset="1" stop-color="#9d9b87"/></radialGradient><clipPath id="moon-clip"><circle cx="150" cy="150" r="137"/></clipPath><filter id="moon-grain"><feTurbulence type="fractalNoise" baseFrequency=".075" numOctaves="4" seed="8" result="noise"/><feColorMatrix in="noise" type="saturate" values="0"/><feComposite in2="SourceGraphic" operator="in"/><feBlend in="SourceGraphic" mode="soft-light"/></filter></defs><circle cx="150" cy="150" r="137" fill="url(#moon-light)"/><g clip-path="url(#moon-clip)" fill="#777d6b" opacity=".19"><path d="M72 22c-4 25 39 29 37 49-1 18-30 14-40 32-11 20 1 28 29 35 30 8 19 39 37 51 22 15 48 0 61-23 17-29 4-56-16-70-18-14-6-40-35-51-26-10-34-37-73-23Z"/><path d="M207 42c-28 17-22 41-5 53 27 18 11 32 31 46 21 14 53-1 61-24l-8-51Z"/><path d="M37 166c20-9 39 6 34 20-7 23 21 23 25 43 4 19-14 34-36 32l-27-51Z"/><ellipse cx="175" cy="238" rx="32" ry="21"/><circle cx="229" cy="193" r="16"/><circle cx="138" cy="100" r="18"/></g><g clip-path="url(#moon-clip)" fill="none" stroke="#8d917d" opacity=".23"><circle cx="90" cy="204" r="18" stroke-width="3"/><circle cx="220" cy="165" r="12" stroke-width="2"/><circle cx="170" cy="70" r="9" stroke-width="2"/><circle cx="141" cy="257" r="12" stroke-width="2"/><path d="m150 226 55-18m-55 18 34 44m-34-44-32-26m32 26-7 54" stroke-width="1"/></g><circle cx="150" cy="150" r="137" fill="#d8d2ba" opacity=".2" filter="url(#moon-grain)"/></svg></button><span class="moon-prompt handwritten">toque na lua. eu deixei um carinho aí. ↗</span><p class="moon-message" id="moon-message" role="status"></p><figure class="photo-print hero-photo"><div class="photo-slot has-photo" data-photo="retrato"><img src="./assets/ilustracoes/lulu-feliz.webp" width="1000" height="1000" decoding="async" alt="Ilustração de Lulu sorrindo com flores e uma lua dourada."></div><figcaption>minha Lulu, toda florida. ♡</figcaption></figure><span class="scene-coordinate" aria-hidden="true">LADO A / FLOR DE LUA</span></div>
     </section>
+
+    <figure class="kiss-moment wrap" id="nosso-beijinho">
+      <picture class="kiss-frame">
+        <source media="(prefers-reduced-motion: reduce)" srcset="./assets/beijinho-lulu-parado.webp">
+        <img id="kiss-image" src="./assets/beijinho-lulu.gif" width="309" height="309" loading="lazy" decoding="async" alt="Rafo dá um beijinho na bochecha de Lulu, cercados de corações e uma lua.">
+      </picture>
+      <figcaption>
+        <p>um beijinho<br><em>pra você.</em> <span aria-hidden="true">♡</span></p>
+        <button id="kiss-toggle" type="button" aria-controls="kiss-image" aria-pressed="false" hidden>pausar animação</button>
+      </figcaption>
+    </figure>
 
     <div class="music-strip wrap"><span class="music-icon" aria-hidden="true">♫</span><div><span class="music-kicker" id="music-status">A TRILHA DESTA CARTINHA</span><p>Flower Moon <span>· Durand Jones &amp; The Indications</span></p></div><button id="mute-music" type="button" hidden aria-label="Silenciar música">som ligado <span aria-hidden="true">↗</span></button><span class="strip-star" aria-hidden="true">✧</span></div>
 
