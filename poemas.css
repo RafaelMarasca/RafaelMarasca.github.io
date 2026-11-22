@@ -4,98 +4,37 @@
   font-weight: 300 700;
   font-display: swap;
 }
-@font-face {
-  font-family: PoetrySerif;
-  src: url('./assets/album/fonts/cormorant-garamond-italic.woff') format('woff');
-  font-style: italic;
-  font-weight: 300 700;
-  font-display: swap;
-}
 :root {
-  color-scheme: dark;
-  --night: #111820;
   --paper: #e9e5d9;
   --gold: #e8d8a9;
-  --sage: #b5c3b2;
   --muted: #b9c1c1;
   --line: #e8d8a92b;
   --serif: PoetrySerif, Georgia, serif;
   --mono: 'Courier New', monospace;
 }
 * { box-sizing: border-box; }
-html { scroll-behavior: smooth; scroll-padding-top: 2rem; background: var(--night); }
-body { margin: 0; color: var(--paper); font: 1rem/1.6 var(--serif); isolation: isolate; }
+html { scroll-behavior: smooth; scroll-padding-top: 2rem; }
+body { margin: 0; color: var(--paper); font: 1rem/1.6 var(--serif); isolation: isolate; -webkit-font-smoothing: antialiased; }
 a { color: inherit; text-underline-offset: .3em; }
-a:focus-visible { outline: 2px solid var(--gold); outline-offset: 6px; border-radius: 2px; }
+a:focus-visible { outline: 2px solid var(--gold); outline-offset: 6px; }
 ::selection { background: #63725b; color: white; }
-.wrap { width: min(1120px, calc(100% - 80px)); margin-inline: auto; }
-.skip-link { position: absolute; left: 1rem; top: -6rem; padding: .8rem 1rem; background: var(--paper); color: var(--night); z-index: 5; }
+.wrap { width: min(740px, calc(100% - 40px)); margin-inline: auto; }
+.skip-link { position: absolute; left: 1rem; top: -6rem; padding: .8rem 1rem; background: var(--paper); color: #111820; z-index: 20; }
 .skip-link:focus { top: 1rem; }
-.poetry-sky { position: fixed; inset: 0; z-index: -1; pointer-events: none; background: radial-gradient(ellipse at 80% 10%, #68766116, transparent 45%), radial-gradient(circle at 13% 24%, #d9d1ad66 .6px, transparent 1px), radial-gradient(circle at 62% 73%, #d9d1ad38 .7px, transparent 1px); background-size: auto, 337px 391px, 441px 483px; }
-.site-header { min-height: 90px; display: flex; align-items: center; justify-content: space-between; gap: 24px; border-bottom: 1px solid var(--line); }
-.brand { display: flex; align-items: center; gap: 10px; text-decoration: none; font: .875rem var(--mono); }
-.brand span { color: var(--gold); font: 2rem Georgia, serif; }
-.site-header nav { display: flex; gap: 28px; flex-wrap: wrap; }
-.site-header nav a { display: flex; align-items: center; min-height: 44px; color: var(--muted); text-decoration: none; font: .875rem var(--mono); }
-.site-header nav a:hover, .site-header nav a[aria-current] { color: var(--gold); }
-.site-header nav a[aria-current] { text-decoration: underline; }
-.eyebrow { font: .875rem/1.6 var(--mono); letter-spacing: .12em; color: var(--sage); margin: 0 0 25px; }
-.poetry-intro { position: relative; display: grid; grid-template-columns: 1fr 260px; gap: 50px; align-items: center; padding: 85px 0 75px; }
-h1, h2 { font-weight: 400; margin: 0; line-height: 1.03; }
-h1 { font-size: clamp(3.5rem, 7.5vw, 6.75rem); letter-spacing: -.045em; }
-h1 em, h2 em { font-weight: 400; color: var(--gold); }
-.intro-note { color: var(--muted); font-size: 1.375rem; line-height: 1.5; margin: 27px 0 0; }
-.poetry-moon { width: 210px; aspect-ratio: 1; justify-self: center; position: relative; border-radius: 50%; background: radial-gradient(circle at 31% 28%, #fff3cd, #d7cdac 55%, #949b84); box-shadow: 0 0 70px #e8d8a913; }
-.poetry-moon::before { content: ''; position: absolute; width: 145%; height: 76%; left: -23%; top: 12%; transform: rotate(-32deg); border: 1px solid #e8d8a931; border-radius: 50%; }
-.poetry-moon::after { content: '✦'; position: absolute; top: -6px; right: -23px; color: var(--gold); font-size: 1.5rem; }
-.poetry-moon span { position: absolute; inset: 0; border-radius: inherit; opacity: .2; background: radial-gradient(ellipse at 29% 36%, #65745d 0 10%, transparent 11%), radial-gradient(ellipse at 38% 48%, #65745d 0 15%, transparent 16%), radial-gradient(ellipse at 66% 24%, #65745d 0 9%, transparent 10%), radial-gradient(ellipse at 66% 71%, #65745d 0 13%, transparent 14%); }
-.poetry-layout { display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 80px; padding-top: 55px; border-top: 1px solid var(--line); }
-.poetry-index { position: sticky; top: 40px; align-self: start; }
-.poetry-index .eyebrow { margin-bottom: 20px; font-size: .875rem; }
-.poetry-index nav a { display: block; font-size: 1.375rem; line-height: 1.35; padding: 16px 0; border-block: 1px solid var(--line); text-decoration: none; color: var(--gold); }
-.poetry-index nav a:hover { text-decoration: underline; }
-.index-note { font-size: 1.125rem; font-style: italic; line-height: 1.6; color: var(--muted); margin: 25px 0 0; }
-.poem { scroll-margin-top: 2rem; padding-bottom: 45px; }
-.poem + .poem { border-top: 1px solid var(--line); padding-top: 60px; }
-.poem-heading { margin-bottom: 38px; }
-.poem-star { display: block; color: var(--sage); font: 2rem Georgia, serif; margin-bottom: 20px; }
-.poem-heading h2 { font-size: clamp(2.75rem, 4.5vw, 4rem); letter-spacing: -.03em; }
-.poem-body { max-width: 65ch; font-size: 1.625rem; line-height: 1.65; }
+.poetry-sky { position: fixed; inset: 0; z-index: -1; pointer-events: none; background-image: radial-gradient(circle at 13% 24%, #d9d1ad45 .6px, transparent 1px), radial-gradient(circle at 62% 73%, #d9d1ad28 .7px, transparent 1px); background-size: 337px 391px, 441px 483px; }
+.poetry-main { padding-block: 64px 44px; }
+h1 { font-size: clamp(3rem, 6vw, 4.5rem); font-weight: 400; line-height: 1; letter-spacing: -.03em; margin: 0 0 48px; color: var(--gold); }
+.poem h2 { font-size: clamp(2rem, 4vw, 2.75rem); font-weight: 400; line-height: 1.15; letter-spacing: -.02em; margin: 0 0 30px; color: var(--paper); }
+.poem-body { font-size: 1.625rem; line-height: 1.7; }
 .poem-body p { margin: 0 0 1.4em; }
-.poem-end { font: 2rem Georgia, serif; color: var(--gold); text-align: center; margin: 40px 0 10px; }
-.album-invitation { display: flex; align-items: center; justify-content: space-between; gap: 35px; padding: 55px 0; border-block: 1px solid var(--line); }
-.album-invitation .eyebrow { margin-bottom: 16px; }
-.album-invitation h2 { font-size: 2.5rem; line-height: 1.15; }
-.album-invitation p:last-child { color: var(--muted); font-size: 1.25rem; margin-bottom: 0; }
-.album-link { display: inline-flex; align-items: center; justify-content: center; min-height: 48px; padding: 12px 20px; font: .875rem var(--mono); color: var(--gold); border: 1px solid #e8d8a970; text-decoration: none; white-space: nowrap; }
-.album-link:hover { background: #e8d8a90c; border-color: var(--gold); }
-footer { display: flex; justify-content: space-between; align-items: center; gap: 20px; padding-block: 28px; color: var(--muted); font: .875rem/1.6 var(--mono); }
+.poem-body p:last-child { margin-bottom: 0; }
+.poem + .poem { margin-top: 64px; padding-top: 64px; border-top: 1px solid var(--line); }
+footer { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px 20px; padding-block: 25px; border-top: 1px solid var(--line); color: var(--muted); font: .875rem/1.6 var(--mono); }
 footer p { margin: 0; }
 footer a { display: flex; align-items: center; min-height: 44px; text-decoration: none; }
-@media (max-width: 800px) {
-  .wrap { width: calc(100% - 40px); }
-  .site-header { flex-wrap: wrap; gap: 0; padding-top: 18px; padding-bottom: 8px; }
-  .brand { min-height: 44px; }
-  .site-header nav { width: 100%; gap: 24px; }
-  .poetry-intro { grid-template-columns: 1fr 110px; gap: 15px; padding: 55px 0; }
-  .poetry-intro .eyebrow { font-size: .875rem; letter-spacing: .06em; }
-  h1 { font-size: clamp(2.8rem, 8vw, 4.5rem); }
-  .poetry-moon { width: 90px; }
-  .poetry-moon::after { right: -8px; font-size: 1rem; }
-  .intro-note { font-size: 1.25rem; }
-  .poetry-layout { grid-template-columns: 1fr; gap: 42px; padding-top: 30px; }
-  .poetry-index { position: static; }
-  .index-note { display: none; }
-  .poem-body { font-size: 1.4375rem; line-height: 1.65; }
-  .poem-heading h2 { font-size: 3rem; }
-  .album-invitation { flex-direction: column; align-items: flex-start; gap: 26px; padding: 38px 0; }
-  .album-invitation h2 { font-size: 2.25rem; }
-  footer { flex-wrap: wrap; gap: 4px 20px; }
-}
-@media (max-width: 380px) {
-  .poetry-intro { grid-template-columns: 1fr; }
-  .poetry-moon { display: none; }
-  h1 { font-size: 3.5rem; }
-  .site-header nav { gap: 20px; }
+@media (max-width: 740px) {
+  .poetry-main { padding-block: 40px; }
+  h1 { margin-bottom: 32px; }
+  .poem-body { font-size: 1.4375rem; }
 }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }

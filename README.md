@@ -66,11 +66,9 @@ Depois dos jogos, fica apenas “Só volto se você não desviar dos beijinhos�
 
 ## Poemas
 
-`poemas.html` reúne os textos em uma página de leitura com o mesmo céu escuro da cartinha, tipografia local, índice e links para a página principal e o álbum de fotos. O texto de cada poema fica em um `article.poem`, com seus parágrafos preservados.
+`poemas.html` apresenta cada poema com seu próprio título, sem apresentações adicionais. O título fica em um `h2`, seguido pelo texto em um `article.poem`, com seus parágrafos preservados. Para adicionar mais poemas, acrescente outro `article.poem` dentro de `.poems`, com título e identificadores próprios. A aparência fica em `poemas.css`.
 
-Para adicionar mais poemas, acrescente outro `article.poem` dentro de `.poems`, com `id` e título próprios, e inclua o link correspondente no índice `.poetry-index`. A aparência fica em `poemas.css`. A publicação inclui esses arquivos automaticamente; não é preciso instalar dependências.
-
-A navegação da página principal também dá acesso aos poemas e ao álbum. Seus ajustes ficam em `site-nav.css`.
+As três páginas publicadas usam o mesmo fundo e a navegação superior “início”, “nosso álbum” e “poemas”, definidos em `site-nav.css`. O controle de música do álbum fica abaixo da navegação. A publicação inclui os arquivos automaticamente, sem dependências.
 
 ## GitHub Pages
 

@@ -1,24 +1,67 @@
+:root {
+  color-scheme: dark;
+  --site-background: #111820;
+  --night: #111820;
+  --nav-text: #b9c1c1;
+  --nav-accent: #e8d8a9;
+}
+html, body { background: var(--site-background); }
+body { overflow-x: clip; }
+.site-header {
+  position: relative;
+  z-index: 10;
+  width: min(1100px, calc(100% - 40px));
+  min-height: 90px;
+  margin-inline: auto;
+  padding-block: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 32px;
+  border-bottom: 1px solid #e8d8a92b;
+}
+.site-header .brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  color: #e9e5d9;
+  font: .875rem/1.4 'Courier New', monospace;
+  letter-spacing: 0;
+  text-decoration: none;
+}
+.site-header .brand > span {
+  color: var(--nav-accent);
+  font: 2rem/1 Georgia, serif;
+}
 .site-header .site-navigation {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 8px 24px;
+  gap: 4px 28px;
 }
 .site-header .site-navigation a {
   display: flex;
   align-items: center;
   min-height: 44px;
-  color: var(--muted);
-  font: .875rem var(--mono);
+  color: var(--nav-text);
+  font: .875rem/1.4 'Courier New', monospace;
   text-decoration: none;
+  text-underline-offset: .4em;
 }
-.site-header .site-navigation a:hover { color: var(--gold); }
-.site-header .site-navigation a:focus-visible {
-  outline: 2px solid var(--gold);
-  outline-offset: 4px;
+.site-header .site-navigation a:hover,
+.site-header .site-navigation a[aria-current="page"] { color: var(--nav-accent); }
+.site-header .site-navigation a[aria-current="page"] { text-decoration: underline; }
+.site-header a:focus-visible { outline: 2px solid var(--nav-accent); outline-offset: 5px; }
+.album-tools {
+  display: flex;
+  justify-content: flex-end;
+  width: min(1100px, 100%);
+  margin: -10px auto 16px;
 }
+.album-main { overflow-x: clip; }
 @media (max-width: 740px) {
-  .site-header { flex-wrap: wrap; padding-block: 12px 6px; }
-  .site-header .brand { min-height: 44px; }
-  .site-header .site-navigation { width: 100%; gap: 4px 20px; }
+  .site-header { flex-wrap: wrap; gap: 0; padding-block: 12px 8px; }
+  .site-header .site-navigation { width: 100%; gap: 4px 24px; }
+  .album-tools { margin-block: -10px 10px; }
 }
