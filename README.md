@@ -64,6 +64,14 @@ Os sprites cartunescos da nave e dos dois astronautas ficam em `assets/moonlande
 
 Depois dos jogos, fica apenas “Só volto se você não desviar dos beijinhos” e um botão “Não volto” que foge do mouse e do toque dentro do próprio quadrinho. Pelo teclado, o botão pode ser ativado normalmente. A preferência de movimento reduzido desliga a transição. A brincadeira não envia ou salva nada.
 
+## Poemas
+
+`poemas.html` reúne os textos em uma página de leitura com o mesmo céu escuro da cartinha, tipografia local, índice e links para a página principal e o álbum de fotos. O texto de cada poema fica em um `article.poem`, com seus parágrafos preservados.
+
+Para adicionar mais poemas, acrescente outro `article.poem` dentro de `.poems`, com `id` e título próprios, e inclua o link correspondente no índice `.poetry-index`. A aparência fica em `poemas.css`. A publicação inclui esses arquivos automaticamente; não é preciso instalar dependências.
+
+A navegação da página principal também dá acesso aos poemas e ao álbum. Seus ajustes ficam em `site-nav.css`.
+
 ## GitHub Pages
 
 Para atualizar a publicação a partir deste computador, abra o terminal na pasta `New project` (que contém as duas pastas do site) e execute:
