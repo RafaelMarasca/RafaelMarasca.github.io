@@ -9,7 +9,7 @@
   <title>Lista de presentes · Uma lua para Lulu</title>
   <link rel="stylesheet" href="./site-nav.css?v=2">
   <link rel="stylesheet" href="./presentes.css">
-  <script src="./presentes.js" defer></script>
+  <script src="./presentes.js?v=2" defer></script>
 </head>
 <body>
   <a href="#conteudo" class="skip">Pular para a lista</a>
@@ -22,17 +22,15 @@
     <noscript>Ative o JavaScript para abrir a lista e salvar presentes.</noscript>
     <section id="gate" class="gate">
       <div><span class="lock-icon" aria-hidden="true">♢</span><h2>Abrir nossa lista</h2>
-      <p id="gateHint">Use o convite privado e a frase compartilhada.</p></div>
+      <p id="gateHint">Digite a frase compartilhada para ver e editar os presentes.</p></div>
       <form id="unlock">
-        <label id="inviteLabel">Link do convite<input id="inviteInput" type="text" autocomplete="off" spellcheck="false" placeholder="Cole o convite aqui"></label>
         <label id="pinLabel">Frase de acesso<input id="pin" type="password" maxlength="160" autocomplete="current-password" autocapitalize="none" spellcheck="false" required placeholder="Digite as cinco palavras"></label>
         <p class="error" id="gateError" role="alert"></p>
         <button id="unlockButton" class="primary">Abrir lista</button>
-        <a id="privateEntry" class="primary store-link" href="https://presentes-lulu-e-rafo.rafaelmarascamartins.chatgpt.site/lista" hidden>Entrar com minha conta</a>
       </form>
     </section>
     <section id="board" hidden>
-      <div class="board-head"><div><h2>Nossos presentes</h2><p id="counter" aria-live="polite"></p></div><div class="actions"><button id="share">Copiar convite</button><button class="primary" id="add">＋ Adicionar presente</button></div></div>
+      <div class="board-head"><div><h2>Nossos presentes</h2><p id="counter" aria-live="polite"></p></div><div class="actions"><button id="share">Copiar link</button><button class="primary" id="add">＋ Adicionar presente</button></div></div>
       <div class="filters"><label>Para quem<select id="recipientFilter"><option value="">Todos</option><option>Lulu</option><option>Rafo</option><option>Nós dois</option></select></label>
       <label>Mostrar<select id="statusFilter"><option value="all">Todos os presentes</option><option value="open">Por comprar</option><option value="bought">Comprados</option></select></label>
       <label>Ordenar por<select id="sort"><option value="priority">Prioridade</option><option value="recent">Mais recentes</option><option value="name">Nome</option></select></label></div>
@@ -57,7 +55,7 @@
     </form>
   </dialog>
   <dialog id="confirmDelete" aria-labelledby="deleteTitle"><h2 id="deleteTitle">Excluir presente?</h2><p id="deleteText"></p><div class="actions"><button id="cancelDelete">Cancelar</button><button id="yesDelete" class="danger">Excluir presente</button></div></dialog>
-  <dialog id="shareDialog" aria-labelledby="shareTitle"><h2 id="shareTitle">Convite da lista</h2><p>Copie o link e envie a frase separadamente.</p><label>Convite privado<input id="shareValue" readonly></label><button class="close" type="button">Fechar</button></dialog>
+  <dialog id="shareDialog" aria-labelledby="shareTitle"><h2 id="shareTitle">Link da lista</h2><p>Copie o link e envie a frase separadamente.</p><label>Endereço da lista<input id="shareValue" readonly></label><button class="close" type="button">Fechar</button></dialog>
   <div id="notice" role="status"></div>
 </body>
 </html>
