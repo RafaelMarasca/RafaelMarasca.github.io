@@ -43,8 +43,7 @@ button:disabled{opacity:.6;cursor:wait}:focus-visible{outline:3px solid #b9dbdf;
 .filter-count{min-width:2ch;padding:1px 5px;border:1px solid #52616a;border-radius:4px;color:var(--gold);font:600 .81rem/1.2 system-ui,sans-serif;font-variant-numeric:tabular-nums}
 .recipient-options input:checked+span .filter-count{color:inherit;border-color:#24232355}
 #boughtCount{background:#bce5c3;color:#173325;border-color:#85aa8c}
-.card.is-bought{position:relative;border-color:#85aa8c}
-.purchase-badge{position:absolute;top:12px;left:0;padding:4px 12px 5px 10px;border-left:3px solid #85aa8c;border-radius:0 2px 2px 0;background:#c8edd0;color:#193722;font:italic 600 1.18rem/1.15 Cormorant,Georgia,serif}
+.card.is-bought{border-color:#85aa8c}
 .purchase{display:flex;align-items:center;gap:10px;min-height:46px;padding:8px 12px;border:1px solid #596971;border-radius:9px;cursor:pointer}
 .purchase:hover{background:#2a3740}
 .purchase input{appearance:none;display:grid;place-items:center;flex:none;width:21px;height:21px;margin:0;padding:0;border:1.5px solid #a6cfad;border-radius:4px;cursor:pointer}

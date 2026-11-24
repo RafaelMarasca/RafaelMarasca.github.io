@@ -209,7 +209,6 @@ function render() {
       void setPurchased(g, check.checked);
     };
     purchase.append(check,caption);
-    if (g.bought) card.append(node('span','Comprado','purchase-badge'));
     body.append(purchase);
     body.append(actions); card.append(image,body); cards.append(card);
     card.loadDetails = async () => {
