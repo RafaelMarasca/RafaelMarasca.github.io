@@ -20,6 +20,8 @@ form{display:grid;gap:15px}.gate form{width:min(400px,48%)}label{display:grid;ga
 .phrase-fields legend{padding:0;margin-bottom:12px;font-weight:600}
 .phrase-words{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,5.8rem),1fr));gap:12px}
 .phrase-words label{min-width:0}
+.remember-device{display:flex;align-items:center;gap:10px;min-height:44px;cursor:pointer}
+.remember-device input{flex:none;width:20px;height:20px;margin:0;accent-color:var(--gold)}
 input,textarea,select{width:100%;min-width:0;background:#101a22;color:var(--paper);border:1px solid #50606a;border-radius:8px;font:1rem/1.45 system-ui,sans-serif;padding:11px 13px}
 input::placeholder,textarea::placeholder{color:#98a5ab}textarea{resize:vertical}select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,#c9cfcb 50%),linear-gradient(135deg,#c9cfcb 50%,transparent 50%);background-position:calc(100% - 16px) 52%,calc(100% - 11px) 52%;background-size:5px 5px;background-repeat:no-repeat;padding-right:34px}
 button,.store-link{min-height:44px;border:1px solid #52616a;border-radius:9px;padding:9px 16px;background:transparent;color:var(--paper);font:600 .9rem/1.4 system-ui,sans-serif;cursor:pointer}
@@ -38,11 +40,14 @@ button:disabled{opacity:.6;cursor:wait}:focus-visible{outline:3px solid #b9dbdf;
 #statusFilter{flex:2 1 20rem;margin:0}
 #statusFilter .recipient-options{grid-template-columns:repeat(3,minmax(0,1fr));max-width:none}
 #statusFilter legend{font-size:.9rem;margin-bottom:6px}
-.purchase{display:flex;align-items:center;gap:10px;min-height:46px;padding:8px 12px;border:1px solid #596971;border-radius:9px;cursor:pointer}
-.purchase:hover{background:#2a3740}
-.purchase input{width:20px;height:20px;margin:0;accent-color:var(--gold);flex:none;cursor:pointer}
-.purchase input:checked+span{color:#c1dabb}
-.purchase:focus-within{outline:3px solid #b9dbdf;outline-offset:2px}
+#statusFilter input[value="bought"]+span{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:4px}
+#boughtCount{border-radius:1em;padding:0 .45em;background:#bce5c3;color:#173325;font-size:.85em}
+.card.is-bought{position:relative;border-color:#85aa8c}
+.purchase-badge{position:absolute;top:12px;left:12px;padding:4px 11px;border-radius:20px;background:#c8edd0;color:#193722;font-weight:700;font-size:.9rem}
+.purchase{min-height:46px;color:#193722;background:#c8edd0;border-color:#a6cfad}
+.purchase:hover{background:#ddf3e1}
+.is-bought .purchase{color:#c8edd0;background:transparent;border-color:#587560}
+.is-bought .purchase:hover{background:#24392f}
 .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(255px,100%),1fr));gap:16px;margin-top:20px}
 .card{display:flex;flex-direction:column;overflow:hidden;border:1px solid var(--line);border-radius:14px;background:var(--panel);min-width:0}.card-image{height:170px;display:grid;place-items:center;background:radial-gradient(ellipse at 40% 20%,#34444e,#1e2c35);color:var(--gold);font:italic 3.5rem Cormorant,Georgia,serif}.card-image img{width:100%;height:100%;object-fit:contain;min-height:0}
 .card-body{padding:18px;display:flex;flex:1;flex-direction:column;gap:9px;overflow-wrap:anywhere}.card-body h3{font-size:2rem}.card-body .actions{margin-top:auto;padding-top:9px}.store-link{display:inline-flex;align-items:center;text-decoration:none}

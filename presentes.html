@@ -8,8 +8,8 @@
   <meta name="robots" content="noindex,nofollow">
   <title>Lista de presentes · Uma lua para Lulu</title>
   <link rel="stylesheet" href="./site-nav.css?v=2">
-  <link rel="stylesheet" href="./presentes.css?v=5">
-  <script src="./presentes.js?v=5" defer></script>
+  <link rel="stylesheet" href="./presentes.css?v=6">
+  <script src="./presentes.js?v=6" defer></script>
 </head>
 <body>
   <a href="#conteudo" class="skip">Pular para a lista</a>
@@ -34,6 +34,7 @@
             <label>5ª palavra<input type="password" required maxlength="160" autocomplete="off" autocapitalize="none" spellcheck="false" enterkeyhint="go"></label>
           </div>
         </fieldset>
+        <label class="remember-device"><input id="rememberDevice" type="checkbox">Lembrar neste aparelho por 30 dias</label>
         <p class="error" id="gateError" role="alert"></p>
         <button id="unlockButton" class="primary">Abrir lista</button>
       </form>
@@ -54,7 +55,7 @@
         <legend>Compra</legend>
         <div class="recipient-options">
           <label><input type="radio" name="purchase" value="open"><span>Por comprar</span></label>
-          <label><input type="radio" name="purchase" value="bought"><span>Comprados</span></label>
+          <label><input type="radio" name="purchase" value="bought"><span>Comprados <b id="boughtCount">0</b></span></label>
           <label><input type="radio" name="purchase" value="all" checked><span>Todos</span></label>
         </div>
       </fieldset>

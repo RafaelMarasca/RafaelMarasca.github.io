@@ -13,7 +13,7 @@ function stored(storage, key, value) {
 }
 if (location.hash.startsWith('#convite=')) history.replaceState(null, '', location.pathname + location.search);
 stored('localStorage', 'lulu.gifts.invite', '');
-let session = stored('sessionStorage', sessionKey);
+let session = stored('localStorage', sessionKey) || stored('sessionStorage', sessionKey);
 let gifts = [], details = new Map(), editing, draftPhoto = '', photoWork = 0, busy = false;
 let requestNumber = 0, viewRevision = 0, notifyTimer;
 const observer = new IntersectionObserver(entries => {
@@ -29,6 +29,7 @@ function notice(message) {
   notifyTimer = setTimeout(() => { el('notice').textContent = ''; }, 4200);
 }
 function showGate(message = '') {
+  if (session && stored('localStorage', sessionKey) === session) stored('localStorage', sessionKey, '');
   session = ''; stored('sessionStorage', sessionKey, '');
   gifts = []; details.clear(); requestNumber++; viewRevision++; observer.disconnect();
   document.querySelectorAll('dialog[open]').forEach(d => d.close());
@@ -36,9 +37,13 @@ function showGate(message = '') {
   el('cards').replaceChildren(); el('board').hidden = true; el('gate').hidden = false;
   el('gateError').textContent = message;
 }
+window.addEventListener('storage', event => {
+  if (session && event.key === sessionKey && event.oldValue === session && event.newValue !== session) showGate();
+});
 async function api(path, method = 'GET', body, version) {
   const headers = {};
-  if (session) headers['X-Gift-Session'] = session;
+  const requestSession = session;
+  if (requestSession) headers['X-Gift-Session'] = requestSession;
   if (version) headers['X-Gift-Version'] = version;
   if (body !== undefined) headers['Content-Type'] = 'application/json';
   let response, data;
@@ -47,7 +52,7 @@ async function api(path, method = 'GET', body, version) {
     data = await response.json();
   } catch { throw new Error('Não foi possível conectar à lista. Confira sua conexão e tente de novo.'); }
   if (!response.ok) {
-    if (response.status === 401 && session) showGate('Sua sessão terminou. Digite a frase novamente.');
+    if (response.status === 401 && session && session === requestSession) showGate('Sua sessão terminou. Digite a frase novamente.');
     throw new Error(data.error || 'Não foi possível concluir.');
   }
   return data;
@@ -96,8 +101,13 @@ el('unlock').addEventListener('submit', async event => {
   button.disabled = true; el('gateError').textContent = '';
   try {
     const code = wordFields.map(field => field.value.trim()).join(' ');
-    const data = await api('/unlock','POST',{code});
-    session = data.session; stored('sessionStorage',sessionKey,session);
+    const remember = el('rememberDevice').checked;
+    const data = await api('/unlock','POST',{code, remember});
+    session = data.session;
+    if (remember) stored('localStorage', sessionKey, session);
+    const remembered = remember && stored('localStorage', sessionKey) === session;
+    stored('sessionStorage', sessionKey, remembered ? '' : session);
+    if (remember && !remembered) notice('O navegador não permitiu lembrar este aparelho.');
     el('unlock').reset();
     await enter();
   } catch (e) {
@@ -108,7 +118,7 @@ el('share').onclick = async () => {
   try { await navigator.clipboard.writeText(listUrl); notice('Link copiado.'); }
   catch { el('shareValue').value = listUrl; el('shareDialog').showModal(); el('shareValue').select(); }
 };
-el('lock').onclick = () => { showGate(); wordFields[0].focus(); };
+el('lock').onclick = () => { stored('localStorage', sessionKey, ''); showGate(); wordFields[0].focus(); };
 document.querySelectorAll('.close').forEach(btn => btn.onclick = () => btn.closest('dialog').close());
 function node(tag, text, cls) {
   const element = document.createElement(tag);
@@ -161,7 +171,9 @@ function render() {
   observer.disconnect();
   const recipient = selectedFilter('recipientFilter'), status = selectedFilter('statusFilter'), order = el('sort').value;
   const ranks = {Alta:0,'Média':1,Baixa:2};
-  const shown = gifts.filter(g => (!recipient || recipient === g.forWhom) && (status === 'all' || (status === 'bought') === g.bought));
+  const byRecipient = gifts.filter(g => !recipient || recipient === g.forWhom);
+  el('boughtCount').textContent = byRecipient.filter(g => g.bought).length;
+  const shown = byRecipient.filter(g => status === 'all' || (status === 'bought') === g.bought);
   shown.sort((a,b) => {
     if (order === 'name') return a.title.localeCompare(b.title,'pt-BR');
     if (order === 'priority') return Number(a.bought)-Number(b.bought) || ranks[a.priority]-ranks[b.priority] || b.updated-a.updated;
@@ -169,25 +181,23 @@ function render() {
   });
   const cards = el('cards'); cards.replaceChildren();
   for (const g of shown) {
-    const card = node('article','','card'), image = node('div','☾','card-image'), body = node('div','','card-body');
+    const card = node('article','',g.bought ? 'card is-bought' : 'card'), image = node('div','☾','card-image'), body = node('div','','card-body');
     image.setAttribute('aria-hidden','true');
     const meta = node('div','','meta'); meta.append(node('span','Para ' + g.forWhom),node('span','Prioridade ' + g.priority.toLowerCase()));
     const notes = node('p','','card-note'), actions = node('div','','actions'), edit = node('button','Editar');
     edit.onclick = () => startEdit(g); actions.append(edit);
     body.append(meta,node('h3',g.title),notes);
-    const purchase = node('label','','purchase');
-    const checkbox = node('input');
-    checkbox.type = 'checkbox';
-    checkbox.checked = g.bought;
-    checkbox.disabled = pendingPurchases.has(g.id);
-    checkbox.setAttribute('aria-label', (g.bought ? 'Comprado: ' : 'Marcar como comprado: ') + g.title);
-    const caption = node('span', checkbox.disabled ? 'Salvando…' : g.bought ? 'Comprado' : 'Marcar como comprado');
-    checkbox.onchange = () => {
-      checkbox.disabled = true;
-      caption.textContent = 'Salvando…';
-      void setPurchased(g, checkbox.checked);
+    const action = g.bought ? 'Voltar para “Por comprar”' : 'Marcar como comprado';
+    const purchase = node('button', pendingPurchases.has(g.id) ? 'Salvando…' : action, 'purchase');
+    purchase.type = 'button';
+    purchase.disabled = pendingPurchases.has(g.id);
+    purchase.setAttribute('aria-label', action + ': ' + g.title);
+    purchase.onclick = () => {
+      purchase.disabled = true;
+      purchase.textContent = 'Salvando…';
+      void setPurchased(g, !g.bought);
     };
-    purchase.append(checkbox,caption);
+    if (g.bought) card.append(node('span','✓ Comprado','purchase-badge'));
     body.append(purchase);
     body.append(actions); card.append(image,body); cards.append(card);
     card.loadDetails = async () => {
