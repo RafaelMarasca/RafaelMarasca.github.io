@@ -25,9 +25,10 @@
       <p id="gateHint">Use o convite privado e o código compartilhado.</p></div>
       <form id="unlock">
         <label id="inviteLabel">Link do convite<input id="inviteInput" type="text" autocomplete="off" spellcheck="false" placeholder="Cole o convite aqui"></label>
-        <label>Código de acesso<input id="pin" type="password" inputmode="numeric" pattern="[0-9]{8}" maxlength="8" minlength="8" autocomplete="off" required placeholder="8 números"></label>
+        <label id="pinLabel">Código de acesso<input id="pin" type="password" inputmode="numeric" pattern="[0-9]{8}" maxlength="8" minlength="8" autocomplete="off" required placeholder="8 números"></label>
         <p class="error" id="gateError" role="alert"></p>
-        <button class="primary">Abrir lista</button>
+        <button id="unlockButton" class="primary">Abrir lista</button>
+        <a id="privateEntry" class="primary store-link" href="https://presentes-lulu-e-rafo.rafaelmarascamartins.chatgpt.site/lista" hidden>Entrar com minha conta</a>
       </form>
     </section>
     <section id="board" hidden>

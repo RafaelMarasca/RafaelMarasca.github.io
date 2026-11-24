@@ -1,5 +1,6 @@
 'use strict';
 const apiOrigin = 'https://presentes-lulu-e-rafo.rafaelmarascamartins.chatgpt.site';
+const accountEntry = location.hostname === 'rafaelmarasca.github.io';
 const el = id => document.getElementById(id);
 const inviteFormat = /^[A-Za-z0-9_-]{43}$/;
 const inviteKey = 'lulu.gifts.invite';
@@ -24,6 +25,12 @@ const incoming = inviteFrom(location.href);
 let invite = incoming || stored('localStorage', inviteKey);
 let session = stored('sessionStorage', sessionKey);
 if (incoming) history.replaceState(null, '', location.pathname + location.search);
+const privateEntry = el('privateEntry');
+privateEntry.hidden = !accountEntry;
+privateEntry.onclick = () => {
+  const key = invite || inviteFrom(el('inviteInput').value.trim());
+  privateEntry.href = apiOrigin + '/lista' + (key ? '#convite=' + key : '');
+};
 let gifts = [], details = new Map(), editing, draftPhoto = '', photoWork = 0, busy = false;
 let requestNumber = 0, viewRevision = 0, notifyTimer;
 const observer = new IntersectionObserver(entries => {
@@ -46,6 +53,10 @@ function showGate(message = '') {
   el('cards').replaceChildren(); el('board').hidden = true; el('gate').hidden = false;
   el('inviteLabel').hidden = !!invite; el('gateError').textContent = message;
   el('gateHint').textContent = invite ? 'Digite o código compartilhado para ver e editar os presentes.' : 'Cole o convite privado e digite o código compartilhado.';
+  if (accountEntry) {
+    el('gateHint').textContent = 'Entre com a conta autorizada. Depois, confirme o código para abrir a lista.';
+    el('pinLabel').hidden = true; el('pin').disabled = true; el('unlockButton').hidden = true;
+  }
 }
 async function api(path, method = 'GET', body, version) {
   const headers = {};
@@ -54,7 +65,7 @@ async function api(path, method = 'GET', body, version) {
   if (body !== undefined) headers['Content-Type'] = 'application/json';
   let response, data;
   try {
-    response = await fetch(apiOrigin + path, {method, headers, body: body === undefined ? undefined : JSON.stringify(body), cache:'no-store', credentials:'omit', referrerPolicy:'no-referrer'});
+    response = await fetch(apiOrigin + path, {method, headers, body: body === undefined ? undefined : JSON.stringify(body), cache:'no-store', credentials:'same-origin', referrerPolicy:'no-referrer'});
     data = await response.json();
   } catch { throw new Error('Não foi possível conectar à lista. Confira sua conexão e tente de novo.'); }
   if (!response.ok) {
@@ -65,6 +76,7 @@ async function api(path, method = 'GET', body, version) {
 }
 el('unlock').addEventListener('submit', async event => {
   event.preventDefault();
+  if (accountEntry) { privateEntry.click(); return; }
   const candidate = invite || inviteFrom(el('inviteInput').value.trim());
   if (!candidate) { el('gateError').textContent = 'Cole o link privado completo que você recebeu.'; return; }
   const button = event.submitter || el('unlock').querySelector('button');
@@ -80,7 +92,7 @@ el('unlock').addEventListener('submit', async event => {
     if (/Convite inválido/.test(e.message)) { invite = ''; stored('localStorage',inviteKey,''); el('inviteLabel').hidden = false; }
   } finally { button.disabled = false; }
 });
-function inviteLink() { const url = new URL(location.pathname, location.origin); url.hash = 'convite=' + invite; return url.href; }
+function inviteLink() { const url = new URL('https://rafaelmarasca.github.io/presentes.html'); url.hash = 'convite=' + invite; return url.href; }
 el('share').onclick = async () => {
   try { await navigator.clipboard.writeText(inviteLink()); notice('Convite copiado. Envie o código separadamente.'); }
   catch { el('shareValue').value = inviteLink(); el('shareDialog').showModal(); el('shareValue').select(); }
@@ -237,4 +249,4 @@ el('yesDelete').onclick=async()=>{
   try{await api('/gifts/'+editing.id,'DELETE',undefined,editing.version);el('editor').close();notice('Presente excluído.');await refresh(true);}
   catch(e){el('editError').textContent=e.message;}finally{saving(false);}
 };
-if (invite && session) enter(); else showGate();
+if (!accountEntry && invite && session) enter(); else showGate();
