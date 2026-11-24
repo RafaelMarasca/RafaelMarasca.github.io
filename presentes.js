@@ -52,14 +52,53 @@ async function api(path, method = 'GET', body, version) {
   }
   return data;
 }
+const wordFields = Array.from(el('unlock').querySelectorAll('.phrase-words input'));
+function distributeWords(value, index) {
+  const words = value.trim().split(/\s+/u).filter(Boolean);
+  const start = words.length === wordFields.length ? 0 : index;
+  if (start + words.length > wordFields.length || words.join(' ').length > 160) {
+    el('gateError').textContent = 'A frase deve ter cinco palavras, uma por campo.';
+    return;
+  }
+  words.forEach((word, offset) => { wordFields[start + offset].value = word; });
+  if (words.length) wordFields[Math.min(start + words.length, wordFields.length - 1)].focus();
+}
+wordFields.forEach((field, index) => {
+  field.addEventListener('paste', event => {
+    const value = event.clipboardData?.getData('text/plain') || '';
+    if (!/\s/u.test(value)) return;
+    event.preventDefault();
+    el('gateError').textContent = '';
+    distributeWords(value, index);
+  });
+  field.addEventListener('input', event => {
+    el('gateError').textContent = '';
+    if (!event.isComposing && /\s/u.test(field.value)) {
+      const value = field.value;
+      field.value = '';
+      distributeWords(value, index);
+    }
+  });
+  field.addEventListener('keydown', event => {
+    if (event.isComposing) return;
+    if (event.key === ' ' || (event.key === 'Enter' && index < wordFields.length - 1)) {
+      event.preventDefault();
+      if (field.value && index < wordFields.length - 1) wordFields[index + 1].focus();
+    } else if (event.key === 'Backspace' && !field.value && index > 0) {
+      event.preventDefault();
+      wordFields[index - 1].focus();
+    }
+  });
+});
 el('unlock').addEventListener('submit', async event => {
   event.preventDefault();
   const button = event.submitter || el('unlock').querySelector('button');
   button.disabled = true; el('gateError').textContent = '';
   try {
-    const data = await api('/unlock','POST',{code:el('pin').value});
+    const code = wordFields.map(field => field.value.trim()).join(' ');
+    const data = await api('/unlock','POST',{code});
     session = data.session; stored('sessionStorage',sessionKey,session);
-    el('pin').value = '';
+    el('unlock').reset();
     await enter();
   } catch (e) {
     el('gateError').textContent = e.message;
@@ -69,7 +108,7 @@ el('share').onclick = async () => {
   try { await navigator.clipboard.writeText(listUrl); notice('Link copiado.'); }
   catch { el('shareValue').value = listUrl; el('shareDialog').showModal(); el('shareValue').select(); }
 };
-el('lock').onclick = () => { showGate(); el('pin').focus(); };
+el('lock').onclick = () => { showGate(); wordFields[0].focus(); };
 document.querySelectorAll('.close').forEach(btn => btn.onclick = () => btn.closest('dialog').close());
 function node(tag, text, cls) {
   const element = document.createElement(tag);

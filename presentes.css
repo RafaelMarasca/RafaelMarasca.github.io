@@ -15,6 +15,11 @@ h2{font-size:clamp(2.1rem,4vw,3rem)}h3{font-size:2rem}p,small{color:var(--muted)
 .gate{margin-top:26px;align-items:flex-start;gap:32px;justify-content:space-between;padding:clamp(24px,4vw,44px);border:1px solid var(--line);border-radius:16px;background:var(--panel)}
 .gate p,.board-head p{margin-top:.5rem}.lock-icon{display:block;font:2.7rem/1 Georgia;color:var(--gold);margin-bottom:8px}
 form{display:grid;gap:15px}.gate form{width:min(400px,48%)}label{display:grid;gap:6px;font-size:.9rem;font-weight:600;color:#dce2de}
+.gate form{width:min(570px,60%);min-width:0}
+.phrase-fields{min-width:0;margin:0;padding:0;border:0}
+.phrase-fields legend{padding:0;margin-bottom:12px;font-weight:600}
+.phrase-words{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,5.8rem),1fr));gap:12px}
+.phrase-words label{min-width:0}
 input,textarea,select{width:100%;min-width:0;background:#101a22;color:var(--paper);border:1px solid #50606a;border-radius:8px;font:1rem/1.45 system-ui,sans-serif;padding:11px 13px}
 input::placeholder,textarea::placeholder{color:#98a5ab}textarea{resize:vertical}select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,#c9cfcb 50%),linear-gradient(135deg,#c9cfcb 50%,transparent 50%);background-position:calc(100% - 16px) 52%,calc(100% - 11px) 52%;background-size:5px 5px;background-repeat:no-repeat;padding-right:34px}
 button,.store-link{min-height:44px;border:1px solid #52616a;border-radius:9px;padding:9px 16px;background:transparent;color:var(--paper);font:600 .9rem/1.4 system-ui,sans-serif;cursor:pointer}

@@ -8,8 +8,8 @@
   <meta name="robots" content="noindex,nofollow">
   <title>Lista de presentes · Uma lua para Lulu</title>
   <link rel="stylesheet" href="./site-nav.css?v=2">
-  <link rel="stylesheet" href="./presentes.css">
-  <script src="./presentes.js?v=2" defer></script>
+  <link rel="stylesheet" href="./presentes.css?v=3">
+  <script src="./presentes.js?v=3" defer></script>
 </head>
 <body>
   <a href="#conteudo" class="skip">Pular para a lista</a>
@@ -22,9 +22,18 @@
     <noscript>Ative o JavaScript para abrir a lista e salvar presentes.</noscript>
     <section id="gate" class="gate">
       <div><span class="lock-icon" aria-hidden="true">♢</span><h2>Abrir nossa lista</h2>
-      <p id="gateHint">Digite a frase compartilhada para ver e editar os presentes.</p></div>
+      <p id="gateHint">Digite uma palavra em cada campo ou cole a frase inteira.</p></div>
       <form id="unlock">
-        <label id="pinLabel">Frase de acesso<input id="pin" type="password" maxlength="160" autocomplete="current-password" autocapitalize="none" spellcheck="false" required placeholder="Digite as cinco palavras"></label>
+        <fieldset class="phrase-fields" aria-describedby="gateHint">
+          <legend>Frase de acesso</legend>
+          <div class="phrase-words">
+            <label>1ª palavra<input type="password" required maxlength="160" autocomplete="off" autocapitalize="none" spellcheck="false" enterkeyhint="next"></label>
+            <label>2ª palavra<input type="password" required maxlength="160" autocomplete="off" autocapitalize="none" spellcheck="false" enterkeyhint="next"></label>
+            <label>3ª palavra<input type="password" required maxlength="160" autocomplete="off" autocapitalize="none" spellcheck="false" enterkeyhint="next"></label>
+            <label>4ª palavra<input type="password" required maxlength="160" autocomplete="off" autocapitalize="none" spellcheck="false" enterkeyhint="next"></label>
+            <label>5ª palavra<input type="password" required maxlength="160" autocomplete="off" autocapitalize="none" spellcheck="false" enterkeyhint="go"></label>
+          </div>
+        </fieldset>
         <p class="error" id="gateError" role="alert"></p>
         <button id="unlockButton" class="primary">Abrir lista</button>
       </form>
