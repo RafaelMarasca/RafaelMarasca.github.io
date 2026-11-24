@@ -124,13 +124,42 @@ function readGift(item) {
   promise.catch(() => { if (details.get(item.id)?.promise === promise) details.delete(item.id); });
   return promise;
 }
-function selectedRecipient() {
-  return el('recipientFilter').querySelector('input:checked').value;
+function selectedFilter(id) {
+  return el(id).querySelector('input:checked').value;
+}
+const pendingPurchases = new Set();
+async function setPurchased(item, bought) {
+  if (pendingPurchases.has(item.id)) return;
+  pendingPurchases.add(item.id);
+  const activeSession = session;
+  try {
+    const record = await readGift(item);
+    if (!session || session !== activeSession) return;
+    const updated = {...record, bought};
+    if (record.bought !== bought) {
+      const saved = await api('/gifts/' + item.id, 'PUT', updated, record.version);
+      updated.version = saved.version;
+      updated.updated = Date.now();
+    }
+    if (session !== activeSession) return;
+    requestNumber++;
+    details.set(item.id, {version: updated.version, promise: Promise.resolve(updated)});
+    gifts = gifts.map(g => g.id === item.id ? {...g, bought, updated: updated.updated, version: updated.version} : g);
+    notice(bought ? 'Presente marcado como comprado.' : 'Presente voltou para Por comprar.');
+  } catch (e) {
+    if (session === activeSession) notice(e.message);
+  } finally {
+    pendingPurchases.delete(item.id);
+    if (session && session === activeSession) {
+      render();
+      void refresh();
+    }
+  }
 }
 function render() {
   const revision = ++viewRevision;
   observer.disconnect();
-  const recipient = selectedRecipient(), status = el('statusFilter').value, order = el('sort').value;
+  const recipient = selectedFilter('recipientFilter'), status = selectedFilter('statusFilter'), order = el('sort').value;
   const ranks = {Alta:0,'Média':1,Baixa:2};
   const shown = gifts.filter(g => (!recipient || recipient === g.forWhom) && (status === 'all' || (status === 'bought') === g.bought));
   shown.sort((a,b) => {
@@ -146,7 +175,20 @@ function render() {
     const notes = node('p','','card-note'), actions = node('div','','actions'), edit = node('button','Editar');
     edit.onclick = () => startEdit(g); actions.append(edit);
     body.append(meta,node('h3',g.title),notes);
-    if (g.bought) body.append(node('span','✓ Comprado','done'));
+    const purchase = node('label','','purchase');
+    const checkbox = node('input');
+    checkbox.type = 'checkbox';
+    checkbox.checked = g.bought;
+    checkbox.disabled = pendingPurchases.has(g.id);
+    checkbox.setAttribute('aria-label', (g.bought ? 'Comprado: ' : 'Marcar como comprado: ') + g.title);
+    const caption = node('span', checkbox.disabled ? 'Salvando…' : g.bought ? 'Comprado' : 'Marcar como comprado');
+    checkbox.onchange = () => {
+      checkbox.disabled = true;
+      caption.textContent = 'Salvando…';
+      void setPurchased(g, checkbox.checked);
+    };
+    purchase.append(checkbox,caption);
+    body.append(purchase);
     body.append(actions); card.append(image,body); cards.append(card);
     card.loadDetails = async () => {
       try {
@@ -197,8 +239,8 @@ function openForm(item) {
   el('giftForm').reset(); photoWork++; busy = false;
   editing = item || {id:crypto.randomUUID(),version:'new'};
   el('giftTitle').value = item?.title || ''; el('giftLink').value = item?.link || '';
-  el('description').value = item?.description || ''; el('forWhom').value = item?.forWhom || selectedRecipient() || 'Lulu';
-  el('priority').value = item?.priority || 'Média'; el('bought').checked = !!item?.bought;
+  el('description').value = item?.description || ''; el('forWhom').value = item?.forWhom || selectedFilter('recipientFilter') || 'Lulu';
+  el('priority').value = item?.priority || 'Média';
   el('editorTitle').textContent = item ? 'Editar presente' : 'Novo presente';
   el('editError').textContent = ''; el('delete').hidden = !item; el('save').disabled = false;
   setPhoto(item?.photo || ''); el('editor').showModal(); el('giftTitle').focus();
@@ -251,7 +293,7 @@ el('giftForm').onsubmit = async event=>{
   event.preventDefault();if(busy||el('save').disabled)return;
   const title=el('giftTitle').value.trim(),link=el('giftLink').value.trim();
   if(!title || (link && !/^https?:\/\//i.test(link))) {el('editError').textContent='Informe um nome e, se houver link, use http ou https.';return;}
-  const gift={title,link,description:el('description').value.trim(),forWhom:el('forWhom').value,priority:el('priority').value,bought:el('bought').checked,photo:draftPhoto};
+  const gift={title,link,description:el('description').value.trim(),forWhom:el('forWhom').value,priority:el('priority').value,bought:editing.bought ?? false,photo:draftPhoto};
   saving(true);el('editError').textContent='';
   try {await api('/gifts/'+editing.id,'PUT',gift,editing.version);el('editor').close();notice('Presente salvo.');await refresh(true);}
   catch(e){el('editError').textContent=e.message;}
