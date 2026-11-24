@@ -22,10 +22,10 @@
     <noscript>Ative o JavaScript para abrir a lista e salvar presentes.</noscript>
     <section id="gate" class="gate">
       <div><span class="lock-icon" aria-hidden="true">♢</span><h2>Abrir nossa lista</h2>
-      <p id="gateHint">Use o convite privado e o código compartilhado.</p></div>
+      <p id="gateHint">Use o convite privado e a frase compartilhada.</p></div>
       <form id="unlock">
         <label id="inviteLabel">Link do convite<input id="inviteInput" type="text" autocomplete="off" spellcheck="false" placeholder="Cole o convite aqui"></label>
-        <label id="pinLabel">Código de acesso<input id="pin" type="password" inputmode="numeric" pattern="[0-9]{8}" maxlength="8" minlength="8" autocomplete="off" required placeholder="8 números"></label>
+        <label id="pinLabel">Frase de acesso<input id="pin" type="password" maxlength="160" autocomplete="current-password" autocapitalize="none" spellcheck="false" required placeholder="Digite as cinco palavras"></label>
         <p class="error" id="gateError" role="alert"></p>
         <button id="unlockButton" class="primary">Abrir lista</button>
         <a id="privateEntry" class="primary store-link" href="https://presentes-lulu-e-rafo.rafaelmarascamartins.chatgpt.site/lista" hidden>Entrar com minha conta</a>
@@ -57,7 +57,7 @@
     </form>
   </dialog>
   <dialog id="confirmDelete" aria-labelledby="deleteTitle"><h2 id="deleteTitle">Excluir presente?</h2><p id="deleteText"></p><div class="actions"><button id="cancelDelete">Cancelar</button><button id="yesDelete" class="danger">Excluir presente</button></div></dialog>
-  <dialog id="shareDialog" aria-labelledby="shareTitle"><h2 id="shareTitle">Convite da lista</h2><p>Copie o link e envie o código separadamente.</p><label>Convite privado<input id="shareValue" readonly></label><button class="close" type="button">Fechar</button></dialog>
+  <dialog id="shareDialog" aria-labelledby="shareTitle"><h2 id="shareTitle">Convite da lista</h2><p>Copie o link e envie a frase separadamente.</p><label>Convite privado<input id="shareValue" readonly></label><button class="close" type="button">Fechar</button></dialog>
   <div id="notice" role="status"></div>
 </body>
 </html>

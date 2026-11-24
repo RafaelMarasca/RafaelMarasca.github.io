@@ -53,9 +53,9 @@ function showGate(message = '') {
   el('giftForm').reset(); draftPhoto = ''; el('preview').removeAttribute('src');
   el('cards').replaceChildren(); el('board').hidden = true; el('gate').hidden = false;
   el('inviteLabel').hidden = !!invite || privateApp || accountEntry; el('gateError').textContent = message;
-  el('gateHint').textContent = invite || privateApp ? 'Digite o código compartilhado para ver e editar os presentes.' : 'Cole o convite privado e digite o código compartilhado.';
+  el('gateHint').textContent = invite || privateApp ? 'Digite a frase compartilhada para ver e editar os presentes.' : 'Cole o convite privado e digite a frase compartilhada.';
   if (accountEntry) {
-    el('gateHint').textContent = 'Entre com a conta autorizada. Depois, confirme o código para abrir a lista.';
+    el('gateHint').textContent = 'Entre com a conta autorizada. Depois, digite a frase para abrir a lista.';
     el('pinLabel').hidden = true; el('pin').disabled = true; el('unlockButton').hidden = true;
   }
 }
@@ -70,7 +70,7 @@ async function api(path, method = 'GET', body, version) {
     data = await response.json();
   } catch { throw new Error('Não foi possível conectar à lista. Confira sua conexão e tente de novo.'); }
   if (!response.ok) {
-    if (response.status === 401 && session) showGate('Sua sessão terminou. Digite o código novamente.');
+    if (response.status === 401 && session) showGate('Sua sessão terminou. Digite a frase novamente.');
     throw new Error(data.error || 'Não foi possível concluir.');
   }
   return data;
@@ -95,7 +95,7 @@ el('unlock').addEventListener('submit', async event => {
 });
 function inviteLink() { const url = new URL('https://rafaelmarasca.github.io/presentes.html'); if (invite) url.hash = 'convite=' + invite; return url.href; }
 el('share').onclick = async () => {
-  try { await navigator.clipboard.writeText(inviteLink()); notice('Convite copiado. Envie o código separadamente.'); }
+  try { await navigator.clipboard.writeText(inviteLink()); notice('Convite copiado. Envie a frase separadamente.'); }
   catch { el('shareValue').value = inviteLink(); el('shareDialog').showModal(); el('shareValue').select(); }
 };
 el('lock').onclick = () => { showGate(); el('pin').focus(); };
