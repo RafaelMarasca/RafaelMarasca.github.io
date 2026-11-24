@@ -1,6 +1,7 @@
 'use strict';
 const apiOrigin = 'https://presentes-lulu-e-rafo.rafaelmarascamartins.chatgpt.site';
 const accountEntry = location.hostname === 'rafaelmarasca.github.io';
+const privateApp = location.origin === apiOrigin;
 const el = id => document.getElementById(id);
 const inviteFormat = /^[A-Za-z0-9_-]{43}$/;
 const inviteKey = 'lulu.gifts.invite';
@@ -51,8 +52,8 @@ function showGate(message = '') {
   document.querySelectorAll('dialog[open]').forEach(d => d.close());
   el('giftForm').reset(); draftPhoto = ''; el('preview').removeAttribute('src');
   el('cards').replaceChildren(); el('board').hidden = true; el('gate').hidden = false;
-  el('inviteLabel').hidden = !!invite; el('gateError').textContent = message;
-  el('gateHint').textContent = invite ? 'Digite o código compartilhado para ver e editar os presentes.' : 'Cole o convite privado e digite o código compartilhado.';
+  el('inviteLabel').hidden = !!invite || privateApp || accountEntry; el('gateError').textContent = message;
+  el('gateHint').textContent = invite || privateApp ? 'Digite o código compartilhado para ver e editar os presentes.' : 'Cole o convite privado e digite o código compartilhado.';
   if (accountEntry) {
     el('gateHint').textContent = 'Entre com a conta autorizada. Depois, confirme o código para abrir a lista.';
     el('pinLabel').hidden = true; el('pin').disabled = true; el('unlockButton').hidden = true;
@@ -78,7 +79,7 @@ el('unlock').addEventListener('submit', async event => {
   event.preventDefault();
   if (accountEntry) { privateEntry.click(); return; }
   const candidate = invite || inviteFrom(el('inviteInput').value.trim());
-  if (!candidate) { el('gateError').textContent = 'Cole o link privado completo que você recebeu.'; return; }
+  if (!candidate && !privateApp) { el('gateError').textContent = 'Cole o link privado completo que você recebeu.'; return; }
   const button = event.submitter || el('unlock').querySelector('button');
   button.disabled = true; el('gateError').textContent = '';
   try {
@@ -92,7 +93,7 @@ el('unlock').addEventListener('submit', async event => {
     if (/Convite inválido/.test(e.message)) { invite = ''; stored('localStorage',inviteKey,''); el('inviteLabel').hidden = false; }
   } finally { button.disabled = false; }
 });
-function inviteLink() { const url = new URL('https://rafaelmarasca.github.io/presentes.html'); url.hash = 'convite=' + invite; return url.href; }
+function inviteLink() { const url = new URL('https://rafaelmarasca.github.io/presentes.html'); if (invite) url.hash = 'convite=' + invite; return url.href; }
 el('share').onclick = async () => {
   try { await navigator.clipboard.writeText(inviteLink()); notice('Convite copiado. Envie o código separadamente.'); }
   catch { el('shareValue').value = inviteLink(); el('shareDialog').showModal(); el('shareValue').select(); }
@@ -249,4 +250,4 @@ el('yesDelete').onclick=async()=>{
   try{await api('/gifts/'+editing.id,'DELETE',undefined,editing.version);el('editor').close();notice('Presente excluído.');await refresh(true);}
   catch(e){el('editError').textContent=e.message;}finally{saving(false);}
 };
-if (!accountEntry && invite && session) enter(); else showGate();
+if (!accountEntry && (invite || privateApp) && session) enter(); else showGate();
