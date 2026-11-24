@@ -1,0 +1,35 @@
+@font-face{font-family:Cormorant;src:url('./assets/album/fonts/cormorant-garamond.woff') format('woff');font-display:swap}
+@font-face{font-family:Cormorant;src:url('./assets/album/fonts/cormorant-garamond-italic.woff') format('woff');font-style:italic;font-display:swap}
+*{box-sizing:border-box}
+:root{--paper:#f2ece0;--muted:#b9c3c5;--gold:#f0dba8;--line:#35434b;--panel:#19242d}
+body{margin:0;color:var(--paper);font:1rem/1.55 system-ui,sans-serif}
+main{width:min(1100px,calc(100% - 40px));margin:30px auto 64px}
+h1,h2,h3,p{margin:0}h1,h2,h3{font-family:Cormorant,Georgia,serif;font-weight:500;line-height:1.06}
+h2{font-size:clamp(2.1rem,4vw,3rem)}h3{font-size:2rem}p,small{color:var(--muted)}
+[hidden]{display:none!important}.skip{position:fixed;left:10px;top:-100px;z-index:99}.skip:focus{top:8px}
+.hero{position:relative;isolation:isolate;overflow:hidden;min-height:305px;display:flex;align-items:center;background:#1d2c3a;border:1px solid #46515b;border-radius:20px}
+.hero-art{position:absolute;inset:0 0 0 39%;z-index:-1;background:linear-gradient(90deg,#1d2c3a 0%,transparent 45%),url('./assets/ilustracoes/nos-dois-lua.webp') 50% 42%/cover}
+.hero-copy{padding:34px clamp(24px,5vw,64px);width:55%}.hero h1{font-size:clamp(4rem,7.3vw,6.3rem);line-height:.82;letter-spacing:-.045em}
+.hero h1 em{color:var(--gold);font-weight:400}.hero p{max-width:30ch;margin-top:24px;color:#d8dddd}
+.gate,.board-head,footer,.dialog-head,.dialog-footer,.actions,.filters,.check{display:flex;align-items:center}
+.gate{margin-top:26px;align-items:flex-start;gap:32px;justify-content:space-between;padding:clamp(24px,4vw,44px);border:1px solid var(--line);border-radius:16px;background:var(--panel)}
+.gate p,.board-head p{margin-top:.5rem}.lock-icon{display:block;font:2.7rem/1 Georgia;color:var(--gold);margin-bottom:8px}
+form{display:grid;gap:15px}.gate form{width:min(400px,48%)}label{display:grid;gap:6px;font-size:.9rem;font-weight:600;color:#dce2de}
+input,textarea,select{width:100%;min-width:0;background:#101a22;color:var(--paper);border:1px solid #50606a;border-radius:8px;font:1rem/1.45 system-ui,sans-serif;padding:11px 13px}
+input::placeholder,textarea::placeholder{color:#98a5ab}textarea{resize:vertical}select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,#c9cfcb 50%),linear-gradient(135deg,#c9cfcb 50%,transparent 50%);background-position:calc(100% - 16px) 52%,calc(100% - 11px) 52%;background-size:5px 5px;background-repeat:no-repeat;padding-right:34px}
+button,.store-link{min-height:44px;border:1px solid #52616a;border-radius:9px;padding:9px 16px;background:transparent;color:var(--paper);font:600 .9rem/1.4 system-ui,sans-serif;cursor:pointer}
+button:hover,.store-link:hover{background:#2a3740}.primary{background:var(--gold);color:#242323;border-color:var(--gold)}.primary:hover{background:#f8e7c5}
+button:disabled{opacity:.6;cursor:wait}:focus-visible{outline:3px solid #b9dbdf;outline-offset:3px}
+.board-head{margin:38px 0 22px;justify-content:space-between;gap:18px}.actions{gap:8px;flex-wrap:wrap}
+.filters{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px;gap:14px;flex-wrap:wrap}.filters label{flex:1;min-width:145px}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(255px,100%),1fr));gap:16px;margin-top:20px}
+.card{display:flex;flex-direction:column;overflow:hidden;border:1px solid var(--line);border-radius:14px;background:var(--panel);min-width:0}.card-image{height:170px;display:grid;place-items:center;background:radial-gradient(ellipse at 40% 20%,#34444e,#1e2c35);color:var(--gold);font:italic 3.5rem Cormorant,Georgia,serif}.card-image img{width:100%;height:100%;object-fit:contain;min-height:0}
+.card-body{padding:18px;display:flex;flex:1;flex-direction:column;gap:9px;overflow-wrap:anywhere}.card-body h3{font-size:2rem}.card-body .actions{margin-top:auto;padding-top:9px}.store-link{display:inline-flex;align-items:center;text-decoration:none}
+.meta{display:flex;justify-content:space-between;gap:6px;color:#d8cba8;font-size:.86rem}.card-note{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden;white-space:pre-line}.done{color:#c1dabb}
+#empty{text-align:center;padding:44px 10px}#empty p{margin-top:8px}footer{margin-top:26px;border-top:1px solid var(--line);padding-top:16px;justify-content:space-between;gap:12px;flex-wrap:wrap}#sync{color:var(--muted);font-size:.87rem}
+dialog{color:var(--paper);background:var(--panel);border:1px solid #52616a;border-radius:16px;width:min(540px,calc(100% - 24px));max-height:90dvh;padding:24px;box-shadow:0 30px 100px #0007}
+dialog::backdrop{background:#071018c9}dialog h2{font-size:2.3rem}dialog>p{margin:14px 0}dialog .close{margin-left:auto}.dialog-head,.dialog-footer{justify-content:space-between;gap:12px}.dialog-head .close{font-size:1.5rem;padding:3px 13px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:14px}.drop{display:flex;align-items:center;padding:16px;gap:14px;border:1px dashed #7c8b8d;border-radius:10px}.drop.over{background:#34424a}.drop small{display:block;margin:2px 0 8px}.drop img{width:76px;height:86px;border-radius:8px;object-fit:cover}.check{gap:10px;min-height:40px}.check input{width:18px;height:18px;accent-color:var(--gold)}
+.dialog-footer .primary{margin-left:auto}.danger{color:#ffc1b9;border-color:#a77370}.error{color:#ffc1b9}.error:empty{display:none}#shareDialog label{margin:12px 0}
+#notice{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);border-radius:10px;background:var(--paper);color:#17212a;padding:10px 18px;box-shadow:0 4px 24px #0005;z-index:10;max-width:90%}#notice:empty{display:none}
+@media(max-width:680px){main{width:calc(100% - 24px);margin-top:18px}.hero{min-height:245px}.hero-copy{padding:24px 18px;width:65%}.hero-art{left:35%;background-position:center,56% 40%}.hero h1{font-size:clamp(3.3rem,12vw,4.6rem)}.hero p{font-size:.91rem;max-width:19ch}.gate,.board-head{flex-direction:column;align-items:stretch}.gate{gap:20px}.gate form{width:100%}.lock-icon{display:none}.site-header .site-navigation{gap:0 15px}.filters{gap:10px}.filters label{min-width:120px}.board-head{margin:26px 0 16px}.two{gap:10px}dialog{padding:18px}.drop{flex-wrap:wrap}}
