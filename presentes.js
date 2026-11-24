@@ -172,8 +172,16 @@ function render() {
   const recipient = selectedFilter('recipientFilter'), status = selectedFilter('statusFilter'), order = el('sort').value;
   const ranks = {Alta:0,'Média':1,Baixa:2};
   const byRecipient = gifts.filter(g => !recipient || recipient === g.forWhom);
-  el('boughtCount').textContent = byRecipient.filter(g => g.bought).length;
-  const shown = byRecipient.filter(g => status === 'all' || (status === 'bought') === g.bought);
+  const bought = byRecipient.filter(g => g.bought).length;
+  el('boughtCount').textContent = bought;
+  el('openCount').textContent = byRecipient.length - bought;
+  el('statusTotal').textContent = byRecipient.length;
+  const byStatus = gifts.filter(g => status === 'all' || (status === 'bought') === g.bought);
+  for (const badge of el('recipientFilter').querySelectorAll('[data-recipient-count]')) {
+    const person = badge.dataset.recipientCount;
+    badge.textContent = person ? byStatus.filter(g => g.forWhom === person).length : byStatus.length;
+  }
+  const shown = byStatus.filter(g => !recipient || recipient === g.forWhom);
   shown.sort((a,b) => {
     if (order === 'name') return a.title.localeCompare(b.title,'pt-BR');
     if (order === 'priority') return Number(a.bought)-Number(b.bought) || ranks[a.priority]-ranks[b.priority] || b.updated-a.updated;
@@ -187,17 +195,21 @@ function render() {
     const notes = node('p','','card-note'), actions = node('div','','actions'), edit = node('button','Editar');
     edit.onclick = () => startEdit(g); actions.append(edit);
     body.append(meta,node('h3',g.title),notes);
-    const action = g.bought ? 'Voltar para “Por comprar”' : 'Marcar como comprado';
-    const purchase = node('button', pendingPurchases.has(g.id) ? 'Salvando…' : action, 'purchase');
-    purchase.type = 'button';
-    purchase.disabled = pendingPurchases.has(g.id);
-    purchase.setAttribute('aria-label', action + ': ' + g.title);
-    purchase.onclick = () => {
-      purchase.disabled = true;
-      purchase.textContent = 'Salvando…';
-      void setPurchased(g, !g.bought);
+    const purchase = node('label','','purchase');
+    const check = node('input');
+    check.type = 'checkbox';
+    check.checked = g.bought;
+    check.disabled = pendingPurchases.has(g.id);
+    const action = g.bought ? 'Comprado' : 'Marcar como comprado';
+    check.setAttribute('aria-label', action + ': ' + g.title);
+    const caption = node('span',check.disabled ? 'Salvando…' : action);
+    check.onchange = () => {
+      check.disabled = true;
+      caption.textContent = 'Salvando…';
+      void setPurchased(g, check.checked);
     };
-    if (g.bought) card.append(node('span','✓ Comprado','purchase-badge'));
+    purchase.append(check,caption);
+    if (g.bought) card.append(node('span','Comprado','purchase-badge'));
     body.append(purchase);
     body.append(actions); card.append(image,body); cards.append(card);
     card.loadDetails = async () => {

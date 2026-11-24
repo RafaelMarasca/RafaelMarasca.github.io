@@ -8,8 +8,8 @@
   <meta name="robots" content="noindex,nofollow">
   <title>Lista de presentes · Uma lua para Lulu</title>
   <link rel="stylesheet" href="./site-nav.css?v=2">
-  <link rel="stylesheet" href="./presentes.css?v=6">
-  <script src="./presentes.js?v=6" defer></script>
+  <link rel="stylesheet" href="./presentes.css?v=7">
+  <script src="./presentes.js?v=7" defer></script>
 </head>
 <body>
   <a href="#conteudo" class="skip">Pular para a lista</a>
@@ -44,19 +44,19 @@
       <fieldset id="recipientFilter" class="recipient-filter">
         <legend>Para quem?</legend>
         <div class="recipient-options">
-          <label><input type="radio" name="recipient" value="Rafo"><span>Rafo</span></label>
-          <label><input type="radio" name="recipient" value="Lulu"><span>Lulu</span></label>
-          <label><input type="radio" name="recipient" value="Nós dois"><span>Nós dois</span></label>
-          <label><input type="radio" name="recipient" value="" checked><span>Todos</span></label>
+          <label><input type="radio" name="recipient" value="Rafo"><span>Rafo <b class="filter-count" data-recipient-count="Rafo">0</b></span></label>
+          <label><input type="radio" name="recipient" value="Lulu"><span>Lulu <b class="filter-count" data-recipient-count="Lulu">0</b></span></label>
+          <label><input type="radio" name="recipient" value="Nós dois"><span>Nós dois <b class="filter-count" data-recipient-count="Nós dois">0</b></span></label>
+          <label><input type="radio" name="recipient" value="" checked><span>Todos <b class="filter-count" data-recipient-count="">0</b></span></label>
         </div>
       </fieldset>
       <div class="filters">
       <fieldset id="statusFilter" class="recipient-filter">
         <legend>Compra</legend>
         <div class="recipient-options">
-          <label><input type="radio" name="purchase" value="open"><span>Por comprar</span></label>
-          <label><input type="radio" name="purchase" value="bought"><span>Comprados <b id="boughtCount">0</b></span></label>
-          <label><input type="radio" name="purchase" value="all" checked><span>Todos</span></label>
+          <label><input type="radio" name="purchase" value="open"><span>Por comprar <b class="filter-count" id="openCount">0</b></span></label>
+          <label><input type="radio" name="purchase" value="bought"><span>Comprados <b class="filter-count" id="boughtCount">0</b></span></label>
+          <label><input type="radio" name="purchase" value="all" checked><span>Todos <b class="filter-count" id="statusTotal">0</b></span></label>
         </div>
       </fieldset>
       <label>Ordenar por<select id="sort"><option value="priority">Prioridade</option><option value="recent">Mais recentes</option><option value="name">Nome</option></select></label></div>

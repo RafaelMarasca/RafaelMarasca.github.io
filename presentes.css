@@ -34,20 +34,30 @@ button:disabled{opacity:.6;cursor:wait}:focus-visible{outline:3px solid #b9dbdf;
 .recipient-options{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;max-width:560px}
 .recipient-options label{position:relative;cursor:pointer}
 .recipient-options input{position:absolute;opacity:0;width:1px;height:1px;padding:0}
-.recipient-options span{display:grid;place-items:center;min-height:46px;text-align:center;border:1px solid #52616a;border-radius:9px;background:var(--panel)}
+.recipient-options span{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:3px 7px;padding:5px;min-height:46px;text-align:center;border:1px solid #52616a;border-radius:9px;background:var(--panel)}
 .recipient-options input:checked+span{background:var(--gold);border-color:var(--gold);color:#242323}
 .recipient-options input:focus-visible+span{outline:3px solid #b9dbdf;outline-offset:2px}
 #statusFilter{flex:2 1 20rem;margin:0}
 #statusFilter .recipient-options{grid-template-columns:repeat(3,minmax(0,1fr));max-width:none}
 #statusFilter legend{font-size:.9rem;margin-bottom:6px}
-#statusFilter input[value="bought"]+span{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:4px}
-#boughtCount{border-radius:1em;padding:0 .45em;background:#bce5c3;color:#173325;font-size:.85em}
+.filter-count{min-width:2ch;padding:1px 5px;border:1px solid #52616a;border-radius:4px;color:var(--gold);font:600 .81rem/1.2 system-ui,sans-serif;font-variant-numeric:tabular-nums}
+.recipient-options input:checked+span .filter-count{color:inherit;border-color:#24232355}
+#boughtCount{background:#bce5c3;color:#173325;border-color:#85aa8c}
 .card.is-bought{position:relative;border-color:#85aa8c}
-.purchase-badge{position:absolute;top:12px;left:12px;padding:4px 11px;border-radius:20px;background:#c8edd0;color:#193722;font-weight:700;font-size:.9rem}
-.purchase{min-height:46px;color:#193722;background:#c8edd0;border-color:#a6cfad}
-.purchase:hover{background:#ddf3e1}
-.is-bought .purchase{color:#c8edd0;background:transparent;border-color:#587560}
-.is-bought .purchase:hover{background:#24392f}
+.purchase-badge{position:absolute;top:12px;left:0;padding:4px 12px 5px 10px;border-left:3px solid #85aa8c;border-radius:0 2px 2px 0;background:#c8edd0;color:#193722;font:italic 600 1.18rem/1.15 Cormorant,Georgia,serif}
+.purchase{display:flex;align-items:center;gap:10px;min-height:46px;padding:8px 12px;border:1px solid #596971;border-radius:9px;cursor:pointer}
+.purchase:hover{background:#2a3740}
+.purchase input{appearance:none;display:grid;place-items:center;flex:none;width:21px;height:21px;margin:0;padding:0;border:1.5px solid #a6cfad;border-radius:4px;cursor:pointer}
+.purchase input:checked{background:#c8edd0;border-color:#c8edd0}
+.purchase input::before{content:"";width:5px;height:10px;border:solid #193722;border-width:0 2px 2px 0;transform:translateY(-1px) rotate(45deg) scale(0)}
+.purchase input:checked::before{transform:translateY(-1px) rotate(45deg) scale(1)}
+.is-bought .purchase{color:#c8edd0;border-color:#587560}
+@media(prefers-reduced-motion:no-preference){
+  .purchase,.purchase input{transition:background-color .16s ease,border-color .16s ease}
+  .purchase input::before{transition:transform .18s ease-out}
+  .purchase:active input{transform:scale(.93)}
+}
+@media(max-width:460px){#recipientFilter .recipient-options{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(255px,100%),1fr));gap:16px;margin-top:20px}
 .card{display:flex;flex-direction:column;overflow:hidden;border:1px solid var(--line);border-radius:14px;background:var(--panel);min-width:0}.card-image{height:170px;display:grid;place-items:center;background:radial-gradient(ellipse at 40% 20%,#34444e,#1e2c35);color:var(--gold);font:italic 3.5rem Cormorant,Georgia,serif}.card-image img{width:100%;height:100%;object-fit:contain;min-height:0}
 .card-body{padding:18px;display:flex;flex:1;flex-direction:column;gap:9px;overflow-wrap:anywhere}.card-body h3{font-size:2rem}.card-body .actions{margin-top:auto;padding-top:9px}.store-link{display:inline-flex;align-items:center;text-decoration:none}
