@@ -124,10 +124,13 @@ function readGift(item) {
   promise.catch(() => { if (details.get(item.id)?.promise === promise) details.delete(item.id); });
   return promise;
 }
+function selectedRecipient() {
+  return el('recipientFilter').querySelector('input:checked').value;
+}
 function render() {
   const revision = ++viewRevision;
   observer.disconnect();
-  const recipient = el('recipientFilter').value, status = el('statusFilter').value, order = el('sort').value;
+  const recipient = selectedRecipient(), status = el('statusFilter').value, order = el('sort').value;
   const ranks = {Alta:0,'Média':1,Baixa:2};
   const shown = gifts.filter(g => (!recipient || recipient === g.forWhom) && (status === 'all' || (status === 'bought') === g.bought));
   shown.sort((a,b) => {
@@ -158,7 +161,8 @@ function render() {
     };
     observer.observe(card);
   }
-  el('counter').textContent = gifts.length + (gifts.length === 1 ? ' presente' : ' presentes') + ' · ' + gifts.filter(g=>g.bought).length + ' comprados';
+  const purchased = shown.filter(g => g.bought).length;
+  el('counter').textContent = shown.length + (shown.length === 1 ? ' presente' : ' presentes') + ' · ' + purchased + (purchased === 1 ? ' comprado' : ' comprados');
   el('empty').hidden = !!shown.length;
   el('emptyTitle').textContent = gifts.length ? 'Nenhum presente neste filtro' : 'Qual vai ser o primeiro presente?';
   el('emptyText').textContent = gifts.length ? 'Escolha outro filtro para ver mais ideias.' : 'Adicione uma ideia com uma foto, um link ou aquele detalhe que faz a diferença.';
@@ -193,7 +197,7 @@ function openForm(item) {
   el('giftForm').reset(); photoWork++; busy = false;
   editing = item || {id:crypto.randomUUID(),version:'new'};
   el('giftTitle').value = item?.title || ''; el('giftLink').value = item?.link || '';
-  el('description').value = item?.description || ''; el('forWhom').value = item?.forWhom || el('recipientFilter').value || 'Lulu';
+  el('description').value = item?.description || ''; el('forWhom').value = item?.forWhom || selectedRecipient() || 'Lulu';
   el('priority').value = item?.priority || 'Média'; el('bought').checked = !!item?.bought;
   el('editorTitle').textContent = item ? 'Editar presente' : 'Novo presente';
   el('editError').textContent = ''; el('delete').hidden = !item; el('save').disabled = false;

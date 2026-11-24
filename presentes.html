@@ -8,8 +8,8 @@
   <meta name="robots" content="noindex,nofollow">
   <title>Lista de presentes · Uma lua para Lulu</title>
   <link rel="stylesheet" href="./site-nav.css?v=2">
-  <link rel="stylesheet" href="./presentes.css?v=3">
-  <script src="./presentes.js?v=3" defer></script>
+  <link rel="stylesheet" href="./presentes.css?v=4">
+  <script src="./presentes.js?v=4" defer></script>
 </head>
 <body>
   <a href="#conteudo" class="skip">Pular para a lista</a>
@@ -40,7 +40,16 @@
     </section>
     <section id="board" hidden>
       <div class="board-head"><div><h2>Nossos presentes</h2><p id="counter" aria-live="polite"></p></div><div class="actions"><button id="share">Copiar link</button><button class="primary" id="add">＋ Adicionar presente</button></div></div>
-      <div class="filters"><label>Para quem<select id="recipientFilter"><option value="">Todos</option><option>Lulu</option><option>Rafo</option><option>Nós dois</option></select></label>
+      <fieldset id="recipientFilter" class="recipient-filter">
+        <legend>Para quem?</legend>
+        <div class="recipient-options">
+          <label><input type="radio" name="recipient" value="Rafo"><span>Rafo</span></label>
+          <label><input type="radio" name="recipient" value="Lulu"><span>Lulu</span></label>
+          <label><input type="radio" name="recipient" value="Nós dois"><span>Nós dois</span></label>
+          <label><input type="radio" name="recipient" value="" checked><span>Todos</span></label>
+        </div>
+      </fieldset>
+      <div class="filters">
       <label>Mostrar<select id="statusFilter"><option value="all">Todos os presentes</option><option value="open">Por comprar</option><option value="bought">Comprados</option></select></label>
       <label>Ordenar por<select id="sort"><option value="priority">Prioridade</option><option value="recent">Mais recentes</option><option value="name">Nome</option></select></label></div>
       <div id="cards" class="cards"></div><section id="empty" hidden><h3 id="emptyTitle"></h3><p id="emptyText"></p></section>
