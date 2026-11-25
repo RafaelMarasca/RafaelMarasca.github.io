@@ -7,8 +7,8 @@
   <title>Bilhetinhos</title>
   <link rel="stylesheet" href="./site-nav.css?v=2">
   <link rel="stylesheet" href="./ceu.css?v=3">
-  <link rel="stylesheet" href="./bilhetinhos.css?v=13">
-  <script src="./bilhetinhos-acesso.js?v=1" defer></script>
+  <link rel="stylesheet" href="./bilhetinhos.css?v=14">
+  <script src="./bilhetinhos-acesso.js?v=2" defer></script>
 </head>
 <body class="site-page">
   <div class="sky" aria-hidden="true"></div>
@@ -22,8 +22,17 @@
     <section id="note-gate" aria-labelledby="gate-title">
       <h1 id="gate-title">Bilhetinhos</h1>
       <form id="note-login">
-        <label for="note-password">Senha dos bilhetinhos</label>
-        <input id="note-password" type="password" autocomplete="current-password" maxlength="160" required>
+        <fieldset aria-describedby="phrase-hint">
+          <legend>Frase de acesso</legend>
+          <p id="phrase-hint">Use as mesmas cinco palavras da lista de presentes, na mesma ordem. Você também pode colar a frase inteira.</p>
+          <div class="note-words">
+            <label>1ª palavra<input type="password" required maxlength="160" autocomplete="off" autocapitalize="none" spellcheck="false" enterkeyhint="next"></label>
+            <label>2ª palavra<input type="password" required maxlength="160" autocomplete="off" autocapitalize="none" spellcheck="false" enterkeyhint="next"></label>
+            <label>3ª palavra<input type="password" required maxlength="160" autocomplete="off" autocapitalize="none" spellcheck="false" enterkeyhint="next"></label>
+            <label>4ª palavra<input type="password" required maxlength="160" autocomplete="off" autocapitalize="none" spellcheck="false" enterkeyhint="next"></label>
+            <label>5ª palavra<input type="password" required maxlength="160" autocomplete="off" autocapitalize="none" spellcheck="false" enterkeyhint="go"></label>
+          </div>
+        </fieldset>
         <button>Entrar</button>
       </form>
       <p id="gate-status" role="status"></p>

@@ -79,9 +79,51 @@ const noteAccess = (() => {
       }
     } finally { login.inert = false; }
   }
+  const fields = Array.from(login.querySelectorAll('.note-words input'));
+  function distribute(value, index) {
+    const words = value.trim().split(/\s+/u).filter(Boolean);
+    const start = words.length === fields.length ? 0 : index;
+    if (start + words.length > fields.length || words.join(' ').length > 160) {
+      status.textContent = 'Digite cinco palavras, uma em cada campo.';
+      return;
+    }
+    words.forEach((word, offset) => { fields[start + offset].value = word; });
+    if (words.length) fields[Math.min(start + words.length, fields.length - 1)].focus();
+  }
+  fields.forEach((field, index) => {
+    field.onpaste = event => {
+      const pasted = event.clipboardData?.getData('text/plain') || '';
+      if (/\s/u.test(pasted)) {
+        event.preventDefault();
+        status.textContent = '';
+        distribute(pasted, index);
+      }
+    };
+    field.oninput = event => {
+      status.textContent = '';
+      if (!event.isComposing && /\s/u.test(field.value)) distribute(field.value, index);
+    };
+    field.onkeydown = event => {
+      if (event.isComposing) return;
+      if ((event.key === ' ' || event.key === 'Enter') && index < fields.length - 1) {
+        event.preventDefault();
+        if (field.value.trim()) fields[index + 1].focus();
+      } else if (event.key === 'Backspace' && !field.value && index > 0) {
+        event.preventDefault();
+        fields[index - 1].focus();
+      }
+    };
+  });
   login.onsubmit = event => {
     event.preventDefault();
-    if (!login.inert) enter(document.getElementById('note-password').value);
+    if (login.inert) return;
+    const words = fields.map(field => field.value.trim());
+    const code = words.join(' ');
+    if (words.some(word => !/^\S+$/u.test(word)) || code.length > 160) {
+      status.textContent = 'Digite cinco palavras, uma em cada campo.';
+      return;
+    }
+    enter(code);
   };
   if (session) enter();
   return {request, get draftKey() { return draftKey; }};
