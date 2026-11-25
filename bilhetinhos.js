@@ -423,8 +423,6 @@ function renderCard() {
   paint(preview, style, palette, paperHeight, [], 56, 68, frames);
   placeOutline(textFrame, activeBox.layout.pose, activeBox.layout.width, activeBox.layout.height);
   rotateText.setAttribute('aria-label', 'Girar caixa de texto, ' + activeBox.angle + ' graus');
-  document.querySelector('#photo-rotation').hidden = !selectedPhoto;
-  if (selectedPhoto) showAngle('photo-angle', placements.get(selectedPhoto).angle);
   document.querySelector('#gesture-help').hidden = !frames.length;
   if (!selectedPhoto) sizePanel.hidden = true;
   frames.forEach((frame, index) => {
@@ -435,7 +433,8 @@ function renderCard() {
     box.classList.toggle('selected', frame.photo === selectedPhoto);
     box.classList.toggle('handle-left', place.handleLeft);
     const expanded = !sizePanel.hidden && frame.photo === selectedPhoto;
-    box.lastElementChild.setAttribute('aria-expanded', String(expanded));
+    box.querySelector('.size-photo').setAttribute('aria-expanded', String(expanded));
+    box.querySelector('.rotate-photo').title = 'Girar foto (' + place.angle + '°). Arraste ou toque para girar 15°.';
     if (expanded) {
       sizeInput.max = Math.floor(maxPhotoSize(frame, style));
       sizeInput.value = Math.round(Math.max(frame.width - 20, frame.height - 30));
@@ -464,7 +463,6 @@ let savedRange = null;
 let typingFormat = null;
 
 function activateBox(item) {
-  textFrame.hidden = false;
   if (item === activeBox) return;
   if (activeBox) activeBox.range = savedRange;
   if (gesture?.kind === 'text') gesture = null;
@@ -520,20 +518,10 @@ document.querySelector('#remove-box').addEventListener('click', () => {
   message.focus({ preventScroll: true });
 });
 
-function showAngle(id, angle) {
-  const input = document.getElementById(id);
-  input.value = angle;
-  input.nextElementSibling.value = angle + '°';
-}
-function rotateActiveBox(degrees) {
-  activeBox.angle = ((Math.round(degrees) + 540) % 360) - 180;
+function rotateItem(item, degrees) {
+  item.angle = ((Math.round(degrees) + 540) % 360) - 180;
   renderCard();
 }
-document.querySelector('#photo-angle').addEventListener('input', event => {
-  if (!selectedPhoto) return;
-  placements.get(selectedPhoto).angle = event.target.valueAsNumber;
-  renderCard();
-});
 
 function atTypingCaret(range) {
   return typingFormat && range.collapsed && range.startContainer === typingFormat.node &&
@@ -591,7 +579,23 @@ sizeControl.addEventListener('change', () => formatSelection([['fontSize', sizeC
 colorControl.addEventListener('change', () => formatSelection([['foreColor', colorControl.value]]));
 document.querySelector('#text-body').addEventListener('click', () =>
   formatSelection([['fontName', 'Manuscrita'], ['fontSize', '3'], ['foreColor', selectedPalette().ink]]));
-card.addEventListener('click', () => message.focus({ preventScroll: true }));
+
+// The formatting target survives blur, but the on-paper handles follow focus.
+function syncEditingFocus(target) {
+  const element = target instanceof Element ? target : null;
+  textFrame.hidden = !element?.closest('.note-text, #text-frame');
+  if (selectedPhoto && !placements.get(selectedPhoto).box.contains(element) && !sizePanel.contains(element)) {
+    selectedPhoto = null;
+    sizePanel.hidden = true;
+    renderCard();
+  }
+}
+document.addEventListener('focusin', event => syncEditingFocus(event.target));
+document.addEventListener('focusout', event => syncEditingFocus(event.relatedTarget));
+document.addEventListener('pointerdown', event => {
+  if (!gesture) syncEditingFocus(event.target);
+});
+window.addEventListener('blur', () => syncEditingFocus(null));
 
 function remainingCharacters() {
   const selection = window.getSelection();
@@ -671,7 +675,6 @@ async function readPhoto(file) {
 }
 
 function selectPhoto(photo) {
-  textFrame.hidden = true;
   if (selectedPhoto === photo) return;
   sizePanel.hidden = true;
   selectedPhoto = photo;
@@ -729,6 +732,14 @@ function beginGesture(event, button, target) {
   button.setPointerCapture(event.pointerId);
 }
 
+function beginRotation(event, button, target, pose, item) {
+  const paper = card.getBoundingClientRect();
+  const scale = paper.width / paperWidth;
+  const cx = paper.left + pose.cx * scale, cy = paper.top + pose.cy * scale;
+  beginGesture(event, button, { ...target, rotate: true, cx, cy, item, angle: item.angle,
+    pointerAngle: Math.atan2(event.clientY - cy, event.clientX - cx) });
+}
+
 function changeTextBox(start, resize, dx, dy, startPaperHeight) {
   const bounds = textBounds(currentStyle());
   const textPlacement = activeBox;
@@ -751,7 +762,7 @@ function changeTextBox(start, resize, dx, dy, startPaperHeight) {
 }
 
 rotateText.addEventListener('click', event => {
-  if (!event.detail || draggedHandle !== rotateText) rotateActiveBox(activeBox.angle + 15);
+  if (!event.detail || draggedHandle !== rotateText) rotateItem(activeBox, activeBox.angle + 15);
 });
 
 for (const button of textFrame.querySelectorAll('button:not(#remove-box)')) {
@@ -763,11 +774,7 @@ for (const button of textFrame.querySelectorAll('button:not(#remove-box)')) {
     button.focus({ preventScroll: true });
     const pose = activeBox.layout.pose;
     if (button === rotateText) {
-      const paper = card.getBoundingClientRect();
-      const scale = paper.width / paperWidth;
-      const cx = paper.left + pose.cx * scale, cy = paper.top + pose.cy * scale;
-      beginGesture(event, button, { kind: 'text', rotate: true, cx, cy, angle: activeBox.angle,
-        pointerAngle: Math.atan2(event.clientY - cy, event.clientX - cx) });
+      beginRotation(event, button, { kind: 'text' }, pose, activeBox);
     } else {
       beginGesture(event, button, { kind: 'text', resize, start: startBox(), pose });
     }
@@ -781,15 +788,24 @@ for (const button of textFrame.querySelectorAll('button:not(#remove-box)')) {
     event.preventDefault();
     const [dx, dy] = arrowSteps[event.key];
     const step = event.shiftKey ? 30 : 10;
-    if (button === rotateText) rotateActiveBox(activeBox.angle + (dx + dy) * (event.shiftKey ? 15 : 1));
+    if (button === rotateText) rotateItem(activeBox, activeBox.angle + (dx + dy) * (event.shiftKey ? 15 : 1));
     else changeTextBox(startBox(), resize, step * dx, step * dy, paperHeight);
   });
 }
 
-function makeHandle(photo, resize) {
+function makeHandle(photo, action) {
+  const resize = action === 'size';
+  const rotate = action === 'rotate';
   const button = document.createElement('button');
   button.type = 'button';
-  button.className = resize ? 'size-photo' : 'move-photo';
+  button.className = action + '-photo';
+  if (rotate) {
+    button.append(rotateText.querySelector('svg').cloneNode(true));
+    button.addEventListener('click', event => {
+      const item = placements.get(photo);
+      if (!event.detail || draggedHandle !== button) rotateItem(item, item.angle + 15);
+    });
+  }
   if (resize) {
     button.setAttribute('aria-controls', 'size-panel');
     button.addEventListener('click', event => {
@@ -800,7 +816,8 @@ function makeHandle(photo, resize) {
       if (!sizePanel.hidden) sizeInput.focus();
     });
   }
-  button.setAttribute('aria-label', (resize ? 'Redimensionar ' : 'Mover ') + photo.getAttribute('aria-label'));
+  const labels = { size: 'Redimensionar ', rotate: 'Girar ', move: 'Mover ' };
+  button.setAttribute('aria-label', labels[action] + photo.getAttribute('aria-label'));
   button.setAttribute('aria-describedby', 'gesture-help');
   button.addEventListener('focus', () => selectPhoto(photo));
   button.addEventListener('pointerdown', event => {
@@ -809,7 +826,9 @@ function makeHandle(photo, resize) {
     button.focus({ preventScroll: true });
     selectPhoto(photo);
     const start = frameFor(photo, currentStyle());
-    beginGesture(event, button, { kind: 'photo', photo, resize, start, pose: photoPose(start, currentStyle()) });
+    const pose = photoPose(start, currentStyle());
+    if (rotate) beginRotation(event, button, { kind: 'photo', photo }, pose, placements.get(photo));
+    else beginGesture(event, button, { kind: 'photo', photo, resize, start, pose });
   });
   button.addEventListener('keydown', event => {
     if (!Object.hasOwn(arrowSteps, event.key)) return;
@@ -818,7 +837,10 @@ function makeHandle(photo, resize) {
     const step = event.shiftKey ? 30 : 10;
     const style = currentStyle();
     const start = frameFor(photo, style);
-    if (resize) {
+    if (rotate) {
+      const item = placements.get(photo);
+      rotateItem(item, item.angle + (dx + dy) * (event.shiftKey ? 15 : 1));
+    } else if (resize) {
       resizePhoto(start, Math.max(start.width - 20, start.height - 30) + step * (dx + dy), style);
       renderCard();
     } else {
@@ -834,7 +856,7 @@ function updateGesture(event) {
   draggedHandle = gesture.button;
   if (gesture.rotate) {
     const angle = Math.atan2(event.clientY - gesture.cy, event.clientX - gesture.cx);
-    rotateActiveBox(gesture.angle + (angle - gesture.pointerAngle) * 180 / Math.PI);
+    rotateItem(gesture.item, gesture.angle + (angle - gesture.pointerAngle) * 180 / Math.PI);
     return;
   }
   let dx = (event.clientX - gesture.x) * gesture.scale, dy = (event.clientY - gesture.y) * gesture.scale;
@@ -890,9 +912,8 @@ function addPhotoFrame(photo) {
   }
   place.handleLeft = place.x + width / 2 > style.width / 2;
   sizePanel.hidden = true;
-  box.append(makeHandle(photo, false), makeHandle(photo, true));
+  box.append(makeHandle(photo, 'move'), makeHandle(photo, 'rotate'), makeHandle(photo, 'size'));
   controls.append(box);
-  selectedPhoto = photo;
 }
 
 function appendPhoto(photo) {
@@ -913,9 +934,9 @@ function appendPhoto(photo) {
   remove.addEventListener('click', () => {
     if (gesture?.photo === photo) gesture = null;
     photos.splice(photos.indexOf(photo), 1);
+    if (selectedPhoto === photo) selectedPhoto = null;
     placements.get(photo).box.remove();
     placements.delete(photo);
-    if (selectedPhoto === photo) selectedPhoto = photos.at(-1) ?? null;
     item.remove();
     renderCard();
     photoStatus.textContent = 'Imagem removida: ' + name;

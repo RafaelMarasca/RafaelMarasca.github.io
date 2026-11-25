@@ -7,8 +7,8 @@
   <title>Bilhetinhos</title>
   <link rel="stylesheet" href="./site-nav.css?v=2">
   <link rel="stylesheet" href="./ceu.css?v=3">
-  <link rel="stylesheet" href="./bilhetinhos.css?v=9">
-  <script src="./bilhetinhos.js?v=9" defer></script>
+  <link rel="stylesheet" href="./bilhetinhos.css?v=10">
+  <script src="./bilhetinhos.js?v=10" defer></script>
 </head>
 <body class="site-page">
   <div class="sky" aria-hidden="true"></div>
@@ -46,8 +46,6 @@
             <label><input type="radio" name="paper" value="azul"><span class="swatch azul"></span>Azul</label>
           </div>
         </fieldset>
-        <button id="download" type="button" disabled>Baixar bilhetinho em PNG</button>
-        <p id="status" role="status"></p>
         <noscript>Ative o JavaScript para escrever e baixar seu bilhetinho.</noscript>
       </section>
       <figure>
@@ -73,7 +71,7 @@
           <canvas id="card" width="1080" height="744" aria-hidden="true"></canvas>
           <div id="text-layers"></div>
           <div id="photo-controls"></div>
-          <div id="text-frame" role="group" aria-label="Controles da caixa selecionada">
+          <div id="text-frame" role="group" aria-label="Controles da caixa selecionada" hidden>
             <div class="box-grips">
               <button type="button" id="move-text" aria-label="Mover caixa de texto" title="Mover caixa">
                 <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 3v18M3 12h18M8 7l4-4 4 4M8 17l4 4 4-4M7 8l-4 4 4 4m10-8 4 4-4 4"/></svg>
@@ -90,13 +88,16 @@
             </button>
           </div>
         </div></div>
-        <small id="count">0 / 280</small>
-        <label class="rotation" id="photo-rotation" hidden>Girar foto <input type="range" id="photo-angle" min="-180" max="180" value="0"><output for="photo-angle">0°</output></label>
+        <div class="paper-actions">
+          <button id="download" type="button" disabled>Baixar bilhetinho em PNG</button>
+          <small id="count">0 / 280</small>
+        </div>
+        <p id="status" role="status"></p>
         <div id="size-panel" hidden>
           <label for="photo-size">Tamanho da foto</label>
           <input id="photo-size" type="range" min="85" max="760">
         </div>
-        <p id="gesture-help" hidden>Arraste a foto para movê-la. Para ajustar o tamanho, arraste o botão do canto ou toque nele para abrir a barra de tamanho.</p>
+        <p id="gesture-help" hidden>Toque na foto para mostrar as alças. Arraste a seta circular para girar ou o canto para mudar o tamanho.</p>
       </figure>
     </div>
   </main>

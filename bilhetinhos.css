@@ -79,6 +79,8 @@ button:focus-visible, .text-tools :is(select,input):focus-visible, .papers label
 #photo-list .select-photo { display: block; padding: 0; background: transparent; }
 #photo-list button:not(.select-photo) { position: absolute; top: -.4rem; right: -.35rem; width: 1.85rem; height: 1.85rem; min-height: 0; padding: 0; border: 1px solid #666e70; border-radius: 50%; color: white; background: #263037; font: 1.3rem/1 system-ui, sans-serif; }
 figure { margin: 0; min-width: 0; }
+.paper-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .5rem 1rem; margin-top: .75rem; }
+.paper-actions small { margin: 0; }
 .stage { display: grid; place-items: center; padding: clamp(1.5rem, 4vw, 3.5rem); border: 1px solid #39464b; border-radius: .5rem; background-color: #1e2a30; background-image: radial-gradient(#b7c5be29 .75px, transparent .85px); background-size: 8px 8px; }
 .card-editor { width: 100%; position: relative; }
 #card { display: block; width: 100%; height: auto; box-shadow: 0 8px 17px #070c104d; }
@@ -103,16 +105,15 @@ figure { margin: 0; min-width: 0; }
 .photo-box.handle-left .size-photo::before { transform: scaleX(-1); }
 #size-panel:not([hidden]) { display: flex; align-items: center; flex-wrap: wrap; gap: .4rem 1rem; margin-top: .75rem; }
 #photo-size { min-height: 44px; flex: 1; min-width: 8rem; accent-color: var(--nav-accent); }
-.photo-box:not(.selected):not(:focus-within) .size-photo { opacity: 0; pointer-events: none; }
+.photo-box .rotate-photo, .photo-box .rotate-photo:enabled:hover { top: 0; left: 50%; transform: translate(-50%, -75%); width: 42px; height: 42px; display: grid; place-items: center; border-radius: 50%; background: transparent; cursor: grab; }
+.rotate-photo svg { display: block; width: 30px; height: 30px; padding: 4px; border: 2px solid #fff5df; border-radius: 50%; background: #48382a; fill: none; stroke: #fff5df; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.photo-box:not(.selected) :is(.size-photo,.rotate-photo) { visibility: hidden; pointer-events: none; }
 .photo-box button:focus-visible { outline: 3px solid #3368a8; outline-offset: 1px; }
 @media (max-width: 740px) {
   .desk { grid-template-columns: 1fr; gap: 1.5rem; }
   .desk figure { grid-row: 1; }
 }
 
-.rotation:not([hidden]) { display: flex; align-items: center; gap: .7rem; margin: .5rem 0; font-size: .95rem; }
-.rotation input { flex: 1; min-width: 60px; min-height: 44px; accent-color: var(--nav-accent); }
-.rotation output { min-width: 3rem; font-variant-numeric: tabular-nums; text-align: right; }
 #text-layers { position: absolute; inset: 0; pointer-events: none; }
 .text-layer { pointer-events: none; }
 .note-text { pointer-events: auto; }
