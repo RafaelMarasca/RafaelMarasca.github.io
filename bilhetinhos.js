@@ -13,9 +13,12 @@ const photos = [];
 const maxPhotos = 4;
 const placements = new Map();
 const controls = document.querySelector('#photo-controls');
+const sizePanel = document.querySelector('#size-panel');
+const sizeInput = document.querySelector('#photo-size');
 const photoTop = 220;
 let selectedPhoto = null;
 let gesture = null;
+let draggedHandle = null;
 let loadingPhotos = false;
 const sample = 'Vi a lua hoje\ne lembrei de você.';
 const palettes = {
@@ -257,7 +260,7 @@ function drawCaderno(ctx, palette, height, firstY, leading) {
 }
 
 const styles = {
-  antigo: { draw: drawAntigo, left: 125, width: 830, footer: '#e8d8a9' },
+  antigo: { draw: drawAntigo, left: 125, width: 830 },
   postal: { draw: drawPostal, left: 108, width: 864 },
   caderno: { draw: drawCaderno, left: 145, width: 824 }
 };
@@ -332,9 +335,6 @@ function paint(ctx, style, palette, height, lines, size, leading, frames = []) {
     ctx.restore();
     ctx.drawImage(frame.photo, frame.x + 10, frame.y + 10, frame.width - 20, frame.height - 30);
   }
-  ctx.fillStyle = style.footer || palette.stamp;
-  ctx.font = '22px monospace';
-  ctx.fillText('☾  uma lua para lulu', style.left, height - (style.footer ? 40 : 65));
 }
 
 function centeredLines(texts, style, height, size, leading) {
@@ -384,14 +384,23 @@ function renderCard() {
   }
   paint(preview, style, selectedPalette(), card.height, lines, size, leading, frames);
   document.querySelector('#gesture-help').hidden = !frames.length;
+  if (!selectedPhoto) sizePanel.hidden = true;
   frames.forEach((frame, index) => {
-    const box = placements.get(frame.photo).box;
+    const place = placements.get(frame.photo);
+    const box = place.box;
     box.style.left = frame.x / card.width * 100 + '%';
     box.style.top = frame.y / card.height * 100 + '%';
     box.style.width = frame.width / card.width * 100 + '%';
     box.style.height = frame.height / card.height * 100 + '%';
     box.style.zIndex = index + 1;
     box.classList.toggle('selected', frame.photo === selectedPhoto);
+    box.classList.toggle('handle-left', place.handleLeft);
+    const expanded = !sizePanel.hidden && frame.photo === selectedPhoto;
+    box.lastElementChild.setAttribute('aria-expanded', String(expanded));
+    if (expanded) {
+      sizeInput.max = Math.floor(maxPhotoSize(frame, style));
+      sizeInput.value = Math.round(Math.max(frame.width - 20, frame.height - 30));
+    }
   });
   const photoNames = photos.map(photo => photo.getAttribute('aria-label'));
   card.setAttribute('aria-label', [input.labels[0].textContent.trim(), hasContent ? text : 'Exemplo. ' + text, ...photoNames].filter(Boolean).join('. '));
@@ -428,10 +437,25 @@ async function readPhoto(file) {
 
 function selectPhoto(photo) {
   if (selectedPhoto === photo) return;
+  sizePanel.hidden = true;
   selectedPhoto = photo;
   photos.splice(photos.indexOf(photo), 1);
   photos.push(photo);
   renderCard();
+}
+
+function maxPhotoSize(frame, style) {
+  const w = frame.width - 20, h = frame.height - 30;
+  const availableWidth = placements.get(frame.photo).handleLeft
+    ? frame.x + frame.width - style.left : style.left + style.width - frame.x;
+  return Math.min((availableWidth - 20) / w, 760 / h) * Math.max(w, h);
+}
+
+function resizePhoto(start, size, style) {
+  const place = placements.get(start.photo);
+  place.size = Math.min(maxPhotoSize(start, style), Math.max(85, size));
+  const width = frameFor(start.photo, style).width;
+  place.x = start.x - style.left + (place.handleLeft ? start.width - width : 0);
 }
 
 function changeFrame(photo, start, resize, dx, dy, cardHeight) {
@@ -439,13 +463,13 @@ function changeFrame(photo, start, resize, dx, dy, cardHeight) {
   const style = currentStyle();
   if (resize) {
     const w = start.width - 20, h = start.height - 30;
-    const factor = 1 + (dx * w + dy * h) / (w * w + h * h);
-    const limit = Math.min((style.width - 20) / w, 760 / h) * Math.max(w, h);
-    place.size = Math.min(limit, Math.max(85, Math.max(w, h) * factor));
-    place.x = Math.min(start.x - style.left, style.width - frameFor(photo, style).width);
+    const outward = place.handleLeft ? -dx : dx;
+    const factor = 1 + (outward * w + dy * h) / (w * w + h * h);
+    resizePhoto(start, Math.max(w, h) * factor, style);
   } else {
     place.x = Math.max(0, Math.min(style.width - start.width, start.x - style.left + dx));
     place.y = Math.max(photoTop, Math.min(cardHeight - 136 - start.height, start.y + dy));
+    place.handleLeft = place.x + start.width / 2 > style.width / 2;
   }
   renderCard();
 }
@@ -454,7 +478,16 @@ function makeHandle(photo, resize) {
   const button = document.createElement('button');
   button.type = 'button';
   button.className = resize ? 'size-photo' : 'move-photo';
-  button.textContent = resize ? '⤡' : '';
+  if (resize) {
+    button.setAttribute('aria-controls', 'size-panel');
+    button.addEventListener('click', event => {
+      if (event.detail && draggedHandle === button) return;
+      selectPhoto(photo);
+      sizePanel.hidden = !sizePanel.hidden;
+      renderCard();
+      if (!sizePanel.hidden) sizeInput.focus();
+    });
+  }
   button.setAttribute('aria-label', (resize ? 'Redimensionar ' : 'Mover ') + photo.getAttribute('aria-label'));
   button.setAttribute('aria-describedby', 'gesture-help');
   button.addEventListener('focus', () => selectPhoto(photo));
@@ -463,7 +496,8 @@ function makeHandle(photo, resize) {
     event.preventDefault();
     button.focus({ preventScroll: true });
     selectPhoto(photo);
-    gesture = { id: event.pointerId, photo, resize, start: frameFor(photo, currentStyle()),
+    draggedHandle = null;
+    gesture = { id: event.pointerId, photo, resize, button, start: frameFor(photo, currentStyle()),
       x: event.clientX, y: event.clientY, scale: card.width / card.getBoundingClientRect().width, cardHeight: card.height };
     button.setPointerCapture(event.pointerId);
   });
@@ -473,15 +507,22 @@ function makeHandle(photo, resize) {
     event.preventDefault();
     const [dx, dy] = steps[event.key];
     const step = event.shiftKey ? 30 : 10;
-    const change = step * (dx + dy);
-    changeFrame(photo, frameFor(photo, currentStyle()), resize, resize ? change : step * dx,
-      resize ? change : step * dy, card.height);
+    const style = currentStyle();
+    const start = frameFor(photo, style);
+    if (resize) {
+      resizePhoto(start, Math.max(start.width - 20, start.height - 30) + step * (dx + dy), style);
+      renderCard();
+    } else {
+      changeFrame(photo, start, false, step * dx, step * dy, card.height);
+    }
   });
   return button;
 }
 
 function updateGesture(event) {
   if (gesture?.id !== event.pointerId) return;
+  if (!draggedHandle && Math.hypot(event.clientX - gesture.x, event.clientY - gesture.y) < 3) return;
+  draggedHandle = gesture.button;
   changeFrame(gesture.photo, gesture.start, gesture.resize, (event.clientX - gesture.x) * gesture.scale,
     (event.clientY - gesture.y) * gesture.scale, gesture.cardHeight);
 }
@@ -501,12 +542,19 @@ window.addEventListener('pointercancel', endGesture);
 window.addEventListener('lostpointercapture', endGesture);
 window.addEventListener('blur', endGesture);
 
+sizeInput.addEventListener('input', () => {
+  if (!selectedPhoto) return;
+  const style = currentStyle();
+  resizePhoto(frameFor(selectedPhoto, style), sizeInput.valueAsNumber, style);
+  renderCard();
+});
+
 function addPhotoFrame(photo) {
   const style = currentStyle();
   const existing = photos.map(other => frameFor(other, style));
   const box = document.createElement('div');
   box.className = 'photo-box';
-  const place = { box, size: 265, x: 0, y: photoTop };
+  const place = { box, size: 265, x: 0, y: photoTop, handleLeft: false };
   placements.set(photo, place);
   const { width, height } = frameFor(photo, style);
   // Alternate sides and start a new row once both spaces are occupied.
@@ -520,6 +568,8 @@ function addPhotoFrame(photo) {
       break;
     }
   }
+  place.handleLeft = place.x + width / 2 > style.width / 2;
+  sizePanel.hidden = true;
   box.append(makeHandle(photo, false), makeHandle(photo, true));
   controls.append(box);
   selectedPhoto = photo;

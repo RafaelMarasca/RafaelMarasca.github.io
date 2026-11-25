@@ -4,16 +4,16 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#111820">
-  <title>Bilhetinhos · Uma lua para Lulu</title>
+  <title>Bilhetinhos</title>
   <link rel="stylesheet" href="./site-nav.css?v=2">
   <link rel="stylesheet" href="./ceu.css?v=3">
-  <link rel="stylesheet" href="./bilhetinhos.css?v=4">
-  <script src="./bilhetinhos.js?v=4" defer></script>
+  <link rel="stylesheet" href="./bilhetinhos.css?v=5">
+  <script src="./bilhetinhos.js?v=5" defer></script>
 </head>
 <body class="site-page">
   <div class="sky" aria-hidden="true"></div>
   <header class="site-header">
-    <a class="brand" href="./index.html"><span aria-hidden="true">☾</span> uma lua para lulu</a>
+    <a class="brand" href="./index.html" aria-label="Página inicial"><span aria-hidden="true">☾</span></a>
     <nav class="site-navigation" aria-label="Navegação principal">
       <a href="./index.html">início</a><a href="./nosso-album.html">nosso álbum</a><a href="./poemas.html">poemas</a><a href="./bilhetinhos.html" aria-current="page">bilhetinhos</a>
     </nav>
@@ -59,7 +59,11 @@
           <canvas id="card" width="1080" height="744" role="img" aria-label="Exemplo de bilhetinho"></canvas>
           <div id="photo-controls"></div>
         </div></div>
-        <p id="gesture-help" hidden>Arraste uma foto para movê-la. Puxe o canto para mudar o tamanho. Pelo teclado, use as setas no controle selecionado.</p>
+        <div id="size-panel" hidden>
+          <label for="photo-size">Tamanho da foto</label>
+          <input id="photo-size" type="range" min="85" max="760">
+        </div>
+        <p id="gesture-help" hidden>Arraste a foto para movê-la. Para ajustar o tamanho, arraste o botão do canto ou toque nele para abrir a barra de tamanho.</p>
       </figure>
     </div>
   </main>
