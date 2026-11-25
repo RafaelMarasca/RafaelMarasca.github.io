@@ -47,11 +47,23 @@
 
   async function migrate(code, NEW) {
     say('Entrando nos dois servidores…', 'skip');
-    const [oldGifts, oldNotes, fresh] = await Promise.all([
-      call(OLD, '/unlock', {method: 'POST', body: {code}}),
-      call(OLD, '/unlock', {method: 'POST', body: {scope: 'bilhetinhos', code}}),
-      call(NEW, '/unlock', {method: 'POST', body: {code}})
-    ]).catch(error => { throw new Error('Não deu para entrar: ' + error.message); });
+    // The old server refuses a second login while another is in progress,
+    // so log in one at a time and retry briefly if it's still busy.
+    async function login(base, body) {
+      for (let attempt = 1; ; attempt++) {
+        try { return await call(base, '/unlock', {method: 'POST', body}); }
+        catch (error) {
+          if (error.status === 403 || error.status === 401 || attempt === 4) throw error;
+          await new Promise(resolve => setTimeout(resolve, 1500 * attempt));
+        }
+      }
+    }
+    let oldGifts, oldNotes, fresh;
+    try {
+      oldGifts = await login(OLD, {code});
+      oldNotes = await login(OLD, {scope: 'bilhetinhos', code});
+      fresh = await login(NEW, {code});
+    } catch (error) { throw new Error('Não deu para entrar: ' + error.message); }
     const giftSession = oldGifts.session, noteSession = oldNotes.session, session = fresh.session;
     const totals = {gifts: 0, giftsSkipped: 0, notes: 0, notesSkipped: 0, problems: 0};
 
