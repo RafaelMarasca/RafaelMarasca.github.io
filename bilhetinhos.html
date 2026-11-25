@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#111820">
+  <title>Bilhetinhos · Uma lua para Lulu</title>
+  <link rel="stylesheet" href="./site-nav.css?v=2">
+  <link rel="stylesheet" href="./bilhetinhos.css">
+  <script src="./bilhetinhos.js" defer></script>
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="./index.html"><span aria-hidden="true">☾</span> uma lua para lulu</a>
+    <nav class="site-navigation" aria-label="Navegação principal">
+      <a href="./index.html">início</a><a href="./nosso-album.html">nosso álbum</a><a href="./poemas.html">poemas</a><a href="./bilhetinhos.html" aria-current="page">bilhetinhos</a>
+    </nav>
+  </header>
+  <main>
+    <h1>Um <em>bilhetinho.</em></h1>
+    <p class="intro">Escreva um recado e leve uma cópia em imagem.</p>
+    <div class="desk">
+      <section class="editor" aria-label="Editar bilhetinho">
+        <label for="message">Seu recado</label>
+        <textarea id="message" rows="5" maxlength="280" placeholder="O que você quer dizer?" aria-describedby="count"></textarea>
+        <small id="count">0 / 280</small>
+        <fieldset>
+          <legend>Cor do papel</legend>
+          <div class="papers">
+            <label><input type="radio" name="paper" value="creme" checked><span class="swatch creme"></span>Creme</label>
+            <label><input type="radio" name="paper" value="rosa"><span class="swatch rosa"></span>Rosa</label>
+            <label><input type="radio" name="paper" value="azul"><span class="swatch azul"></span>Azul</label>
+          </div>
+        </fieldset>
+        <button id="download" type="button" disabled>Baixar bilhetinho em PNG</button>
+        <p id="status" role="status"></p>
+        <noscript>Ative o JavaScript para escrever e baixar seu bilhetinho.</noscript>
+      </section>
+      <figure>
+        <figcaption>Prévia do bilhetinho</figcaption>
+        <div class="stage"><canvas id="card" width="1080" height="744" role="img" aria-label="Exemplo de bilhetinho"></canvas></div>
+      </figure>
+    </div>
+  </main>
+</body>
+</html>
