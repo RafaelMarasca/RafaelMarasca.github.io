@@ -74,6 +74,12 @@ Depois dos jogos, fica apenas “Só volto se você não desviar dos beijinhos�
 
 As três páginas publicadas usam o mesmo fundo e a navegação superior “início”, “nosso álbum” e “poemas”. A cor de fundo e a navegação ficam em `site-nav.css`; as estrelas, luas e a textura compartilhadas ficam em `ceu.css`. A página de poemas inclui uma linha abaixo do título da página e separadores após cada poema. O controle de música do álbum fica abaixo da navegação. A publicação inclui os arquivos automaticamente, sem dependências.
 
+## Acesso ao site
+
+Todas as páginas pedem a mesma frase de cinco palavras da lista de presentes. A entrada fica em `site-acesso.js` e `site-acesso.css`, carregados no `<head>` de cada página. Com **Lembrar neste aparelho** marcado, a frase fica guardada no navegador para renovar a entrada sozinha; sem marcar, vale só até fechar a aba. O link **sair** na navegação apaga tudo neste aparelho.
+
+O portão esconde as páginas, mas textos e fotos estáticos (poemas, álbum) continuam no código público do GitHub Pages. Só a lista de presentes e os bilhetinhos ficam protegidos no servidor.
+
 ## GitHub Pages
 
 Para atualizar a publicação a partir deste computador, abra o terminal na pasta `New project` (que contém as duas pastas do site) e execute:

@@ -1,19 +1,10 @@
 'use strict';
-const apiOrigin = 'https://presentes-lulu-e-rafo.rafaelmarascamartins.chatgpt.site';
 const listUrl = 'https://rafaelmarasca.github.io/presentes.html';
 const el = id => document.getElementById(id);
-const sessionKey = 'lulu.gifts.session';
-function stored(storage, key, value) {
-  try {
-    if (value === undefined) return window[storage].getItem(key) || '';
-    if (value) window[storage].setItem(key, value);
-    else window[storage].removeItem(key);
-  } catch { /* The current tab still works when storage is unavailable. */ }
-  return '';
-}
 if (location.hash.startsWith('#convite=')) history.replaceState(null, '', location.pathname + location.search);
-stored('localStorage', 'lulu.gifts.invite', '');
-let session = stored('localStorage', sessionKey) || stored('sessionStorage', sessionKey);
+try { localStorage.removeItem('lulu.gifts.invite'); } catch {}
+// A entrada é feita uma vez para o site todo (site-acesso.js).
+let session = '';
 let gifts = [], details = new Map(), editing, draftPhoto = '', photoWork = 0, busy = false;
 let requestNumber = 0, viewRevision = 0, notifyTimer;
 const observer = new IntersectionObserver(entries => {
@@ -28,97 +19,18 @@ function notice(message) {
   el('notice').textContent = message;
   notifyTimer = setTimeout(() => { el('notice').textContent = ''; }, 4200);
 }
-function showGate(message = '') {
-  if (session && stored('localStorage', sessionKey) === session) stored('localStorage', sessionKey, '');
-  session = ''; stored('sessionStorage', sessionKey, '');
-  gifts = []; details.clear(); requestNumber++; viewRevision++; observer.disconnect();
-  document.querySelectorAll('dialog[open]').forEach(d => d.close());
-  el('giftForm').reset(); draftPhoto = ''; el('preview').removeAttribute('src');
-  el('cards').replaceChildren(); el('board').hidden = true; el('gate').hidden = false;
-  el('gateError').textContent = message;
-}
-window.addEventListener('storage', event => {
-  if (session && event.key === sessionKey && event.oldValue === session && event.newValue !== session) showGate();
-});
 async function api(path, method = 'GET', body, version) {
   const headers = {};
-  const requestSession = session;
-  if (requestSession) headers['X-Gift-Session'] = requestSession;
   if (version) headers['X-Gift-Version'] = version;
   if (body !== undefined) headers['Content-Type'] = 'application/json';
-  let response, data;
-  try {
-    response = await fetch(apiOrigin + path, {method, headers, body: body === undefined ? undefined : JSON.stringify(body), cache:'no-store', credentials:'omit', referrerPolicy:'no-referrer'});
-    data = await response.json();
-  } catch { throw new Error('Não foi possível conectar à lista. Confira sua conexão e tente de novo.'); }
-  if (!response.ok) {
-    if (response.status === 401 && session && session === requestSession) showGate('Sua sessão terminou. Digite a frase novamente.');
-    throw new Error(data.error || 'Não foi possível concluir.');
-  }
-  return data;
+  const response = await siteAccess.request(path, {method, headers, body: body === undefined ? undefined : JSON.stringify(body)});
+  try { return await response.json(); }
+  catch { throw new Error('Não foi possível conectar à lista. Confira sua conexão e tente de novo.'); }
 }
-const wordFields = Array.from(el('unlock').querySelectorAll('.phrase-words input'));
-function distributeWords(value, index) {
-  const words = value.trim().split(/\s+/u).filter(Boolean);
-  const start = words.length === wordFields.length ? 0 : index;
-  if (start + words.length > wordFields.length || words.join(' ').length > 160) {
-    el('gateError').textContent = 'A frase deve ter cinco palavras, uma por campo.';
-    return;
-  }
-  words.forEach((word, offset) => { wordFields[start + offset].value = word; });
-  if (words.length) wordFields[Math.min(start + words.length, wordFields.length - 1)].focus();
-}
-wordFields.forEach((field, index) => {
-  field.addEventListener('paste', event => {
-    const value = event.clipboardData?.getData('text/plain') || '';
-    if (!/\s/u.test(value)) return;
-    event.preventDefault();
-    el('gateError').textContent = '';
-    distributeWords(value, index);
-  });
-  field.addEventListener('input', event => {
-    el('gateError').textContent = '';
-    if (!event.isComposing && /\s/u.test(field.value)) {
-      const value = field.value;
-      field.value = '';
-      distributeWords(value, index);
-    }
-  });
-  field.addEventListener('keydown', event => {
-    if (event.isComposing) return;
-    if (event.key === ' ' || (event.key === 'Enter' && index < wordFields.length - 1)) {
-      event.preventDefault();
-      if (field.value && index < wordFields.length - 1) wordFields[index + 1].focus();
-    } else if (event.key === 'Backspace' && !field.value && index > 0) {
-      event.preventDefault();
-      wordFields[index - 1].focus();
-    }
-  });
-});
-el('unlock').addEventListener('submit', async event => {
-  event.preventDefault();
-  const button = event.submitter || el('unlock').querySelector('button');
-  button.disabled = true; el('gateError').textContent = '';
-  try {
-    const code = wordFields.map(field => field.value.trim()).join(' ');
-    const remember = el('rememberDevice').checked;
-    const data = await api('/unlock','POST',{code, remember});
-    session = data.session;
-    if (remember) stored('localStorage', sessionKey, session);
-    const remembered = remember && stored('localStorage', sessionKey) === session;
-    stored('sessionStorage', sessionKey, remembered ? '' : session);
-    if (remember && !remembered) notice('O navegador não permitiu lembrar este aparelho.');
-    el('unlock').reset();
-    await enter();
-  } catch (e) {
-    el('gateError').textContent = e.message;
-  } finally { button.disabled = false; }
-});
 el('share').onclick = async () => {
   try { await navigator.clipboard.writeText(listUrl); notice('Link copiado.'); }
   catch { el('shareValue').value = listUrl; el('shareDialog').showModal(); el('shareValue').select(); }
 };
-el('lock').onclick = () => { stored('localStorage', sessionKey, ''); showGate(); wordFields[0].focus(); };
 document.querySelectorAll('.close').forEach(btn => btn.onclick = () => btn.closest('dialog').close());
 function node(tag, text, cls) {
   const element = document.createElement(tag);
@@ -243,7 +155,8 @@ async function refresh(force = false) {
   } catch (e) { if (number === requestNumber) el('sync').textContent = e.message; }
 }
 async function enter() {
-  el('gate').hidden = true; el('board').hidden = false;
+  session = 'aberta';
+  el('loading').hidden = true; el('board').hidden = false;
   el('empty').hidden = true; el('counter').textContent = 'Carregando…'; el('sync').textContent = '';
   await refresh(true);
 }
@@ -327,4 +240,4 @@ el('yesDelete').onclick=async()=>{
   try{await api('/gifts/'+editing.id,'DELETE',undefined,editing.version);el('editor').close();notice('Presente excluído.');await refresh(true);}
   catch(e){el('editError').textContent=e.message;}finally{saving(false);}
 };
-if (session) enter(); else showGate();
+siteAccess.ready.then(enter);

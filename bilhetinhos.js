@@ -448,11 +448,16 @@ function renderCard() {
       sizeInput.value = Math.round(Math.max(frame.width - 20, frame.height - 30));
     }
   });
-  document.querySelector('#count').textContent = editorText().length + ' / 280';
+  const count = document.querySelector('#count');
+  const used = editorText().length;
+  count.textContent = used + ' / 280';
+  count.dataset.level = used >= 280 ? 'full' : used >= 250 ? 'near' : '';
+  count.title = used >= 280 ? 'Esta caixa está cheia. Adicione outra caixa de texto para continuar.' : '';
   download.disabled = !hasContent || loadingPhotos;
   saveNote.disabled = pinNote.disabled = download.disabled;
   addPhotos.disabled = loadingPhotos || photos.length >= maxPhotos;
   statusText.textContent = '';
+  document.dispatchEvent(new Event('bilhetinho:mudou'));
 }
 
 function refreshPaper() {
@@ -471,6 +476,19 @@ const inkControls = document.querySelector('#ink-colors');
 const sizeDown = document.querySelector('#size-down');
 const sizeUp = document.querySelector('#size-up');
 const fontStatus = document.querySelector('#font-status');
+const customFont = document.querySelector('#custom-font');
+const formatButtons = Array.from(document.querySelectorAll('.format'));
+// Show the font currently under the caret, even one typed by hand.
+function showFont(name) {
+  if (!name) return;
+  let option = [...fontControl.options].find(item => item.value.toLowerCase() === name.toLowerCase());
+  if (!option) {
+    option = new Option(name, name);
+    option.style.fontFamily = '"' + name + '"';
+    fontControl.add(option, fontControl.querySelector('[data-custom]'));
+  }
+  fontControl.value = option.value;
+}
 for (const [name, color] of inks) {
   const button = document.createElement('button');
   button.type = 'button';
@@ -597,14 +615,20 @@ function rememberSelection() {
   if (node.nodeType !== Node.ELEMENT_NODE) node = node.parentElement;
   const css = getComputedStyle(node);
   const font = css.fontFamily.split(',')[0].replace(/["']/g, '').trim();
-  if (document.activeElement !== fontControl) fontControl.value = font;
+  if (document.activeElement !== fontControl) showFont(font);
+  for (const button of formatButtons) {
+    const pressed = button.dataset.command
+      ? document.queryCommandState(button.dataset.command)
+      : (css.textAlign === 'start' || css.textAlign === 'left' ? 'left' : css.textAlign) === button.dataset.align;
+    button.setAttribute('aria-pressed', String(pressed));
+  }
   const size = [...sizeControl.options].find(option => Number(option.text) === Math.round(parseFloat(css.fontSize)));
   if (size) sizeControl.value = size.value;
   const rgb = css.color.match(/\d+/g);
   if (rgb?.length >= 3) showInk('#' + rgb.slice(0, 3).map(v => Number(v).toString(16).padStart(2, '0')).join(''));
   if (typingFormat) {
     const settings = typingFormat.settings;
-    if (settings.has('fontName') && document.activeElement !== fontControl) fontControl.value = settings.get('fontName');
+    if (settings.has('fontName') && document.activeElement !== fontControl) showFont(settings.get('fontName'));
     if (settings.has('fontSize')) sizeControl.value = settings.get('fontSize');
     if (settings.has('foreColor')) showInk(settings.get('foreColor'));
   }
@@ -644,24 +668,67 @@ function availableFont(name) {
     return ctx.measureText(sample).width !== baseline;
   });
 }
-fontControl.addEventListener('input', () => { fontStatus.textContent = ''; });
+// Hide system fonts this device doesn't have; the two site fonts always load.
+for (const option of [...fontControl.options]) {
+  if (option.value && !['Manuscrita', 'Carta'].includes(option.value) && !availableFont(option.value)) option.remove();
+}
+let fontBeforeCustom = 'Manuscrita';
+fontControl.addEventListener('focus', () => { fontBeforeCustom = fontControl.value || fontBeforeCustom; });
 fontControl.addEventListener('change', () => {
-  const typed = fontControl.value.trim();
+  fontStatus.textContent = '';
+  if (fontControl.selectedOptions[0]?.hasAttribute('data-custom')) {
+    customFont.hidden = false;
+    customFont.value = '';
+    customFont.focus();
+    return;
+  }
+  customFont.hidden = true;
+  fontBeforeCustom = fontControl.value;
+  formatSelection([['fontName', fontControl.value]]);
+});
+function closeCustomFont() {
+  customFont.hidden = true;
+  showFont(fontBeforeCustom);
+}
+customFont.addEventListener('input', () => { fontStatus.textContent = ''; });
+customFont.addEventListener('keydown', event => {
+  if (event.key === 'Escape') { event.preventDefault(); closeCustomFont(); fontControl.focus(); return; }
+  if (event.key !== 'Enter') return;
+  event.preventDefault();
+  const typed = customFont.value.trim();
   const aliases = { caveat: 'Manuscrita', manuscrita: 'Manuscrita', carta: 'Carta', 'cormorant garamond': 'Carta' };
   const name = Object.hasOwn(aliases, typed.toLowerCase()) ? aliases[typed.toLowerCase()] : typed;
   if (!name || !/^[\p{L}\p{N}\p{M} .+'_-]+$/u.test(name) || !availableFont(name)) {
-    fontStatus.textContent = 'Fonte indisponível neste dispositivo. Escolha uma sugestão ou digite outro nome.';
+    fontStatus.textContent = 'Essa fonte não está instalada neste aparelho. Tente outro nome ou escolha uma da lista.';
     return;
   }
+  customFont.hidden = true;
   fontStatus.textContent = '';
+  showFont(name);
+  fontBeforeCustom = name;
   formatSelection([['fontName', name]]);
 });
-fontControl.addEventListener('keydown', event => {
-  if (event.key === 'Enter') {
-    event.preventDefault();
-    fontControl.blur();
+customFont.addEventListener('blur', () => { if (!customFont.hidden && !customFont.value.trim()) closeCustomFont(); });
+
+// Bold, italic, underline and alignment toggle in place, like any text editor.
+function toggleFormat(command) {
+  const range = savedRange && message.contains(savedRange.commonAncestorContainer) ? savedRange.cloneRange() : null;
+  message.focus({ preventScroll: true });
+  if (range) {
+    const selection = window.getSelection();
+    selection.removeAllRanges();
+    selection.addRange(range);
   }
-});
+  document.execCommand('styleWithCSS', false, false);
+  document.execCommand(command, false, null);
+  rememberSelection();
+  renderCard();
+}
+const alignCommands = { left: 'justifyLeft', center: 'justifyCenter', right: 'justifyRight' };
+for (const button of formatButtons) {
+  button.addEventListener('pointerdown', event => event.preventDefault());
+  button.addEventListener('click', () => toggleFormat(button.dataset.command || alignCommands[button.dataset.align]));
+}
 sizeControl.addEventListener('change', () => formatSelection([['fontSize', sizeControl.value]]));
 for (const [button, delta] of [[sizeDown, -1], [sizeUp, 1]]) {
   button.addEventListener('click', () => {
@@ -669,8 +736,15 @@ for (const [button, delta] of [[sizeDown, -1], [sizeUp, 1]]) {
     if (option) formatSelection([['fontSize', option.value]]);
   });
 }
-document.querySelector('#text-body').addEventListener('click', () =>
-  formatSelection([['fontName', 'Manuscrita'], ['fontSize', '3'], ['foreColor', selectedPalette().ink]]));
+document.querySelector('#text-body').addEventListener('click', () => {
+  const range = savedRange && message.contains(savedRange.commonAncestorContainer) ? savedRange : null;
+  // With nothing selected, clear the whole box.
+  if (!range || range.collapsed) {
+    savedRange = document.createRange();
+    savedRange.selectNodeContents(message);
+  }
+  formatSelection([['removeFormat', null], ['fontName', 'Manuscrita'], ['fontSize', '3'], ['foreColor', selectedPalette().ink]]);
+});
 
 // The formatting target survives blur, but the on-paper handles follow focus.
 function syncEditingFocus(target) {
@@ -708,6 +782,8 @@ function bindEditor(item) {
   });
   editor.addEventListener('paste', event => {
     event.preventDefault();
+    const images = Array.from(event.clipboardData.files).filter(file => file.type.startsWith('image/'));
+    if (images.length) { addPhotoFiles(images); return; }
     const text = event.clipboardData.getData('text/plain').replace(/\r\n?/g, '\n');
     const room = remainingCharacters();
     let inserted = '';
@@ -734,6 +810,7 @@ function bindEditor(item) {
   editor.addEventListener('input', event => {
     if (event.isComposing) renderCard();
     else acceptEdit();
+    if (event.inputType?.startsWith('format')) rememberSelection();
   });
   editor.addEventListener('compositionend', acceptEdit);
 }
@@ -1039,9 +1116,37 @@ function appendPhoto(photo) {
 }
 
 addPhotos.addEventListener('click', () => filesInput.click());
-filesInput.addEventListener('change', async () => {
+filesInput.addEventListener('change', () => {
   const files = Array.from(filesInput.files);
   filesInput.value = '';
+  addPhotoFiles(files);
+});
+const stage = document.querySelector('.stage');
+let dragDepth = 0;
+const carriesFiles = event => Array.from(event.dataTransfer?.types || []).includes('Files');
+stage.addEventListener('dragenter', event => {
+  if (!carriesFiles(event)) return;
+  event.preventDefault();
+  dragDepth++;
+  stage.classList.add('is-dropping');
+});
+stage.addEventListener('dragover', event => {
+  if (!carriesFiles(event)) return;
+  event.preventDefault();
+  event.dataTransfer.dropEffect = photos.length >= maxPhotos ? 'none' : 'copy';
+});
+stage.addEventListener('dragleave', () => {
+  dragDepth = Math.max(0, dragDepth - 1);
+  if (!dragDepth) stage.classList.remove('is-dropping');
+});
+stage.addEventListener('drop', event => {
+  if (!carriesFiles(event)) return;
+  event.preventDefault();
+  dragDepth = 0;
+  stage.classList.remove('is-dropping');
+  addPhotoFiles(Array.from(event.dataTransfer.files));
+});
+async function addPhotoFiles(files) {
   if (!files.length || loadingPhotos) return;
   loadingPhotos = true;
   renderCard();
@@ -1066,7 +1171,7 @@ filesInput.addEventListener('change', async () => {
     renderCard();
     photoStatus.textContent = notices.join(' ') || (photos.length === 1 ? '1 imagem no bilhetinho.' : photos.length + ' imagens no bilhetinho.');
   }
-});
+}
 document.querySelectorAll('input[name="style"]').forEach(input => input.addEventListener('change', renderCard));
 document.querySelectorAll('input[name="paper"]').forEach(input => input.addEventListener('change', refreshPaper));
 function exportCard() {
@@ -1110,6 +1215,12 @@ function drawTextRuns(ctx, editor, paper, scale) {
     const metrics = ctx.measureText('Mg');
     // A DOM range includes the font's ascent and descent, including for mixed sizes.
     const baselineOffset = (metrics.fontBoundingBoxAscent - metrics.fontBoundingBoxDescent) / 2;
+    // Underline doesn't inherit in computed style, so look at every ancestor.
+    let underline = false;
+    for (let element = node.parentElement; element && !underline; element = element === editor ? null : element.parentElement) {
+      underline = getComputedStyle(element).textDecorationLine.includes('underline');
+    }
+    const fontSize = parseFloat(css.fontSize);
     let run = null;
     function drawRun() {
       if (!run) return;
@@ -1117,6 +1228,10 @@ function drawTextRuns(ctx, editor, paper, scale) {
       const baseline = (run.middle - paper.top) / scale + baselineOffset;
       ctx.textAlign = 'left';
       ctx.fillText(run.text, x, baseline);
+      if (underline && run.text.trim()) {
+        const thickness = Math.max(1.5, fontSize / 18);
+        ctx.fillRect(x, baseline + fontSize * .12, ctx.measureText(run.text).width, thickness);
+      }
       run = null;
     }
     let offset = 0;

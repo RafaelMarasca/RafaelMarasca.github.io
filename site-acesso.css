@@ -1,0 +1,127 @@
+/* Portão de entrada do site e o botão "sair" da navegação. */
+@font-face {
+  font-family: GateSerif;
+  src: url('./assets/album/fonts/cormorant-garamond.woff') format('woff');
+  font-display: swap;
+}
+@font-face {
+  font-family: GateSerif;
+  src: url('./assets/album/fonts/cormorant-garamond-italic.woff') format('woff');
+  font-style: italic;
+  font-display: swap;
+}
+html.site-locked, html.site-locked body { background: #111820; }
+html.site-locked body { margin: 0; }
+
+#site-gate {
+  position: relative;
+  z-index: 20;
+  box-sizing: border-box;
+  min-height: 100svh;
+  display: grid;
+  place-items: center;
+  padding: 32px 16px;
+  color: #ece6d7;
+  font: 1rem/1.5 system-ui, sans-serif;
+  background:
+    radial-gradient(circle at 12% 23%, #e9debe88 .7px, transparent 1px) 0 0 / 193px 217px,
+    radial-gradient(circle at 80% 51%, #e9debe55 .8px, transparent 1px) 0 0 / 277px 319px,
+    radial-gradient(circle at 45% 7%, #e9debe44 .6px, transparent 1px) 0 0 / 337px 253px,
+    radial-gradient(ellipse at 50% 0%, #1f2d3a 0%, #111820 70%);
+}
+#site-gate *, #site-gate *::before { box-sizing: border-box; }
+#site-gate :is(p, h1, legend, label, span) { letter-spacing: normal; text-transform: none; }
+#site-gate .gate-card {
+  width: min(560px, 100%);
+  padding: clamp(24px, 5vw, 44px);
+  border: 1px solid #e8d8a92e;
+  border-radius: 18px;
+  background: #18222bdd;
+  box-shadow: 0 30px 80px #0007;
+  text-align: center;
+}
+#site-gate .gate-moon {
+  display: block;
+  color: #e8d8a9;
+  font: 3.2rem/1 Georgia, serif;
+  text-shadow: 0 0 28px #e8d8a966;
+}
+#site-gate h1 {
+  margin: 10px 0 0;
+  padding: 0;
+  border: 0;
+  color: #ece6d7;
+  font: 400 clamp(2.4rem, 8vw, 3.4rem)/1 GateSerif, Georgia, serif;
+  letter-spacing: -.03em;
+}
+#site-gate h1 em { color: #e8d8a9; }
+#site-gate .gate-lead { margin: 12px auto 0; max-width: 34ch; color: #b9c1c1; }
+#site-login { display: grid; gap: 14px; margin-top: 26px; text-align: left; }
+#site-login fieldset { min-width: 0; margin: 0; padding: 0; border: 0; }
+#site-login legend { padding: 0; font-weight: 600; color: #dce2de; }
+#site-gate-hint { margin: 4px 0 12px; color: #9fabad; font-size: .875rem; }
+.gate-words {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+}
+.gate-words label { display: grid; gap: 4px; min-width: 0; }
+.gate-words label span { color: #9fabad; font-size: .75rem; }
+.gate-words input {
+  width: 100%;
+  min-width: 0;
+  min-height: 46px;
+  padding: 10px;
+  border: 1px solid #50606a;
+  border-radius: 8px;
+  color: #f2ece0;
+  background: #101a22;
+  font: 1rem/1.4 system-ui, sans-serif;
+}
+.gate-words input:focus-visible { outline: 2px solid #e8d8a9; outline-offset: 2px; border-color: #e8d8a9; }
+.gate-remember {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  width: fit-content;
+  color: #dce2de;
+  cursor: pointer;
+}
+.gate-remember input { flex: none; width: 20px; height: 20px; margin: 0; accent-color: #e8d8a9; }
+#site-gate-status { margin: 0; min-height: 1.5em; color: #ffc1b9; font-size: .9rem; }
+#site-gate.is-busy #site-gate-status { color: #b9c1c1; }
+#site-login button {
+  min-height: 48px;
+  padding: 12px 20px;
+  border: 0;
+  border-radius: 9px;
+  color: #232523;
+  background: #e8d8a9;
+  font: 600 1rem/1.4 system-ui, sans-serif;
+  cursor: pointer;
+}
+#site-login button:hover { background: #f5e6ba; }
+#site-login button:focus-visible { outline: 2px solid #e8d8a9; outline-offset: 4px; }
+#site-gate.is-busy button { opacity: .6; cursor: wait; }
+@media (max-width: 520px) {
+  .gate-words { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .gate-words label:last-child { grid-column: 1 / -1; }
+}
+
+.site-header .site-navigation .site-exit {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  color: #8f9a9b;
+  background: transparent;
+  font: .875rem/1.4 'Courier New', monospace;
+  cursor: pointer;
+  text-underline-offset: .4em;
+}
+.site-header .site-navigation .site-exit:hover { color: var(--nav-accent, #e8d8a9); background: transparent; text-decoration: underline; }
+.site-header .site-navigation .site-exit:focus-visible { outline: 2px solid var(--nav-accent, #e8d8a9); outline-offset: 5px; }

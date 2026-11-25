@@ -3,12 +3,14 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="./site-acesso.css?v=1">
+  <script src="./site-acesso.js?v=1"></script>
   <meta name="theme-color" content="#111820">
   <title>Bilhetinhos</title>
   <link rel="stylesheet" href="./site-nav.css?v=2">
   <link rel="stylesheet" href="./ceu.css?v=3">
-  <link rel="stylesheet" href="./bilhetinhos.css?v=14">
-  <script src="./bilhetinhos-acesso.js?v=2" defer></script>
+  <link rel="stylesheet" href="./bilhetinhos.css?v=16">
+  <script src="./bilhetinhos-acesso.js?v=4" defer></script>
 </head>
 <body class="site-page">
   <div class="sky" aria-hidden="true"></div>
@@ -19,41 +21,57 @@
     </nav>
   </header>
   <main>
-    <section id="note-gate" aria-labelledby="gate-title">
-      <h1 id="gate-title">Bilhetinhos</h1>
-      <form id="note-login">
-        <fieldset aria-describedby="phrase-hint">
-          <legend>Frase de acesso</legend>
-          <p id="phrase-hint">Use as mesmas cinco palavras da lista de presentes, na mesma ordem. Você também pode colar a frase inteira.</p>
-          <div class="note-words">
-            <label>1ª palavra<input type="password" required maxlength="160" autocomplete="off" autocapitalize="none" spellcheck="false" enterkeyhint="next"></label>
-            <label>2ª palavra<input type="password" required maxlength="160" autocomplete="off" autocapitalize="none" spellcheck="false" enterkeyhint="next"></label>
-            <label>3ª palavra<input type="password" required maxlength="160" autocomplete="off" autocapitalize="none" spellcheck="false" enterkeyhint="next"></label>
-            <label>4ª palavra<input type="password" required maxlength="160" autocomplete="off" autocapitalize="none" spellcheck="false" enterkeyhint="next"></label>
-            <label>5ª palavra<input type="password" required maxlength="160" autocomplete="off" autocapitalize="none" spellcheck="false" enterkeyhint="go"></label>
-          </div>
-        </fieldset>
-        <button>Entrar</button>
-      </form>
-      <p id="gate-status" role="status"></p>
-      <noscript>Ative o JavaScript para entrar.</noscript>
-    </section>
+    <p id="notes-loading" role="status">Abrindo os bilhetinhos…</p>
     <template id="notes-template">
     <div class="note-navigation">
       <button id="toggle-notes" type="button">Abrir editor</button>
-      <button id="lock-notes" type="button">Sair</button>
     </div>
     <section id="collection-view" aria-labelledby="collection-title">
     <h1 id="collection-title" tabindex="-1">Bilhetinhos</h1>
     <section id="daily-note" aria-labelledby="daily-title" hidden>
-      <h2 id="daily-title">Bilhetinho do dia</h2>
-      <time id="daily-date"></time>
-      <img id="daily-preview" alt="" hidden>
-      <label for="published-dates">Bilhetinhos por data</label>
-      <select id="published-dates"></select>
-      <a id="published-link">Link deste bilhetinho</a>
+      <div class="daily-head">
+        <button id="older-note" class="date-step" type="button" aria-label="Bilhetinho anterior" title="Anterior"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
+        <div class="daily-date">
+          <p id="daily-kicker"></p>
+          <h2 id="daily-title"><time id="daily-date"></time></h2>
+          <p id="daily-weekday"></p>
+        </div>
+        <button id="newer-note" class="date-step" type="button" aria-label="Próximo bilhetinho" title="Próximo"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button>
+      </div>
+      <div class="daily-paper">
+        <img id="daily-preview" alt="" hidden>
+        <p id="daily-wait" hidden></p>
+      </div>
+      <div class="daily-actions">
+        <button id="go-today" type="button" hidden>Voltar para hoje</button>
+        <button id="copy-link" type="button">Copiar link deste bilhetinho</button>
+      </div>
     </section>
     <p id="public-status" role="status"></p>
+    <section class="note-archive" aria-labelledby="archive-title" hidden>
+      <header>
+        <h2 id="archive-title">Todos os bilhetinhos</h2>
+        <p id="archive-count" role="status"></p>
+      </header>
+      <div class="archive-filters" role="search">
+        <label class="archive-search">Procurar
+          <input id="archive-search" type="search" placeholder="Uma palavra ou data" autocomplete="off">
+        </label>
+        <label>Mês
+          <select id="archive-month"></select>
+        </label>
+        <label>Ir para o dia
+          <input id="archive-date" type="date">
+        </label>
+      </div>
+      <div class="archive-chips" role="group" aria-label="Mostrar">
+        <button type="button" data-when="all" aria-pressed="true">Todos</button>
+        <button type="button" data-when="past" aria-pressed="false">Já abertos</button>
+        <button type="button" data-when="future" aria-pressed="false">Agendados</button>
+      </div>
+      <div id="archive-list"></div>
+      <p id="archive-empty" hidden>Nenhum bilhetinho com esse filtro. <button type="button" id="clear-filters">Limpar filtros</button></p>
+    </section>
     <section class="note-library" aria-labelledby="library-title">
       <header><h2 id="library-title">Meus bilhetinhos</h2><button id="new-note" type="button">Novo bilhetinho</button></header>
       <p>Rascunhos salvos neste navegador.</p>
@@ -64,7 +82,7 @@
     <section id="editor-view" aria-labelledby="editor-title" hidden>
     <header class="intro">
       <h1 id="editor-title" tabindex="-1">Um <em>bilhetinho.</em></h1>
-      <p id="text-help">Escreva no papel e selecione um trecho para formatar.</p>
+      <p id="text-help">Escreva no papel e selecione um trecho para formatar. Arraste ou cole fotos direto no bilhetinho.</p>
     </header>
     <div class="studio">
       <section class="composer-tools" aria-label="Ferramentas da cartinha">
@@ -83,10 +101,20 @@
         <p id="photo-status" role="status"></p>
         <div id="tools-text" class="tool-panel text-tools" role="tabpanel" aria-labelledby="tab-text">
           <div class="type-row">
-            <label class="field font-field" for="text-font">Fonte
-              <input id="text-font" type="text" list="font-names" value="Manuscrita" placeholder="Digite o nome da fonte" autocomplete="off" spellcheck="false" maxlength="100" aria-describedby="font-status">
-              <datalist id="font-names"><option value="Manuscrita">Caveat</option><option value="Carta">Cormorant Garamond</option><option value="Arial"></option><option value="Georgia"></option><option value="Courier New"></option><option value="Times New Roman"></option></datalist>
-            </label>
+            <div class="field font-field"><label for="text-font">Fonte</label>
+              <select id="text-font" aria-describedby="font-status">
+                <option value="Manuscrita" style="font-family:Manuscrita">Manuscrita</option>
+                <option value="Carta" style="font-family:Carta">Carta</option>
+                <option value="Georgia" style="font-family:Georgia">Georgia</option>
+                <option value="Times New Roman" style="font-family:'Times New Roman'">Times New Roman</option>
+                <option value="Arial" style="font-family:Arial">Arial</option>
+                <option value="Verdana" style="font-family:Verdana">Verdana</option>
+                <option value="Trebuchet MS" style="font-family:'Trebuchet MS'">Trebuchet MS</option>
+                <option value="Courier New" style="font-family:'Courier New'">Courier New</option>
+                <option value="" data-custom>Outra fonte…</option>
+              </select>
+              <input id="custom-font" type="text" placeholder="Nome da fonte e Enter" autocomplete="off" spellcheck="false" maxlength="100" aria-label="Nome de outra fonte" aria-describedby="font-status" hidden>
+            </div>
             <div class="field"><label for="text-size">Tamanho</label>
               <div class="size-stepper">
                 <button type="button" id="size-down" aria-label="Diminuir fonte">−</button>
@@ -100,8 +128,18 @@
           </div>
           <p id="font-status" role="status"></p>
           <div class="box-row">
-            <label for="box-list">Caixa de texto</label><select id="box-list" aria-label="Selecionar caixa de texto"></select>
-            <button type="button" id="text-body">Texto normal</button>
+            <div class="format-group" role="group" aria-label="Estilo do texto">
+              <button type="button" class="format" data-command="bold" aria-pressed="false" aria-label="Negrito" title="Negrito (Ctrl+B)"><b>N</b></button>
+              <button type="button" class="format" data-command="italic" aria-pressed="false" aria-label="Itálico" title="Itálico (Ctrl+I)"><i>I</i></button>
+              <button type="button" class="format" data-command="underline" aria-pressed="false" aria-label="Sublinhado" title="Sublinhado (Ctrl+U)"><u>S</u></button>
+            </div>
+            <div class="format-group" role="group" aria-label="Alinhamento">
+              <button type="button" class="format" data-align="left" aria-pressed="true" aria-label="Alinhar à esquerda" title="Alinhar à esquerda"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 6h16M4 10h10M4 14h16M4 18h10"/></svg></button>
+              <button type="button" class="format" data-align="center" aria-pressed="false" aria-label="Centralizar" title="Centralizar"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 6h16M7 10h10M4 14h16M7 18h10"/></svg></button>
+              <button type="button" class="format" data-align="right" aria-pressed="false" aria-label="Alinhar à direita" title="Alinhar à direita"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 6h16M10 10h10M4 14h16M10 18h10"/></svg></button>
+            </div>
+            <label for="box-list">Caixa</label><select id="box-list" aria-label="Selecionar caixa de texto"></select>
+            <button type="button" id="text-body" title="Volta para a letra manuscrita, sem negrito, itálico ou cor">Limpar formatação</button>
           </div>
         </div>
         <div id="tools-paper" class="tool-panel" role="tabpanel" aria-labelledby="tab-paper" hidden>
@@ -125,7 +163,7 @@
       </section>
       <noscript>Ative o JavaScript para escrever e baixar seu bilhetinho.</noscript>
       <figure aria-label="Sua cartinha">
-        <div class="stage"><div class="card-editor">
+        <div class="stage"><p class="drop-hint" aria-hidden="true">Solte as fotos no papel</p><div class="card-editor">
           <canvas id="card" width="1080" height="744" aria-hidden="true"></canvas>
           <div id="text-layers"></div>
           <div id="photo-controls"></div>
@@ -147,8 +185,9 @@
           </div>
         </div></div>
         <div class="paper-actions">
-          <button id="save-note" type="button" disabled>Salvar bilhetinho</button>
+          <button id="save-note" type="button" disabled title="Ctrl+S">Salvar bilhetinho</button>
           <button id="download" type="button" disabled>Baixar bilhetinho em PNG</button>
+          <span id="save-state" role="status"></span>
           <small id="count">0 / 280</small>
         </div>
         <div class="pin-actions">

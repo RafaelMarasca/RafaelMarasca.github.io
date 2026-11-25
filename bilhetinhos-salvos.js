@@ -12,8 +12,10 @@ function restoreText(html) {
     if (tag === 'font') {
       for (const key of ['face', 'size', 'color']) if (node.hasAttribute(key)) clean.setAttribute(key, node.getAttribute(key));
     }
+    if ((tag === 'div' || tag === 'p') && /^(left|center|right)$/.test(node.getAttribute('align') || ''))
+      clean.setAttribute('align', node.getAttribute('align'));
     if (clean.style) {
-      for (const key of ['fontFamily', 'fontSize', 'fontWeight', 'fontStyle', 'color', 'textDecoration'])
+      for (const key of ['fontFamily', 'fontSize', 'fontWeight', 'fontStyle', 'color', 'textDecoration', 'textAlign'])
         clean.style[key] = node.style[key];
     }
     for (const child of node.childNodes) clean.append(copy(child));
@@ -28,7 +30,6 @@ function restoreText(html) {
   const feedback = byId('save-status');
   const libraryStatus = byId('library-status');
   const dialog = byId('publish-dialog');
-  const datePicker = byId('published-dates');
   const today = () => new Intl.DateTimeFormat('sv-SE', {timeZone:'America/Sao_Paulo'}).format(new Date());
   const formatDate = date => new Intl.DateTimeFormat('pt-BR', {dateStyle:'long'}).format(new Date(date + 'T12:00:00'));
   dateInput.value = today();
@@ -127,6 +128,7 @@ function restoreText(html) {
     return baseline === JSON.stringify(layout()) || confirm('Descartar as alterações que ainda não foram salvas?');
   }
   async function openDraft(id) {
+    await saveChain.catch(() => {});
     if (!confirmSwitch()) return;
     let record, images = [];
     if (id) {
@@ -154,6 +156,9 @@ function restoreText(html) {
     saveNote.textContent = id ? 'Salvar alterações' : 'Salvar bilhetinho';
     feedback.textContent = photoStatus.textContent = '';
     baseline = JSON.stringify(layout());
+    clearTimeout(autosaveTimer);
+    lastSaved = null;
+    showSaveState();
     return true;
   }
 
@@ -217,12 +222,97 @@ function restoreText(html) {
   byId('toggle-notes').onclick = () => changeView(byId('editor-view').hidden);
   window.addEventListener('hashchange', showView);
   showView();
+  // ---------- Salvamento automático ----------
+  // Saves run one at a time so two of them never race for the same revision.
+  let saveChain = Promise.resolve(), saving = false, autosaveTimer, checkTimer, lastSaved;
+  const saveState = byId('save-state');
+  const isDirty = () => baseline !== JSON.stringify(layout());
+  const clock = date => date.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
+  function queueSave() {
+    const next = saveChain.catch(() => {}).then(async () => {
+      saving = true;
+      showSaveState();
+      try {
+        const title = await saveDraft();
+        lastSaved = new Date();
+        return title;
+      } finally { saving = false; showSaveState(); }
+    });
+    saveChain = next;
+    return next;
+  }
+  function showSaveState(error) {
+    saveState.dataset.state = error ? 'error' : saving ? 'saving' : isDirty() ? 'dirty' : editingId ? 'saved' : '';
+    saveState.textContent = error || (saving ? 'Salvando…' : isDirty() ? (saveNote.disabled ? '' : 'Alterações ainda não salvas') :
+      editingId ? (lastSaved ? 'Salvo às ' + clock(lastSaved) : 'Salvo') : '');
+  }
+  async function autosave() {
+    if (!isDirty() || saveNote.disabled) return showSaveState();
+    if (busy || saving || loadingPhotos || gesture) { autosaveTimer = setTimeout(autosave, 1500); return; }
+    try { await queueSave(); }
+    catch (error) { showSaveState(error?.name === 'Error' ? error.message : 'Não foi possível salvar automaticamente.'); return; }
+    if (isDirty()) scheduleAutosave();
+  }
+  function scheduleAutosave() {
+    clearTimeout(autosaveTimer);
+    autosaveTimer = setTimeout(autosave, 2500);
+  }
+  document.addEventListener('bilhetinho:mudou', () => {
+    // renderCard runs on every pointer move, so compare layouts only once things settle.
+    clearTimeout(checkTimer);
+    checkTimer = setTimeout(() => {
+      showSaveState();
+      if (isDirty()) scheduleAutosave();
+    }, 300);
+  });
+  window.addEventListener('beforeunload', event => {
+    if (saving || (isDirty() && !saveNote.disabled)) event.preventDefault();
+  });
+  document.addEventListener('keydown', event => {
+    if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's' && !byId('editor-view').hidden) {
+      event.preventDefault();
+      if (!saveNote.disabled) saveNote.click();
+    }
+  });
   saveNote.onclick = () => run(async () => {
-    await saveDraft();
+    clearTimeout(autosaveTimer);
+    await queueSave();
     feedback.textContent = 'Salvo em Meus bilhetinhos.';
   });
   byId('new-note').onclick = () => switchTo(undefined);
   listDrafts().catch(() => { libraryStatus.textContent = 'O armazenamento deste navegador está indisponível.'; });
+
+  // ---------- Bilhetinhos publicados ----------
+  const at = date => new Date(date + 'T12:00:00');
+  const fmt = options => new Intl.DateTimeFormat('pt-BR', options);
+  const dayMonth = fmt({day:'numeric', month:'long'});
+  const weekday = fmt({weekday:'long'});
+  const weekdayShort = fmt({weekday:'short'});
+  const monthShort = fmt({month:'short'});
+  const monthYear = fmt({month:'long', year:'numeric'});
+  const relative = new Intl.RelativeTimeFormat('pt-BR', {numeric:'auto'});
+  const capital = text => text.charAt(0).toUpperCase() + text.slice(1);
+  const fold = text => text.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase();
+  const daysBetween = (from, to) => Math.round((at(to) - at(from)) / 864e5);
+  function whenLabel(date) {
+    const days = daysBetween(publicToday, date);
+    if (days === 0) return 'Bilhetinho de hoje';
+    if (days === -1) return 'Bilhetinho de ontem';
+    if (days > 0) return 'Abre ' + relative.format(days, 'day');
+    const ago = -days;
+    if (ago < 7) return capital(relative.format(days, 'day'));
+    if (ago < 31) return capital(relative.format(-Math.floor(ago / 7), 'week'));
+    if (ago < 365) return capital(relative.format(-Math.floor(ago / 30), 'month'));
+    return capital(relative.format(-Math.floor(ago / 365), 'year'));
+  }
+
+  const archive = document.querySelector('.note-archive');
+  const search = byId('archive-search');
+  const monthPicker = byId('archive-month');
+  const dayPicker = byId('archive-date');
+  const archiveList = byId('archive-list');
+  const publicStatus = byId('public-status');
+  let selected, when = 'all';
 
   function noteLink(date) {
     const url = new URL(location.href);
@@ -230,24 +320,39 @@ function restoreText(html) {
     url.hash = '';
     return url;
   }
+  const isFuture = item => item.date > publicToday;
+  const latest = () => publications.find(item => item.date === publicToday) ||
+    publications.find(item => !isFuture(item)) || publications[publications.length - 1];
+
   let previewUrl, imageRequest = 0;
-  async function showPublication(date) {
+  async function showPublication(date, {scroll = false} = {}) {
     const generation = ++imageRequest;
     const img = byId('daily-preview');
-    img.hidden = true;
+    const wait = byId('daily-wait');
+    img.hidden = wait.hidden = true;
     img.removeAttribute('src');
     if (previewUrl) URL.revokeObjectURL(previewUrl);
-    const item = publications.find(item => item.date === date);
+    previewUrl = null;
+    const index = publications.findIndex(item => item.date === date);
+    const item = publications[index];
     byId('daily-note').hidden = !item;
+    selected = item?.date;
+    renderArchive();
     if (!item) return;
-    byId('daily-title').textContent = date === publicToday ? 'Bilhetinho do dia' : 'Bilhetinho de ' + formatDate(date);
     const time = byId('daily-date');
-    time.textContent = formatDate(date);
+    time.textContent = dayMonth.format(at(date));
     time.dateTime = date;
-    time.hidden = date !== publicToday;
+    const kicker = byId('daily-kicker');
+    kicker.textContent = whenLabel(date);
+    kicker.classList.toggle('is-today', date === publicToday);
+    byId('daily-weekday').textContent = weekday.format(at(date)) + ' · ' + date.slice(0, 4);
+    byId('older-note').disabled = index === publications.length - 1;
+    byId('newer-note').disabled = index === 0;
+    const home = latest();
+    byId('go-today').hidden = !home || home.date === date;
+    byId('go-today').textContent = home?.date === publicToday ? 'Voltar para hoje' : 'Ir para o mais recente';
     img.alt = item.title;
-    byId('published-link').href = noteLink(date);
-    datePicker.value = date;
+    if (scroll) byId('daily-note').scrollIntoView({behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block:'start'});
     try {
       const blob = await (await noteAccess.request('/bilhetinhos/' + date)).blob();
       if (generation !== imageRequest) return;
@@ -255,10 +360,120 @@ function restoreText(html) {
       img.src = previewUrl;
       img.hidden = false;
     } catch {
-      if (generation === imageRequest) byId('public-status').textContent = 'Não foi possível abrir este bilhetinho.';
+      if (generation !== imageRequest) return;
+      wait.textContent = isFuture(item) ? 'Este bilhetinho abre em ' + formatDate(date) + '. ♡' : 'Não foi possível abrir este bilhetinho.';
+      wait.hidden = false;
     }
   }
-  datePicker.onchange = () => { history.replaceState(null, '', noteLink(datePicker.value)); showPublication(datePicker.value); };
+  function select(date, options) {
+    history.replaceState(null, '', noteLink(date));
+    publicStatus.textContent = '';
+    showPublication(date, options);
+  }
+  function step(offset) {
+    const index = publications.findIndex(item => item.date === selected);
+    const next = publications[index + offset];
+    if (next) select(next.date);
+  }
+  byId('older-note').onclick = () => step(1);
+  byId('newer-note').onclick = () => step(-1);
+  byId('daily-note').addEventListener('keydown', event => {
+    if (event.target.closest('input, select, textarea')) return;
+    if (event.key === 'ArrowLeft') { event.preventDefault(); step(1); }
+    if (event.key === 'ArrowRight') { event.preventDefault(); step(-1); }
+  });
+  byId('go-today').onclick = () => { const home = latest(); if (home) select(home.date); };
+  byId('copy-link').onclick = async () => {
+    const link = noteLink(selected).href;
+    try { await navigator.clipboard.writeText(link); publicStatus.textContent = 'Link copiado.'; }
+    catch { publicStatus.textContent = link; }
+  };
+
+  function matches(item) {
+    if (when === 'past' && isFuture(item)) return false;
+    if (when === 'future' && !isFuture(item)) return false;
+    if (monthPicker.value && !item.date.startsWith(monthPicker.value)) return false;
+    const query = fold(search.value.trim());
+    if (!query) return true;
+    const haystack = fold([item.title, formatDate(item.date), weekday.format(at(item.date)), item.date].join(' '));
+    return query.split(/\s+/).every(word => haystack.includes(word));
+  }
+  const text = (tag, content, className) => Object.assign(document.createElement(tag), {textContent:content, className:className || ''});
+  function renderArchive() {
+    const shown = publications.filter(matches);
+    byId('archive-count').textContent = shown.length !== publications.length
+      ? shown.length + ' de ' + publications.length + ' bilhetinhos'
+      : publications.length + (publications.length === 1 ? ' bilhetinho' : ' bilhetinhos');
+    byId('archive-empty').hidden = shown.length > 0;
+    const groups = new Map();
+    for (const item of shown) {
+      const key = item.date.slice(0, 7);
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key).push(item);
+    }
+    archiveList.replaceChildren(...[...groups].map(([month, items]) => {
+      const group = document.createElement('section');
+      group.className = 'archive-month';
+      const list = document.createElement('ul');
+      for (const item of items) {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'archive-item' + (isFuture(item) ? ' is-future' : '');
+        if (item.date === selected) button.setAttribute('aria-current', 'true');
+        const tile = text('span', '', 'day-tile');
+        tile.setAttribute('aria-hidden', 'true');
+        tile.append(text('small', weekdayShort.format(at(item.date)).replace('.', '')),
+          text('b', String(Number(item.date.slice(8)))),
+          text('small', monthShort.format(at(item.date)).replace('.', '')));
+        const body = text('span', '', 'archive-text');
+        const date = text('time', capital(weekday.format(at(item.date))) + ', ' + formatDate(item.date));
+        date.dateTime = item.date;
+        body.append(date, text('span', item.title, 'archive-title'));
+        button.append(tile, body);
+        if (item.date === publicToday) button.append(text('span', 'hoje', 'archive-badge'));
+        else if (isFuture(item)) button.append(text('span', 'agendado', 'archive-badge'));
+        button.onclick = () => select(item.date, {scroll:true});
+        const li = document.createElement('li');
+        li.append(button);
+        list.append(li);
+      }
+      group.append(text('h3', capital(monthYear.format(at(month + '-01')))), list);
+      return group;
+    }));
+  }
+  function fillMonths() {
+    const current = monthPicker.value;
+    const counts = new Map();
+    for (const item of publications) counts.set(item.date.slice(0, 7), (counts.get(item.date.slice(0, 7)) || 0) + 1);
+    monthPicker.replaceChildren(new Option('Todos os meses', ''),
+      ...[...counts].map(([month, count]) => new Option(capital(monthYear.format(at(month + '-01'))) + ' (' + count + ')', month)));
+    monthPicker.value = counts.has(current) ? current : '';
+    if (publications.length) {
+      dayPicker.min = publications[publications.length - 1].date;
+      dayPicker.max = publications[0].date;
+    }
+  }
+  search.oninput = monthPicker.onchange = renderArchive;
+  for (const chip of archive.querySelectorAll('[data-when]')) chip.onclick = () => {
+    when = chip.dataset.when;
+    for (const other of archive.querySelectorAll('[data-when]')) other.setAttribute('aria-pressed', String(other === chip));
+    renderArchive();
+  };
+  byId('clear-filters').onclick = () => {
+    search.value = monthPicker.value = '';
+    archive.querySelector('[data-when="all"]').click();
+  };
+  dayPicker.onchange = () => {
+    const date = dayPicker.value;
+    if (!date || !publications.length) return;
+    if (publications.some(item => item.date === date)) { select(date, {scroll:true}); return; }
+    // Sem bilhetinho nesse dia: abre o mais próximo.
+    const nearest = publications.reduce((best, item) =>
+      Math.abs(daysBetween(item.date, date)) < Math.abs(daysBetween(best.date, date)) ? item : best);
+    select(nearest.date, {scroll:true});
+    publicStatus.textContent = 'Não há bilhetinho em ' + formatDate(date) + '. Mostrando o mais próximo, de ' + formatDate(nearest.date) + '.';
+  };
+
   const remote = async (path, options) => (await noteAccess.request(path, options)).json();
   let fetchNumber = 0;
   async function refreshPublic(preferred) {
@@ -266,15 +481,20 @@ function restoreText(html) {
     try {
       const result = await remote('/bilhetinhos');
       if (number !== fetchNumber) return;
-      publications = result.items;
-      publicToday = result.today;
-      datePicker.replaceChildren(...publications.map(item => new Option(formatDate(item.date), item.date)));
-      const date = preferred || new URL(location.href).searchParams.get('dia');
-      const found = publications.some(item => item.date === date);
-      byId('public-status').textContent = date && !found ? 'Ainda não há publicação para esta data.' :
+      publicToday = result.today || today();
+      publications = [...result.items].sort((a, b) => b.date.localeCompare(a.date));
+      fillMonths();
+      archive.hidden = !publications.length;
+      const param = new URL(location.href).searchParams.get('dia');
+      const asked = preferred || (/^\d{4}-\d{2}-\d{2}$/.test(param || '') ? param : null);
+      const found = publications.some(item => item.date === asked);
+      publicStatus.textContent = asked && !found ? 'Ainda não há bilhetinho para ' + formatDate(asked) + '.' :
         (publications.length ? '' : 'Ainda não há bilhetinhos publicados.');
-      showPublication(found ? date : publications[0]?.date);
-    } catch { if (number === fetchNumber) byId('public-status').textContent = 'Não foi possível carregar os bilhetinhos publicados.'; }
+      const keep = !preferred && selected && publications.some(item => item.date === selected);
+      const date = found ? asked : keep ? selected : latest()?.date;
+      if (date !== selected || !previewUrl) showPublication(date);
+      else renderArchive();
+    } catch { if (number === fetchNumber) publicStatus.textContent = 'Não foi possível carregar os bilhetinhos publicados.'; }
   }
   refreshPublic();
   document.addEventListener('visibilitychange', () => { if (!document.hidden) refreshPublic(); });
@@ -303,7 +523,7 @@ function restoreText(html) {
         if (version !== 'new' && !confirm('Substituir o bilhetinho já publicado para ' + formatDate(date) + '?')) {
           dialog.close(); return;
         }
-        const title = await saveDraft();
+        const title = await queueSave();
         await document.fonts.ready;
         renderCard();
         const image = exportCard().toDataURL('image/jpeg', .88);
