@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <meta name="referrer" content="no-referrer">
+  <title>Mudança de servidor</title>
+  <style>
+    body { max-width: 42rem; margin: 2rem auto; padding: 0 1rem; color: #ece6d7; background: #111820; font: 1rem/1.5 system-ui, sans-serif; }
+    h1 { font: 400 2.2rem/1.2 Georgia, serif; margin-bottom: .3rem; }
+    p { color: #b9c1c1; }
+    label { display: grid; gap: .3rem; margin: 1rem 0; font-weight: 600; }
+    input { width: 100%; box-sizing: border-box; padding: .7rem; border: 1px solid #50606a; border-radius: .4rem; color: #f2ece0; background: #18222b; font: 1rem/1.4 system-ui, sans-serif; }
+    button { min-height: 48px; padding: .6rem 1.2rem; border: 0; border-radius: .4rem; background: #e8d8a9; color: #232523; font: 600 1rem system-ui, sans-serif; cursor: pointer; }
+    button:disabled { opacity: .6; cursor: wait; }
+    ol { padding-left: 1.3rem; }
+    #log { list-style: none; padding: 0; margin-top: 1.5rem; display: grid; gap: .35rem; font: .9rem/1.4 ui-monospace, monospace; }
+    #log .ok { color: #a6cfad; } #log .skip { color: #b9c1c1; } #log .warn { color: #e8c98a; } #log .error { color: #ffc1b9; }
+    #summary { margin-top: 1.2rem; padding: 1rem; border: 1px solid #50606a; border-radius: .5rem; }
+  </style>
+</head>
+<body>
+  <h1>Mudança de servidor</h1>
+  <p>Copia a lista de presentes, os bilhetinhos publicados e a chave dos rascunhos do servidor antigo (ChatGPT) para o novo (Cloudflare). Nada é apagado do antigo. Pode rodar de novo sem duplicar: o que já foi copiado é pulado.</p>
+  <form id="form">
+    <label>Endereço do novo servidor
+      <input id="target" type="url" required placeholder="https://lulu-e-rafo-api.seu-nome.workers.dev" autocomplete="off">
+    </label>
+    <label>Frase de acesso (as cinco palavras, iguais nos dois servidores)
+      <input id="phrase" type="password" required autocomplete="off" autocapitalize="none" spellcheck="false">
+    </label>
+    <button id="start">Copiar tudo</button>
+  </form>
+  <div id="summary" hidden></div>
+  <ul id="log" aria-live="polite"></ul>
+  <script src="./migrar.js?v=1"></script>
+</body>
+</html>

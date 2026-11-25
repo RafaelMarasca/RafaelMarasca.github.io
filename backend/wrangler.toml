@@ -1,0 +1,14 @@
+# Só é usado se você preferir publicar pelo terminal (npx wrangler deploy).
+# Pelo painel da Cloudflare, este arquivo não é necessário.
+name = "lulu-e-rafo-api"
+main = "worker.js"
+compatibility_date = "2026-11-01"
+
+[vars]
+ALLOWED_ORIGINS = "https://rafaelmarasca.github.io"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "lulu-e-rafo"
+# Troque pelo ID que aparece depois de: npx wrangler d1 create lulu-e-rafo
+database_id = "COLE-AQUI-O-ID-DO-BANCO"

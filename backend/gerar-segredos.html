@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <meta name="referrer" content="no-referrer">
+  <title>Gerar segredos do servidor</title>
+  <style>
+    body { max-width: 40rem; margin: 2rem auto; padding: 0 1rem; color: #ece6d7; background: #111820; font: 1rem/1.5 system-ui, sans-serif; }
+    h1 { font: 400 2rem/1.2 Georgia, serif; }
+    label { display: grid; gap: .3rem; margin: 1rem 0; font-weight: 600; }
+    input, textarea { width: 100%; box-sizing: border-box; padding: .7rem; border: 1px solid #50606a; border-radius: .4rem; color: #f2ece0; background: #18222b; font: 1rem/1.4 ui-monospace, monospace; }
+    textarea { min-height: 4.5rem; resize: vertical; word-break: break-all; }
+    button { min-height: 44px; padding: .6rem 1.1rem; border: 0; border-radius: .4rem; background: #e8d8a9; color: #232523; font: 600 1rem system-ui, sans-serif; cursor: pointer; }
+    p, li { color: #b9c1c1; }
+    .copy { margin-top: .3rem; background: #223039; color: #ede8d9; border: 1px solid #677372; }
+  </style>
+</head>
+<body>
+  <h1>Segredos do servidor</h1>
+  <p>Tudo acontece neste navegador: a frase não é enviada a lugar nenhum. Cole os dois resultados como <em>secrets</em> do Worker na Cloudflare (veja o LEIA-ME).</p>
+  <form id="form">
+    <label>Frase de acesso (as cinco palavras)
+      <input id="phrase" type="password" autocomplete="off" autocapitalize="none" spellcheck="false" required>
+    </label>
+    <button>Gerar</button>
+  </form>
+  <div id="result" hidden>
+    <label>PHRASE_HASH
+      <textarea id="hash" readonly></textarea>
+      <button type="button" class="copy" data-for="hash">Copiar</button>
+    </label>
+    <label>SESSION_SECRET
+      <textarea id="secret" readonly></textarea>
+      <button type="button" class="copy" data-for="secret">Copiar</button>
+    </label>
+    <p>Maiúsculas e espaços extras não importam: “Lua  Estrela” vale o mesmo que “lua estrela”.</p>
+  </div>
+  <script type="module">
+    import {hashPhrase} from './worker.js';
+    const form = document.getElementById('form');
+    form.onsubmit = async event => {
+      event.preventDefault();
+      const phrase = document.getElementById('phrase').value;
+      if (phrase.trim().split(/\s+/).length !== 5 && !confirm('A frase não tem cinco palavras. Continuar mesmo assim?')) return;
+      document.getElementById('hash').value = await hashPhrase(phrase, crypto.getRandomValues(new Uint8Array(16)));
+      const bytes = crypto.getRandomValues(new Uint8Array(32));
+      document.getElementById('secret').value = btoa(String.fromCharCode(...bytes)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+      document.getElementById('phrase').value = '';
+      document.getElementById('result').hidden = false;
+    };
+    for (const button of document.querySelectorAll('.copy')) button.onclick = async () => {
+      const field = document.getElementById(button.dataset.for);
+      try { await navigator.clipboard.writeText(field.value); button.textContent = 'Copiado'; }
+      catch { field.select(); }
+      setTimeout(() => { button.textContent = 'Copiar'; }, 1500);
+    };
+  </script>
+</body>
+</html>
