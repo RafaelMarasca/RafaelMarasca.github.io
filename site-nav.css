@@ -64,13 +64,21 @@ body { overflow-x: clip; }
   /* Marca e "sair" na primeira linha; os links numa única linha que rola de lado se faltar espaço. */
   .site-header { width: calc(100% - 32px); min-height: 0; flex-wrap: wrap; gap: 0; padding-block: 6px 0; }
   .site-header .site-navigation {
-    width: 100%; flex-wrap: nowrap; gap: 0 10px; overflow-x: auto;
+    width: 100%; flex-wrap: nowrap; gap: 0 14px; overflow-x: auto;
     overscroll-behavior-x: contain; scrollbar-width: none;
   }
   .site-header .site-navigation::-webkit-scrollbar { display: none; }
-  .site-header .site-navigation a { flex: none; font-size: .75rem; white-space: nowrap; }
-  /* "nosso álbum" vira "álbum" para os seis links caberem numa linha. */
+  .site-header .site-navigation a { flex: none; font-size: .78rem; white-space: nowrap; }
+  /* "nosso álbum" vira "álbum" para os links caberem numa linha. */
   .site-header .nav-extra { display: none; }
   .site-header .site-navigation .site-exit { position: absolute; top: 6px; right: 0; padding-left: 12px; }
   .album-tools { margin-block: -10px 10px; }
+}
+@media (max-width: 440px) {
+  /* Em telas estreitas os seis links não cabem numa linha: viram duas fileiras de três, sem rolar de lado. */
+  .site-header .site-navigation {
+    display: grid; grid-template-columns: repeat(3, auto); justify-content: space-between;
+    gap: 0 12px; overflow: visible; padding-bottom: 4px;
+  }
+  .site-header .site-navigation a { min-height: 40px; font-size: .8rem; }
 }
