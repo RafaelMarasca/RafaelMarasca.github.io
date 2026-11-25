@@ -270,8 +270,7 @@ function freeColumn(style, frames, top, bottom) {
 }
 
 const textFrame = document.querySelector('#text-frame');
-const adjustText = document.querySelector('#adjust-text');
-const boxHelp = document.querySelector('#box-help');
+const rotateText = document.querySelector('#rotate-text');
 function poseFor(left, top, width, height, angle, bounds) {
   const radians = angle * Math.PI / 180;
   const cos = Math.abs(Math.cos(radians)), sin = Math.abs(Math.sin(radians));
@@ -423,7 +422,7 @@ function renderCard() {
   preview.setTransform(width / paperWidth, 0, 0, height / paperHeight, 0, 0);
   paint(preview, style, palette, paperHeight, [], 56, 68, frames);
   placeOutline(textFrame, activeBox.layout.pose, activeBox.layout.width, activeBox.layout.height);
-  showAngle('text-angle', activeBox.angle);
+  rotateText.setAttribute('aria-label', 'Girar caixa de texto, ' + activeBox.angle + ' graus');
   document.querySelector('#photo-rotation').hidden = !selectedPhoto;
   if (selectedPhoto) showAngle('photo-angle', placements.get(selectedPhoto).angle);
   document.querySelector('#gesture-help').hidden = !frames.length;
@@ -465,6 +464,7 @@ let savedRange = null;
 let typingFormat = null;
 
 function activateBox(item) {
+  textFrame.hidden = false;
   if (item === activeBox) return;
   if (activeBox) activeBox.range = savedRange;
   if (gesture?.kind === 'text') gesture = null;
@@ -507,7 +507,7 @@ function addTextBox(focus = true) {
 boxList.addEventListener('change', () => {
   const box = textBoxes.find(item => String(item.id) === boxList.value);
   activateBox(box);
-  if (textFrame.hidden) box.editor.focus({ preventScroll: true });
+  box.editor.focus({ preventScroll: true });
 });
 document.querySelector('#add-box').addEventListener('click', () => addTextBox());
 document.querySelector('#remove-box').addEventListener('click', () => {
@@ -525,10 +525,10 @@ function showAngle(id, angle) {
   input.value = angle;
   input.nextElementSibling.value = angle + '°';
 }
-document.querySelector('#text-angle').addEventListener('input', event => {
-  activeBox.angle = event.target.valueAsNumber;
+function rotateActiveBox(degrees) {
+  activeBox.angle = ((Math.round(degrees) + 540) % 360) - 180;
   renderCard();
-});
+}
 document.querySelector('#photo-angle').addEventListener('input', event => {
   if (!selectedPhoto) return;
   placements.get(selectedPhoto).angle = event.target.valueAsNumber;
@@ -604,7 +604,6 @@ function bindEditor(item) {
   let acceptedHTML = editor.innerHTML;
   editor.addEventListener('focus', () => {
     activateBox(item);
-    setTextBoxMode(false);
   });
   editor.addEventListener('beforeinput', event => {
     if (event.isComposing || !event.inputType.startsWith('insert')) return;
@@ -672,7 +671,7 @@ async function readPhoto(file) {
 }
 
 function selectPhoto(photo) {
-  setTextBoxMode(false);
+  textFrame.hidden = true;
   if (selectedPhoto === photo) return;
   sizePanel.hidden = true;
   selectedPhoto = photo;
@@ -730,18 +729,6 @@ function beginGesture(event, button, target) {
   button.setPointerCapture(event.pointerId);
 }
 
-function setTextBoxMode(enabled) {
-  if (!enabled && gesture?.kind === 'text') gesture = null;
-  textFrame.hidden = boxHelp.hidden = !enabled;
-  adjustText.setAttribute('aria-pressed', String(enabled));
-  adjustText.textContent = enabled ? 'Concluir ajuste' : 'Ajustar caixa';
-}
-
-adjustText.addEventListener('click', () => {
-  setTextBoxMode(textFrame.hidden);
-  if (!textFrame.hidden) document.querySelector('#move-text').focus({ preventScroll: true });
-});
-
 function changeTextBox(start, resize, dx, dy, startPaperHeight) {
   const bounds = textBounds(currentStyle());
   const textPlacement = activeBox;
@@ -763,26 +750,39 @@ function changeTextBox(start, resize, dx, dy, startPaperHeight) {
   renderCard();
 }
 
-for (const button of textFrame.querySelectorAll('button')) {
+rotateText.addEventListener('click', event => {
+  if (!event.detail || draggedHandle !== rotateText) rotateActiveBox(activeBox.angle + 15);
+});
+
+for (const button of textFrame.querySelectorAll('button:not(#remove-box)')) {
   const resize = button.id === 'resize-text';
   const startBox = () => ({ ...textBoxFor(currentStyle()), height: message.offsetHeight });
   button.addEventListener('pointerdown', event => {
     if (event.button !== 0 || gesture) return;
     event.preventDefault();
     button.focus({ preventScroll: true });
-    beginGesture(event, button, { kind: 'text', resize, start: startBox(), pose: activeBox.layout.pose });
+    const pose = activeBox.layout.pose;
+    if (button === rotateText) {
+      const paper = card.getBoundingClientRect();
+      const scale = paper.width / paperWidth;
+      const cx = paper.left + pose.cx * scale, cy = paper.top + pose.cy * scale;
+      beginGesture(event, button, { kind: 'text', rotate: true, cx, cy, angle: activeBox.angle,
+        pointerAngle: Math.atan2(event.clientY - cy, event.clientX - cx) });
+    } else {
+      beginGesture(event, button, { kind: 'text', resize, start: startBox(), pose });
+    }
   });
   button.addEventListener('keydown', event => {
     if (event.key === 'Escape') {
-      setTextBoxMode(false);
-      adjustText.focus({ preventScroll: true });
+      message.focus({ preventScroll: true });
       return;
     }
     if (!Object.hasOwn(arrowSteps, event.key)) return;
     event.preventDefault();
     const [dx, dy] = arrowSteps[event.key];
     const step = event.shiftKey ? 30 : 10;
-    changeTextBox(startBox(), resize, step * dx, step * dy, paperHeight);
+    if (button === rotateText) rotateActiveBox(activeBox.angle + (dx + dy) * (event.shiftKey ? 15 : 1));
+    else changeTextBox(startBox(), resize, step * dx, step * dy, paperHeight);
   });
 }
 
@@ -832,6 +832,11 @@ function updateGesture(event) {
   if (gesture?.id !== event.pointerId) return;
   if (!draggedHandle && Math.hypot(event.clientX - gesture.x, event.clientY - gesture.y) < 3) return;
   draggedHandle = gesture.button;
+  if (gesture.rotate) {
+    const angle = Math.atan2(event.clientY - gesture.cy, event.clientX - gesture.cx);
+    rotateActiveBox(gesture.angle + (angle - gesture.pointerAngle) * 180 / Math.PI);
+    return;
+  }
   let dx = (event.clientX - gesture.x) * gesture.scale, dy = (event.clientY - gesture.y) * gesture.scale;
   if (gesture.resize && gesture.pose) {
     const { radians, fit } = gesture.pose;
