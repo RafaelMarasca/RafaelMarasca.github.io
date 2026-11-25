@@ -67,10 +67,17 @@ figure { margin: 0; min-width: 0; }
 .photo-box .move-photo:active { cursor: grabbing; }
 .photo-box.selected .move-photo { outline: 2px solid #735331; outline-offset: -1px; }
 .photo-box .size-photo, .photo-box .size-photo:enabled:hover { z-index: 1; right: 0; bottom: 0; transform: translate(50%, 50%); width: 44px; height: 44px; display: grid; place-items: center; border: none; border-radius: 50%; background: transparent; cursor: nwse-resize; }
-.photo-box .size-photo::before { content: '↘'; display: grid; place-items: center; width: 26px; height: 26px; border: 2px solid #fff5df; border-radius: 50%; background: #48382a; color: #fff5df; font: bold 1.1rem/1 system-ui; }
+.photo-box .size-photo::before {
+  content: '';
+  width: 26px;
+  height: 26px;
+  border: 2px solid #fff5df;
+  border-radius: 50%;
+  background: #48382a url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M5 5L19 19M5 12V5h7m0 14h7v-7' fill='none' stroke='%23fff5df' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / 16px 16px no-repeat;
+}
 .photo-box.handle-left .size-photo { right: auto; left: 0; transform: translate(-50%, 50%); cursor: nesw-resize; }
 .photo-box.handle-left .size-photo:enabled:hover { right: auto; left: 0; transform: translate(-50%, 50%); cursor: nesw-resize; }
-.photo-box.handle-left .size-photo::before { content: '↙'; }
+.photo-box.handle-left .size-photo::before { transform: scaleX(-1); }
 #size-panel:not([hidden]) { display: flex; align-items: center; flex-wrap: wrap; gap: .4rem 1rem; margin-top: .75rem; }
 #photo-size { min-height: 44px; flex: 1; min-width: 8rem; accent-color: var(--nav-accent); }
 .photo-box:not(.selected):not(:focus-within) .size-photo { opacity: 0; pointer-events: none; }
