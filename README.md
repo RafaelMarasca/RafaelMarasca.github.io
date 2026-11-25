@@ -74,6 +74,12 @@ Depois dos jogos, fica apenas “Só volto se você não desviar dos beijinhos�
 
 As três páginas publicadas usam o mesmo fundo e a navegação superior “início”, “nosso álbum” e “poemas”. A cor de fundo e a navegação ficam em `site-nav.css`; as estrelas, luas e a textura compartilhadas ficam em `ceu.css`. A página de poemas inclui uma linha abaixo do título da página e separadores após cada poema. O controle de música do álbum fica abaixo da navegação. A publicação inclui os arquivos automaticamente, sem dependências.
 
+## Buquê
+
+`buque.html` é uma página só para o buquê “flor de lua”. Ele começa embrulhado; ao tocar, as flores sobem de dentro do papel e desabrocham: lírios, margaridas, rosinhas, uma flor de lua, florzinhas douradas, mosquitinho, eucalipto e uma lua de enfeite, com pétalas, vagalumes e uma etiqueta “para Lulu ♡”. Depois de aberto, uma das flores esconde um beijinho: cada toque numa flor responde “quente” ou “frio” até a Lulu achar, e então o beijinho se esconde em outra. Tocar fora das flores balança o buquê e mostra um recadinho.
+
+O desenho inteiro é um SVG montado em `buque.js` (posições e tipos das flores ficam na lista `stems`); a aparência e as animações ficam em `buque.css`. Funciona por toque e teclado, pausa fora da tela e, com movimento reduzido, abre direto. Nada é enviado ou salvo.
+
 ## Acesso ao site
 
 Todas as páginas pedem a mesma frase de cinco palavras. A entrada fica em `site-acesso.js` e `site-acesso.css`, carregados no `<head>` de cada página. Com **Lembrar neste aparelho** marcado, o aparelho recebe uma entrada de 30 dias que se renova sozinha enquanto o site é usado; sem marcar, vale só até fechar a aba (no máximo 12 horas). A frase nunca fica guardada no aparelho. O link **sair** na navegação apaga a entrada deste aparelho.
