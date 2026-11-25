@@ -27,10 +27,15 @@ let gesture = null;
 let draggedHandle = null;
 let loadingPhotos = false;
 const sample = 'Vi a lua hoje\ne lembrei de você.';
+const inks = [
+  ['Grafite', '#393a35'], ['Azul-marinho', '#284967'], ['Verde-musgo', '#395640'],
+  ['Vinho', '#893954'], ['Ameixa', '#594269'], ['Terracota', '#904822']
+];
+const defaultInk = inks[0][1];
 const palettes = {
-  creme: { paper: '#f6ead0', ink: '#393a35', stamp: '#646e55' },
-  rosa: { paper: '#f6deda', ink: '#462f35', stamp: '#98656d' },
-  azul: { paper: '#dceaf1', ink: '#263946', stamp: '#516f83' }
+  creme: { paper: '#f6ead0', ink: defaultInk, stamp: '#646e55' },
+  rosa: { paper: '#f6deda', ink: defaultInk, stamp: '#98656d' },
+  azul: { paper: '#dceaf1', ink: defaultInk, stamp: '#516f83' }
 };
 const segmenter = typeof Intl.Segmenter === 'function'
   ? new Intl.Segmenter('pt-BR', { granularity: 'grapheme' }) : null;
@@ -400,7 +405,7 @@ function renderCard() {
   for (const item of textBoxes) {
     const raw = editorText(item.editor);
     hasContent ||= Boolean(raw.trim());
-    item.editor.dataset.empty = String(!raw && item === activeBox && !photos.length);
+    item.editor.dataset.empty = String(!raw && item === activeBox);
     const box = textBoxFor(style, item);
     arrangeEditor(item, box, palette, item.angle ? [] : obstacles, scale);
     const height = item.editor.offsetHeight;
@@ -421,6 +426,7 @@ function renderCard() {
   card.style.aspectRatio = paperWidth + ' / ' + paperHeight;
   preview.setTransform(width / paperWidth, 0, 0, height / paperHeight, 0, 0);
   paint(preview, style, palette, paperHeight, [], 56, 68, frames);
+  document.querySelector('#text-layers').classList.toggle('has-photos', photos.length > 0);
   placeOutline(textFrame, activeBox.layout.pose, activeBox.layout.width, activeBox.layout.height);
   rotateText.setAttribute('aria-label', 'Girar caixa de texto, ' + activeBox.angle + ' graus');
   document.querySelector('#gesture-help').hidden = !frames.length;
@@ -458,7 +464,48 @@ function editorText(editor = message) {
 
 const fontControl = document.querySelector('#text-font');
 const sizeControl = document.querySelector('#text-size');
-const colorControl = document.querySelector('#text-color');
+const inkControls = document.querySelector('#ink-colors');
+const sizeDown = document.querySelector('#size-down');
+const sizeUp = document.querySelector('#size-up');
+const fontStatus = document.querySelector('#font-status');
+for (const [name, color] of inks) {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.title = name;
+  button.setAttribute('aria-label', name);
+  button.setAttribute('aria-pressed', String(color === defaultInk));
+  button.dataset.color = color;
+  button.style.setProperty('--ink', color);
+  button.addEventListener('click', () => formatSelection([['foreColor', color]]));
+  inkControls.append(button);
+}
+function showInk(color) {
+  for (const button of inkControls.children) {
+    button.setAttribute('aria-pressed', String(button.dataset.color === color));
+  }
+}
+
+const tabs = Array.from(document.querySelectorAll('.tool-tabs [role=tab]'));
+function selectTab(current) {
+  for (const tab of tabs) {
+    const selected = tab === current;
+    tab.setAttribute('aria-selected', String(selected));
+    tab.tabIndex = selected ? 0 : -1;
+    document.getElementById(tab.getAttribute('aria-controls')).hidden = !selected;
+  }
+}
+tabs.forEach((tab, index) => {
+  tab.addEventListener('click', () => selectTab(tab));
+  tab.addEventListener('keydown', event => {
+    const positions = { ArrowLeft: (index + tabs.length - 1) % tabs.length,
+      ArrowRight: (index + 1) % tabs.length, Home: 0, End: tabs.length - 1 };
+    if (!Object.hasOwn(positions, event.key)) return;
+    event.preventDefault();
+    const next = tabs[positions[event.key]];
+    selectTab(next);
+    next.focus();
+  });
+});
 let savedRange = null;
 let typingFormat = null;
 
@@ -507,7 +554,11 @@ boxList.addEventListener('change', () => {
   activateBox(box);
   box.editor.focus({ preventScroll: true });
 });
-document.querySelector('#add-box').addEventListener('click', () => addTextBox());
+document.querySelector('#add-box').addEventListener('click', () => {
+  selectTab(document.querySelector('#tab-text'));
+  if (textBoxes.length === 1 && !editorText().trim()) message.focus();
+  else addTextBox();
+});
 document.querySelector('#remove-box').addEventListener('click', () => {
   if (textBoxes.length < 2) return;
   const index = textBoxes.indexOf(activeBox);
@@ -539,17 +590,19 @@ function rememberSelection() {
   if (node.nodeType !== Node.ELEMENT_NODE) node = node.parentElement;
   const css = getComputedStyle(node);
   const font = css.fontFamily.split(',')[0].replace(/["']/g, '').trim();
-  if ([...fontControl.options].some(option => option.value === font)) fontControl.value = font;
+  if (document.activeElement !== fontControl) fontControl.value = font;
   const size = [...sizeControl.options].find(option => Number(option.text) === Math.round(parseFloat(css.fontSize)));
   if (size) sizeControl.value = size.value;
   const rgb = css.color.match(/\d+/g);
-  if (rgb?.length >= 3) colorControl.value = '#' + rgb.slice(0, 3).map(v => Number(v).toString(16).padStart(2, '0')).join('');
+  if (rgb?.length >= 3) showInk('#' + rgb.slice(0, 3).map(v => Number(v).toString(16).padStart(2, '0')).join(''));
   if (typingFormat) {
     const settings = typingFormat.settings;
-    if (settings.has('fontName')) fontControl.value = settings.get('fontName');
+    if (settings.has('fontName') && document.activeElement !== fontControl) fontControl.value = settings.get('fontName');
     if (settings.has('fontSize')) sizeControl.value = settings.get('fontSize');
-    if (settings.has('foreColor')) colorControl.value = settings.get('foreColor');
+    if (settings.has('foreColor')) showInk(settings.get('foreColor'));
   }
+  sizeDown.disabled = sizeControl.selectedIndex === 0;
+  sizeUp.disabled = sizeControl.selectedIndex === sizeControl.length - 1;
 }
 
 function formatSelection(commands) {
@@ -574,9 +627,41 @@ function formatSelection(commands) {
 
 document.addEventListener('selectionchange', rememberSelection);
 for (const tools of document.querySelectorAll('.text-tools')) tools.addEventListener('pointerdown', rememberSelection);
-fontControl.addEventListener('change', () => formatSelection([['fontName', fontControl.value]]));
+function availableFont(name) {
+  const ctx = document.createElement('canvas').getContext('2d');
+  const sample = 'Bilhetinho WwMm 123 Áç';
+  return ['serif', 'sans-serif', 'monospace'].some(fallback => {
+    ctx.font = '48px ' + fallback;
+    const baseline = ctx.measureText(sample).width;
+    ctx.font = '48px "' + name + '", ' + fallback;
+    return ctx.measureText(sample).width !== baseline;
+  });
+}
+fontControl.addEventListener('input', () => { fontStatus.textContent = ''; });
+fontControl.addEventListener('change', () => {
+  const typed = fontControl.value.trim();
+  const aliases = { caveat: 'Manuscrita', manuscrita: 'Manuscrita', carta: 'Carta', 'cormorant garamond': 'Carta' };
+  const name = Object.hasOwn(aliases, typed.toLowerCase()) ? aliases[typed.toLowerCase()] : typed;
+  if (!name || !/^[\p{L}\p{N}\p{M} .+'_-]+$/u.test(name) || !availableFont(name)) {
+    fontStatus.textContent = 'Fonte indisponível neste dispositivo. Escolha uma sugestão ou digite outro nome.';
+    return;
+  }
+  fontStatus.textContent = '';
+  formatSelection([['fontName', name]]);
+});
+fontControl.addEventListener('keydown', event => {
+  if (event.key === 'Enter') {
+    event.preventDefault();
+    fontControl.blur();
+  }
+});
 sizeControl.addEventListener('change', () => formatSelection([['fontSize', sizeControl.value]]));
-colorControl.addEventListener('change', () => formatSelection([['foreColor', colorControl.value]]));
+for (const [button, delta] of [[sizeDown, -1], [sizeUp, 1]]) {
+  button.addEventListener('click', () => {
+    const option = sizeControl.options[sizeControl.selectedIndex + delta];
+    if (option) formatSelection([['fontSize', option.value]]);
+  });
+}
 document.querySelector('#text-body').addEventListener('click', () =>
   formatSelection([['fontName', 'Manuscrita'], ['fontSize', '3'], ['foreColor', selectedPalette().ink]]));
 

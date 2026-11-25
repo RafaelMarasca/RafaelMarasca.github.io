@@ -7,8 +7,8 @@
   <title>Bilhetinhos</title>
   <link rel="stylesheet" href="./site-nav.css?v=2">
   <link rel="stylesheet" href="./ceu.css?v=3">
-  <link rel="stylesheet" href="./bilhetinhos.css?v=10">
-  <script src="./bilhetinhos.js?v=10" defer></script>
+  <link rel="stylesheet" href="./bilhetinhos.css?v=11">
+  <script src="./bilhetinhos.js?v=11" defer></script>
 </head>
 <body class="site-page">
   <div class="sky" aria-hidden="true"></div>
@@ -19,17 +19,49 @@
     </nav>
   </header>
   <main>
-    <h1>Um <em>bilhetinho.</em></h1>
-    <div class="desk">
-      <section class="editor" aria-label="Editar bilhetinho">
-        <fieldset>
-          <legend>Imagens</legend>
-          <input id="photo-files" type="file" accept="image/jpeg,image/png,image/webp" multiple hidden>
-          <button id="add-photos" type="button" aria-describedby="photo-help">Adicionar imagens</button>
-          <p id="photo-help">Até 4 imagens em JPG, PNG ou WebP.</p>
-          <ul id="photo-list" aria-label="Imagens do bilhetinho"></ul>
-          <p id="photo-status" role="status"></p>
-        </fieldset>
+    <header class="intro">
+      <h1>Um <em>bilhetinho.</em></h1>
+      <p id="text-help">Escreva no papel e selecione um trecho para formatar.</p>
+    </header>
+    <div class="studio">
+      <section class="composer-tools" aria-label="Ferramentas da cartinha">
+        <div class="tool-head">
+          <div class="tool-tabs" role="tablist" aria-label="Ferramentas">
+            <button id="tab-text" role="tab" type="button" aria-selected="true" aria-controls="tools-text">Texto</button>
+            <button id="tab-paper" role="tab" type="button" aria-selected="false" aria-controls="tools-paper" tabindex="-1">Papel</button>
+          </div>
+          <div class="insert-tools" role="group" aria-label="Adicionar à cartinha">
+            <button type="button" id="add-box"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M3 7V4h14v3M10 4v15m-4 0h8m5-7v8m-4-4h8"/></svg>Adicionar texto</button>
+            <button type="button" id="add-photos" aria-describedby="photo-help" title="Até 4 fotos em JPG, PNG ou WebP"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 4H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h13a2 2 0 0 0 2-2v-7M3 16l5-5 4 4 3-3 5 5m-2-15v7m-3.5-3.5h7"/><circle cx="8" cy="8" r="1"/></svg>Adicionar foto</button>
+            <input id="photo-files" type="file" accept="image/jpeg,image/png,image/webp" multiple hidden>
+            <span id="photo-help" class="sr-only">Até 4 fotos em JPG, PNG ou WebP.</span>
+          </div>
+        </div>
+        <p id="photo-status" role="status"></p>
+        <div id="tools-text" class="tool-panel text-tools" role="tabpanel" aria-labelledby="tab-text">
+          <div class="type-row">
+            <label class="field font-field" for="text-font">Fonte
+              <input id="text-font" type="text" list="font-names" value="Manuscrita" placeholder="Digite o nome da fonte" autocomplete="off" spellcheck="false" maxlength="100" aria-describedby="font-status">
+              <datalist id="font-names"><option value="Manuscrita">Caveat</option><option value="Carta">Cormorant Garamond</option><option value="Arial"></option><option value="Georgia"></option><option value="Courier New"></option><option value="Times New Roman"></option></datalist>
+            </label>
+            <div class="field"><label for="text-size">Tamanho</label>
+              <div class="size-stepper">
+                <button type="button" id="size-down" aria-label="Diminuir fonte">−</button>
+                <select id="text-size" aria-label="Tamanho da fonte em pixels">
+                  <option value="1">32</option><option value="2">44</option><option value="3" selected>56</option><option value="4">68</option><option value="5">80</option><option value="6">96</option><option value="7">112</option>
+                </select>
+                <button type="button" id="size-up" aria-label="Aumentar fonte">+</button>
+              </div>
+            </div>
+            <fieldset class="ink-field"><legend>Cor da tinta</legend><div id="ink-colors"></div></fieldset>
+          </div>
+          <p id="font-status" role="status"></p>
+          <div class="box-row">
+            <label for="box-list">Caixa de texto</label><select id="box-list" aria-label="Selecionar caixa de texto"></select>
+            <button type="button" id="text-body">Texto normal</button>
+          </div>
+        </div>
+        <div id="tools-paper" class="tool-panel" role="tabpanel" aria-labelledby="tab-paper" hidden>
         <fieldset>
           <legend>Estilo do bilhetinho</legend>
           <div class="styles">
@@ -46,27 +78,10 @@
             <label><input type="radio" name="paper" value="azul"><span class="swatch azul"></span>Azul</label>
           </div>
         </fieldset>
-        <noscript>Ative o JavaScript para escrever e baixar seu bilhetinho.</noscript>
+        </div>
       </section>
-      <figure>
-        <figcaption>Sua cartinha</figcaption>
-        <p id="text-help">Toque no texto para editar. Arraste as alças da borda para mover, girar ou redimensionar a caixa.</p>
-        <div class="text-tools" role="group" aria-label="Caixas de texto">
-          <label>Caixa de texto<select id="box-list" aria-label="Selecionar caixa de texto"></select></label>
-          <button type="button" id="add-box">Adicionar caixa</button>
-        </div>
-        <div class="text-tools" role="group" aria-label="Formatação do recado">
-          <label>Fonte<select id="text-font">
-            <option value="Manuscrita">Manuscrita</option><option value="Carta">Serifada</option>
-            <option value="Arial">Sem serifa</option><option value="Courier New">Máquina de escrever</option>
-          </select></label>
-          <label>Tamanho<select id="text-size">
-            <option value="1">32</option><option value="2">44</option><option value="3" selected>56</option>
-            <option value="4">68</option><option value="5">80</option><option value="6">96</option><option value="7">112</option>
-          </select></label>
-          <label>Cor<input id="text-color" type="color" value="#393a35"></label>
-          <button type="button" id="text-body">Texto normal</button>
-        </div>
+      <noscript>Ative o JavaScript para escrever e baixar seu bilhetinho.</noscript>
+      <figure aria-label="Sua cartinha">
         <div class="stage"><div class="card-editor">
           <canvas id="card" width="1080" height="744" aria-hidden="true"></canvas>
           <div id="text-layers"></div>
@@ -98,6 +113,7 @@
           <input id="photo-size" type="range" min="85" max="760">
         </div>
         <p id="gesture-help" hidden>Toque na foto para mostrar as alças. Arraste a seta circular para girar ou o canto para mudar o tamanho.</p>
+        <ul id="photo-list" aria-label="Imagens do bilhetinho"></ul>
       </figure>
     </div>
   </main>
