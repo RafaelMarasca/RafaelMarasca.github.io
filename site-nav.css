@@ -61,7 +61,14 @@ body { overflow-x: clip; }
 }
 .album-main { overflow-x: clip; }
 @media (max-width: 740px) {
-  .site-header { flex-wrap: wrap; gap: 0; padding-block: 12px 8px; }
-  .site-header .site-navigation { width: 100%; gap: 4px 24px; }
+  /* Marca e "sair" na primeira linha; os links numa única linha que rola de lado se faltar espaço. */
+  .site-header { width: calc(100% - 32px); min-height: 0; flex-wrap: wrap; gap: 0; padding-block: 6px 0; }
+  .site-header .site-navigation {
+    width: 100%; flex-wrap: nowrap; gap: 0 18px; overflow-x: auto;
+    overscroll-behavior-x: contain; scrollbar-width: none;
+  }
+  .site-header .site-navigation::-webkit-scrollbar { display: none; }
+  .site-header .site-navigation a { flex: none; font-size: .8125rem; white-space: nowrap; }
+  .site-header .site-navigation .site-exit { position: absolute; top: 6px; right: 0; padding-left: 12px; }
   .album-tools { margin-block: -10px 10px; }
 }

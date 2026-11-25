@@ -1,0 +1,58 @@
+/* Página inicial no celular: textos legíveis (nada abaixo de ~10px) e toques
+   confortáveis. Carregado por último no index.html para valer sobre lua.css,
+   snake.css, moonlander.css e feedback.css. */
+@media (max-width: 740px) {
+  body.site-page .hero { padding-top: 22px; }
+  body.site-page .eyebrow { font-size: 11px; letter-spacing: .9px; line-height: 1.6; }
+  body.site-page .letter-paper .eyebrow { font-size: 10px; }
+  body.site-page .hero-description { font-size: 15px; }
+  body.site-page .letter-link { font-size: 12px; min-height: 48px; }
+
+  /* Lua e fotinhos do topo */
+  body.site-page .moon-prompt { font-size: 12px; }
+  body.site-page .moon-message { font-size: 12px; }
+  body.site-page .photo-print figcaption { font-size: 10px; line-height: 1.4; padding: 9px 2px 10px; }
+  body.site-page .memory-note { font-size: 13px; }
+
+  /* Música */
+  body.site-page .music-kicker { font-size: 10px; letter-spacing: .8px; }
+  body.site-page .music-strip p { font-size: 15px; }
+  body.site-page .music-strip p > span { font-size: 12px; }
+  body.site-page .music-strip button { font-size: 11px; min-width: 0; min-height: 44px; }
+
+  /* Motivos e seções */
+  body.site-page .number { font-size: 11px; }
+  body.site-page .reason p,
+  body.site-page .space-grid p,
+  body.site-page .cons-grid p { font-size: 15px; }
+  body.site-page blockquote .handwritten { font-size: 13px; }
+
+  /* Cartinha */
+  body.site-page .letter-action small,
+  body.site-page .envelope-address small { font-size: 11px; }
+  body.site-page #letter-hint,
+  body.site-page .fold-letter { font-size: 12px; min-height: 44px; }
+
+  /* Jogo da cobrinha */
+  body.site-page .snake-topline span,
+  body.site-page .snake-instructions,
+  body.site-page .snake-disclaimer { font-size: 11px; line-height: 1.6; }
+  body.site-page .snake-start { font-size: 13px; }
+
+  /* Moonlander */
+  body.site-page .moonlander-topline span { font-size: 10px; }
+  body.site-page .moonlander-hud { padding: 7px 0; text-align: center; }
+  body.site-page .moonlander-hud span { font-size: 10px; }
+  body.site-page .moonlander-hud b { display: block; margin: 1px 0 0; font-size: 13px; }
+  body.site-page .moonlander-help { font-size: 11px; line-height: 1.6; }
+  body.site-page #moonlander-pause { font-size: 12px; min-height: 44px; }
+  body.site-page .moonlander-start { font-size: 13px; }
+
+  /* Final */
+  body.site-page .feedback-hint { font-size: 11px; }
+  body.site-page .feedback-reply > span { font-size: 10px; }
+  body.site-page .feedback-privacy,
+  body.site-page .no-return-caption { font-size: 11px; line-height: 1.6; }
+  body.site-page footer,
+  body.site-page footer a { font-size: 11px; }
+}
