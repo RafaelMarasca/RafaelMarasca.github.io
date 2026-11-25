@@ -7,8 +7,8 @@
   <title>Bilhetinhos</title>
   <link rel="stylesheet" href="./site-nav.css?v=2">
   <link rel="stylesheet" href="./ceu.css?v=3">
-  <link rel="stylesheet" href="./bilhetinhos.css?v=6">
-  <script src="./bilhetinhos.js?v=5" defer></script>
+  <link rel="stylesheet" href="./bilhetinhos.css?v=7">
+  <script src="./bilhetinhos.js?v=7" defer></script>
 </head>
 <body class="site-page">
   <div class="sky" aria-hidden="true"></div>
@@ -22,9 +22,6 @@
     <h1>Um <em>bilhetinho.</em></h1>
     <div class="desk">
       <section class="editor" aria-label="Editar bilhetinho">
-        <label for="message">Seu recado</label>
-        <textarea id="message" rows="5" maxlength="280" placeholder="O que você quer dizer?" aria-describedby="count"></textarea>
-        <small id="count">0 / 280</small>
         <fieldset>
           <legend>Imagens</legend>
           <input id="photo-files" type="file" accept="image/jpeg,image/png,image/webp" multiple hidden>
@@ -54,11 +51,27 @@
         <noscript>Ative o JavaScript para escrever e baixar seu bilhetinho.</noscript>
       </section>
       <figure>
-        <figcaption>Prévia do bilhetinho</figcaption>
+        <figcaption>Sua cartinha</figcaption>
+        <p id="text-help">Escreva no papel. Selecione um trecho para mudar a aparência dele.</p>
+        <div class="text-tools" role="group" aria-label="Formatação do recado">
+          <label>Fonte<select id="text-font">
+            <option value="Manuscrita">Manuscrita</option><option value="Carta">Serifada</option>
+            <option value="Arial">Sem serifa</option><option value="Courier New">Máquina de escrever</option>
+          </select></label>
+          <label>Tamanho<select id="text-size">
+            <option value="1">32</option><option value="2">44</option><option value="3" selected>56</option>
+            <option value="4">68</option><option value="5">80</option><option value="6">96</option><option value="7">112</option>
+          </select></label>
+          <label>Cor<input id="text-color" type="color" value="#393a35"></label>
+          <button type="button" id="text-title">Título</button>
+          <button type="button" id="text-body">Texto normal</button>
+        </div>
         <div class="stage"><div class="card-editor">
-          <canvas id="card" width="1080" height="744" role="img" aria-label="Exemplo de bilhetinho"></canvas>
+          <canvas id="card" width="1080" height="744" aria-hidden="true"></canvas>
+          <div id="text-layer"><div id="message" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Texto da cartinha" aria-describedby="text-help count" data-hint="Escreva aqui…"></div></div>
           <div id="photo-controls"></div>
         </div></div>
+        <small id="count">0 / 280</small>
         <div id="size-panel" hidden>
           <label for="photo-size">Tamanho da foto</label>
           <input id="photo-size" type="range" min="85" max="760">

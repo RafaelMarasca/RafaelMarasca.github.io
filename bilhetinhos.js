@@ -16,6 +16,8 @@ const controls = document.querySelector('#photo-controls');
 const sizePanel = document.querySelector('#size-panel');
 const sizeInput = document.querySelector('#photo-size');
 const photoTop = 220;
+const paperWidth = 1080;
+let paperHeight = 744;
 let selectedPhoto = null;
 let gesture = null;
 let draggedHandle = null;
@@ -28,34 +30,6 @@ const palettes = {
 };
 const segmenter = typeof Intl.Segmenter === 'function'
   ? new Intl.Segmenter('pt-BR', { granularity: 'grapheme' }) : null;
-
-function wrapText(ctx, text, maxWidth) {
-  const lines = [];
-  for (const paragraph of text.split('\n')) {
-    let line = '';
-    for (const token of paragraph.match(/\s+|\S+/gu) || []) {
-      if (line && token.trim() && ctx.measureText(line + token).width > maxWidth) {
-        lines.push(line.trimEnd());
-        line = '';
-      }
-      if (ctx.measureText(line + token).width <= maxWidth) {
-        line += token;
-        continue;
-      }
-      const chars = segmenter
-        ? Array.from(segmenter.segment(token), part => part.segment) : Array.from(token);
-      for (const char of chars) {
-        if (line && ctx.measureText(line + char).width > maxWidth) {
-          lines.push(line);
-          line = '';
-        }
-        line += char;
-      }
-    }
-    lines.push(line.trimEnd());
-  }
-  return lines;
-}
 
 function circle(ctx, x, y, radius, color) {
   ctx.fillStyle = color;
@@ -291,32 +265,45 @@ function freeColumn(style, frames, top, bottom) {
   return right - x > best.width ? { x, width: right - x } : best;
 }
 
-// Give each line the widest clear stretch of paper at its actual height.
-function flowText(ctx, text, style, frames, size, leading) {
-  const lines = [];
-  let top = photoTop;
-  for (const paragraph of text.split('\n')) {
-    let chars = segmenter ? Array.from(segmenter.segment(paragraph), item => item.segment) : Array.from(paragraph);
-    if (!chars.length) top += leading;
-    while (chars.length) {
-      const column = freeColumn(style, frames, top - 4, top + leading + 4);
-      if (column.width < size * 3) {
-        top += leading;
-        continue;
-      }
-      let count = 0;
-      let space = 0;
-      while (count < chars.length && ctx.measureText(chars.slice(0, count + 1).join('')).width <= column.width) {
-        if (/\s/u.test(chars[count])) space = count + 1;
-        count++;
-      }
-      const take = count < chars.length && space ? space : Math.max(1, count);
-      lines.push({ text: chars.slice(0, take).join('').trimEnd(), x: column.x, y: top + size });
-      chars = chars.slice(take);
-      top += leading;
+const textLayer = document.querySelector('#text-layer');
+const exclusions = document.createElement('div');
+exclusions.style.display = 'contents';
+exclusions.setAttribute('aria-hidden', 'true');
+textLayer.prepend(exclusions);
+let lastBands = '';
+
+function arrangeEditor(style, palette, frames, scale) {
+  textLayer.style.left = style.left * scale + 'px';
+  textLayer.style.top = photoTop * scale + 'px';
+  textLayer.style.width = style.width + 'px';
+  textLayer.style.transform = 'scale(' + scale + ')';
+  message.style.color = palette.ink;
+
+  // Paired floats let the browser wrap editable text and selections around photos.
+  const edges = [...new Set([photoTop, ...frames.flatMap(frame =>
+    [Math.max(photoTop, frame.y - 18), frame.y + frame.height + 18])])].sort((a, b) => a - b);
+  const bands = edges.slice(1).map((edge, i) => {
+    const column = freeColumn(style, frames, edges[i], edge);
+    const left = column.width < 145 ? style.width : column.x - style.left;
+    const right = column.width < 145 ? 0 : style.width - left - column.width;
+    return [edge - edges[i], left, Math.max(0, right)];
+  });
+  const signature = JSON.stringify(bands);
+  if (signature === lastBands) return;
+  lastBands = signature;
+  const floats = document.createDocumentFragment();
+  for (const [height, left, right] of bands) {
+    for (const [side, width] of [['left', left], ['right', right]]) {
+      const spacer = document.createElement('div');
+      spacer.style.cssFloat = side;
+      spacer.style.clear = side === 'left' ? 'both' : 'none';
+      spacer.style.width = Math.floor(width * 64) / 64 + 'px';
+      spacer.style.height = height + 'px';
+      spacer.style.pointerEvents = 'none';
+      floats.append(spacer);
     }
   }
-  return { lines, bottom: top };
+  exclusions.replaceChildren(floats);
 }
 
 function paint(ctx, style, palette, height, lines, size, leading, frames = []) {
@@ -357,41 +344,33 @@ function drawChoices() {
 }
 
 function renderCard() {
-  const raw = message.value;
-  const hasMessage = Boolean(raw.trim());
-  const hasContent = hasMessage || photos.length > 0;
-  const text = hasMessage ? raw : (hasContent ? '' : sample);
-  const input = document.querySelector('input[name="style"]:checked');
-  const style = styles[input.value];
-  let size = 78;
-  let lines;
-  do {
-    preview.font = size + 'px Manuscrita, cursive';
-    lines = text ? wrapText(preview, text, style.width) : [];
-    if (lines.length * size * 1.22 <= 350 || size <= 42) break;
-    size -= 6;
-  } while (true);
-  const leading = Math.ceil(size * 1.22);
+  const raw = editorText();
+  const hasContent = Boolean(raw.trim()) || photos.length > 0;
+  const style = currentStyle();
+  const palette = selectedPalette();
   const frames = photos.map(photo => frameFor(photo, style));
-  if (frames.length) {
-    const flow = flowText(preview, text, style, frames, size, leading);
-    const bottom = Math.max(flow.bottom, ...frames.map(frame => frame.y + frame.height));
-    card.height = Math.ceil(Math.max(744, bottom + 136, gesture?.cardHeight ?? 0));
-    lines = flow.lines;
-  } else {
-    card.height = Math.ceil(Math.max(744, 365 + lines.length * leading));
-    lines = centeredLines(lines, style, card.height, size, leading);
-  }
-  paint(preview, style, selectedPalette(), card.height, lines, size, leading, frames);
+  const scale = card.getBoundingClientRect().width / paperWidth;
+  message.dataset.empty = String(!raw && !photos.length);
+  arrangeEditor(style, palette, frames, scale);
+  const bottom = Math.max(photoTop + message.offsetHeight, ...frames.map(frame => frame.y + frame.height));
+  paperHeight = Math.ceil(Math.max(744, bottom + 136, gesture?.cardHeight ?? 0));
+  // Keep very tall notes exportable on mobile canvases.
+  const resolution = Math.min(1, 12000 / paperHeight);
+  const width = Math.round(paperWidth * resolution), height = Math.round(paperHeight * resolution);
+  if (card.width !== width) card.width = width;
+  if (card.height !== height) card.height = height;
+  card.style.aspectRatio = paperWidth + ' / ' + paperHeight;
+  preview.setTransform(width / paperWidth, 0, 0, height / paperHeight, 0, 0);
+  paint(preview, style, palette, paperHeight, [], 56, 68, frames);
   document.querySelector('#gesture-help').hidden = !frames.length;
   if (!selectedPhoto) sizePanel.hidden = true;
   frames.forEach((frame, index) => {
     const place = placements.get(frame.photo);
     const box = place.box;
-    box.style.left = frame.x / card.width * 100 + '%';
-    box.style.top = frame.y / card.height * 100 + '%';
-    box.style.width = frame.width / card.width * 100 + '%';
-    box.style.height = frame.height / card.height * 100 + '%';
+    box.style.left = frame.x / paperWidth * 100 + '%';
+    box.style.top = frame.y / paperHeight * 100 + '%';
+    box.style.width = frame.width / paperWidth * 100 + '%';
+    box.style.height = frame.height / paperHeight * 100 + '%';
     box.style.zIndex = index + 1;
     box.classList.toggle('selected', frame.photo === selectedPhoto);
     box.classList.toggle('handle-left', place.handleLeft);
@@ -402,8 +381,6 @@ function renderCard() {
       sizeInput.value = Math.round(Math.max(frame.width - 20, frame.height - 30));
     }
   });
-  const photoNames = photos.map(photo => photo.getAttribute('aria-label'));
-  card.setAttribute('aria-label', [input.labels[0].textContent.trim(), hasContent ? text : 'Exemplo. ' + text, ...photoNames].filter(Boolean).join('. '));
   document.querySelector('#count').textContent = raw.length + ' / 280';
   download.disabled = !hasContent || loadingPhotos;
   addPhotos.disabled = loadingPhotos || photos.length >= maxPhotos;
@@ -415,7 +392,129 @@ function refreshPaper() {
   renderCard();
 }
 
-message.addEventListener('input', renderCard);
+function editorText() {
+  const text = message.innerText.replace(/\r/g, '');
+  return text === '\n' && !message.textContent ? '' : text;
+}
+
+const fontControl = document.querySelector('#text-font');
+const sizeControl = document.querySelector('#text-size');
+const colorControl = document.querySelector('#text-color');
+const titleButton = document.querySelector('#text-title');
+let savedRange = null;
+let acceptedHTML = '';
+let typingFormat = null;
+
+function atTypingCaret(range) {
+  return typingFormat && range.collapsed && range.startContainer === typingFormat.node &&
+    range.startOffset === typingFormat.offset;
+}
+
+function rememberSelection() {
+  const selection = window.getSelection();
+  if (!selection.rangeCount) return;
+  const range = selection.getRangeAt(0);
+  if (!message.contains(range.commonAncestorContainer)) return;
+  if (!atTypingCaret(range)) typingFormat = null;
+  savedRange = range.cloneRange();
+  let node = selection.focusNode;
+  if (node.nodeType !== Node.ELEMENT_NODE) node = node.parentElement;
+  const css = getComputedStyle(node);
+  const font = css.fontFamily.split(',')[0].replace(/["']/g, '').trim();
+  if ([...fontControl.options].some(option => option.value === font)) fontControl.value = font;
+  const size = [...sizeControl.options].find(option => Number(option.text) === Math.round(parseFloat(css.fontSize)));
+  if (size) sizeControl.value = size.value;
+  const rgb = css.color.match(/\d+/g);
+  if (rgb?.length >= 3) colorControl.value = '#' + rgb.slice(0, 3).map(v => Number(v).toString(16).padStart(2, '0')).join('');
+  if (typingFormat) {
+    const settings = typingFormat.settings;
+    if (settings.has('fontName')) fontControl.value = settings.get('fontName');
+    if (settings.has('fontSize')) sizeControl.value = settings.get('fontSize');
+    if (settings.has('foreColor')) colorControl.value = settings.get('foreColor');
+  }
+}
+
+function formatSelection(commands) {
+  const range = savedRange && message.contains(savedRange.commonAncestorContainer) ? savedRange.cloneRange() : document.createRange();
+  if (!message.contains(range.commonAncestorContainer)) {
+    range.selectNodeContents(message);
+    range.collapse(false);
+  }
+  const settings = new Map(atTypingCaret(range) ? typingFormat.settings : []);
+  for (const [command, value] of commands) settings.set(command, value);
+  message.focus({ preventScroll: true });
+  const selection = window.getSelection();
+  selection.removeAllRanges();
+  selection.addRange(range);
+  // Native inline formatting keeps the caret, mobile selection and undo history.
+  document.execCommand('styleWithCSS', false, false);
+  for (const [command, value] of settings) document.execCommand(command, false, value);
+  typingFormat = selection.isCollapsed ? { node: selection.focusNode, offset: selection.focusOffset, settings } : null;
+  rememberSelection();
+  renderCard();
+}
+
+document.addEventListener('selectionchange', rememberSelection);
+document.querySelector('.text-tools').addEventListener('pointerdown', rememberSelection);
+fontControl.addEventListener('change', () => formatSelection([['fontName', fontControl.value]]));
+sizeControl.addEventListener('change', () => formatSelection([['fontSize', sizeControl.value]]));
+colorControl.addEventListener('change', () => formatSelection([['foreColor', colorControl.value]]));
+titleButton.addEventListener('click', () => formatSelection([['fontName', 'Carta'], ['fontSize', '6']]));
+document.querySelector('#text-body').addEventListener('click', () =>
+  formatSelection([['fontName', 'Manuscrita'], ['fontSize', '3'], ['foreColor', selectedPalette().ink]]));
+card.addEventListener('click', () => message.focus({ preventScroll: true }));
+
+function remainingCharacters() {
+  const selection = window.getSelection();
+  const selected = selection.rangeCount && message.contains(selection.getRangeAt(0).commonAncestorContainer)
+    ? selection.toString().length : 0;
+  return 280 - editorText().length + selected;
+}
+message.addEventListener('beforeinput', event => {
+  if (event.isComposing || !event.inputType.startsWith('insert')) return;
+  const length = event.data?.length ?? (['insertParagraph', 'insertLineBreak'].includes(event.inputType) ? 1 : 0);
+  if (length > remainingCharacters()) event.preventDefault();
+});
+message.addEventListener('paste', event => {
+  event.preventDefault();
+  const text = event.clipboardData.getData('text/plain').replace(/\r\n?/g, '\n');
+  const room = remainingCharacters();
+  let inserted = '';
+  for (const part of segmenter ? segmenter.segment(text) : Array.from(text)) {
+    const char = part.segment ?? part;
+    if (inserted.length + char.length > room) break;
+    inserted += char;
+  }
+  if (inserted) document.execCommand('insertText', false, inserted);
+});
+message.addEventListener('drop', event => event.preventDefault());
+function acceptEdit() {
+  if (editorText().length > 280) {
+    message.innerHTML = acceptedHTML;
+    const range = document.createRange();
+    range.selectNodeContents(message);
+    range.collapse(false);
+    window.getSelection().removeAllRanges();
+    window.getSelection().addRange(range);
+  }
+  acceptedHTML = message.innerHTML;
+  renderCard();
+}
+message.addEventListener('input', event => {
+  if (event.isComposing) renderCard();
+  else acceptEdit();
+});
+message.addEventListener('compositionend', acceptEdit);
+
+let editorWidth = 0;
+new ResizeObserver(() => {
+  const width = card.getBoundingClientRect().width;
+  if (width === editorWidth) return;
+  editorWidth = width;
+  renderCard();
+}).observe(card);
+
+
 async function readPhoto(file) {
   const url = URL.createObjectURL(file);
   try {
@@ -498,7 +597,7 @@ function makeHandle(photo, resize) {
     selectPhoto(photo);
     draggedHandle = null;
     gesture = { id: event.pointerId, photo, resize, button, start: frameFor(photo, currentStyle()),
-      x: event.clientX, y: event.clientY, scale: card.width / card.getBoundingClientRect().width, cardHeight: card.height };
+      x: event.clientX, y: event.clientY, scale: paperWidth / card.getBoundingClientRect().width, cardHeight: paperHeight };
     button.setPointerCapture(event.pointerId);
   });
   button.addEventListener('keydown', event => {
@@ -513,7 +612,7 @@ function makeHandle(photo, resize) {
       resizePhoto(start, Math.max(start.width - 20, start.height - 30) + step * (dx + dy), style);
       renderCard();
     } else {
-      changeFrame(photo, start, false, step * dx, step * dy, card.height);
+      changeFrame(photo, start, false, step * dx, step * dy, paperHeight);
     }
   });
   return button;
@@ -636,11 +735,62 @@ filesInput.addEventListener('change', async () => {
 });
 document.querySelectorAll('input[name="style"]').forEach(input => input.addEventListener('change', renderCard));
 document.querySelectorAll('input[name="paper"]').forEach(input => input.addEventListener('change', refreshPaper));
-download.addEventListener('click', () => {
+function exportCard() {
+  const result = document.createElement('canvas');
+  result.width = card.width;
+  result.height = card.height;
+  const ctx = result.getContext('2d');
+  ctx.drawImage(card, 0, 0);
+  ctx.setTransform(result.width / paperWidth, 0, 0, result.height / paperHeight, 0, 0);
+  const paper = card.getBoundingClientRect();
+  const scale = paper.width / paperWidth;
+  const walker = document.createTreeWalker(message, NodeFilter.SHOW_TEXT);
+  const range = document.createRange();
+  while (walker.nextNode()) {
+    const node = walker.currentNode;
+    const css = getComputedStyle(node.parentElement);
+    ctx.font = [css.fontStyle, css.fontWeight, css.fontSize, css.fontFamily].join(' ');
+    ctx.fillStyle = css.color;
+    ctx.direction = css.direction;
+    const metrics = ctx.measureText('Mg');
+    // A DOM range includes the font's ascent and descent, including for mixed sizes.
+    const baselineOffset = (metrics.fontBoundingBoxAscent - metrics.fontBoundingBoxDescent) / 2;
+    let run = null;
+    function drawRun() {
+      if (!run) return;
+      const x = (run.left - paper.left) / scale;
+      const baseline = (run.middle - paper.top) / scale + baselineOffset;
+      ctx.textAlign = 'left';
+      ctx.fillText(run.text, x, baseline);
+      run = null;
+    }
+    let offset = 0;
+    const chars = segmenter ? segmenter.segment(node.data) : Array.from(node.data);
+    for (const part of chars) {
+      const char = part.segment ?? part;
+      range.setStart(node, offset);
+      offset += char.length;
+      range.setEnd(node, offset);
+      const rect = range.getBoundingClientRect();
+      if (char === '\n' || !rect.width) { drawRun(); continue; }
+      const middle = (rect.top + rect.bottom) / 2;
+      if (run && Math.abs(run.middle - middle) > .5 * scale) drawRun();
+      if (!run) run = { left: rect.left, middle, text: '' };
+      run.left = Math.min(run.left, rect.left);
+      run.text += char;
+    }
+    drawRun();
+  }
+  return result;
+}
+
+download.addEventListener('click', async () => {
   const link = document.createElement('a');
   link.download = 'meu-bilhetinho.png';
   try {
-    link.href = card.toDataURL('image/png');
+    if (document.fonts.status === 'loading') await document.fonts.ready;
+    renderCard();
+    link.href = exportCard().toDataURL('image/png');
     if (link.href === 'data:,') throw new Error('Imagem indisponível');
     document.body.append(link);
     link.click();
@@ -652,4 +802,4 @@ download.addEventListener('click', () => {
   }
 });
 refreshPaper();
-document.fonts.load('78px Manuscrita').then(refreshPaper, refreshPaper);
+Promise.all([document.fonts.load('56px Manuscrita'), document.fonts.load('96px Carta')]).then(refreshPaper, refreshPaper);
