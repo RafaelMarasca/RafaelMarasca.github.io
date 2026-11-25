@@ -14,10 +14,20 @@ const observer = new IntersectionObserver(entries => {
   }
 }, {rootMargin:'250px'});
 
-function notice(message) {
+// A short message at the bottom, optionally with one action (like "Desfazer").
+function notice(message, action) {
   clearTimeout(notifyTimer);
-  el('notice').textContent = message;
-  notifyTimer = setTimeout(() => { el('notice').textContent = ''; }, 4200);
+  const box = el('notice');
+  box.replaceChildren(document.createTextNode(message));
+  if (action) {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'notice-action';
+    button.textContent = action.label;
+    button.onclick = () => { clearTimeout(notifyTimer); box.replaceChildren(); action.run(); };
+    box.append(button);
+  }
+  notifyTimer = setTimeout(() => box.replaceChildren(), action ? 7000 : 4200);
 }
 async function api(path, method = 'GET', body, version) {
   const headers = {};
@@ -67,7 +77,8 @@ async function setPurchased(item, bought) {
     requestNumber++;
     details.set(item.id, {version: updated.version, promise: Promise.resolve(updated)});
     gifts = gifts.map(g => g.id === item.id ? {...g, bought, updated: updated.updated, version: updated.version} : g);
-    notice(bought ? 'Presente marcado como comprado.' : 'Presente voltou para Por comprar.');
+    notice(bought ? '“' + item.title + '” marcado como comprado.' : '“' + item.title + '” voltou para Por comprar.',
+      {label: 'Desfazer', run: () => setPurchased(item, !bought)});
   } catch (e) {
     if (session === activeSession) notice(e.message);
   } finally {
@@ -101,21 +112,30 @@ function tiltFor(id) {
   for (const char of id) hash = (hash * 31 + char.charCodeAt(0)) | 0;
   return ((Math.abs(hash) % 7) - 3) * .45;
 }
+const bagIcon = '<svg aria-hidden="true" viewBox="0 0 24 24"><path d="M5 8h14l-1 12H6zM9 8V6.5a3 3 0 0 1 6 0V8"/></svg>';
+const tickIcon = '<svg aria-hidden="true" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>';
+// One button that says what it does: "Marcar como comprado", then a filled "Comprado" that undoes on tap.
+function paintPurchase(button, g) {
+  const pending = pendingPurchases.has(g.id);
+  button.className = 'buy' + (g.bought ? ' is-on' : '');
+  button.disabled = pending;
+  button.setAttribute('aria-pressed', String(g.bought));
+  button.setAttribute('aria-label', g.bought ? g.title + ': comprado. Toque para voltar a Por comprar' : 'Marcar ' + g.title + ' como comprado');
+  button.innerHTML = g.bought ? tickIcon : bagIcon;
+  button.append(pending ? node('span', 'Salvando…') : g.bought ? node('span', 'Comprado')
+    : Object.assign(node('span'), {innerHTML: '<span class="long">Marcar como comprado</span><span class="short">Comprei</span>'}));
+}
 function purchaseToggle(g) {
-  const purchase = node('label', '', 'check');
-  const check = node('input');
-  check.type = 'checkbox';
-  check.checked = g.bought;
-  check.disabled = pendingPurchases.has(g.id);
-  check.setAttribute('aria-label', (g.bought ? 'Comprado' : 'Marcar como comprado') + ': ' + g.title);
-  const caption = node('span', check.disabled ? 'salvando…' : g.bought ? 'comprado' : 'já comprei');
-  check.onchange = () => {
-    check.disabled = true;
-    caption.textContent = 'salvando…';
-    void setPurchased(g, check.checked);
+  const button = node('button');
+  button.type = 'button';
+  paintPurchase(button, g);
+  button.onclick = () => {
+    pendingPurchases.add(g.id);
+    paintPurchase(button, g);
+    pendingPurchases.delete(g.id);
+    void setPurchased(g, !g.bought);
   };
-  purchase.append(check, caption);
-  return purchase;
+  return button;
 }
 function textButton(label, aria, onClick) {
   const button = node('button', label, 'text-link');
@@ -221,10 +241,7 @@ async function refreshViewer() {
   const request = ++viewerRequest;
   el('viewerTitle').textContent = g.title;
   el('viewerTags').replaceWith(Object.assign(forLine(g), {id: 'viewerTags'}));
-  const check = el('viewerBought');
-  check.checked = g.bought;
-  check.disabled = pendingPurchases.has(g.id);
-  el('viewerBoughtText').textContent = check.disabled ? 'salvando…' : g.bought ? 'comprado' : 'já comprei';
+  paintPurchase(el('viewerBuy'), g);
   el('viewer').classList.toggle('is-bought', g.bought);
   try {
     const record = await readGift(g);
@@ -243,12 +260,13 @@ async function refreshViewer() {
     if (!link.hidden) link.href = record.link;
   } catch (e) { if (request === viewerRequest) el('viewerText').textContent = e.message; }
 }
-el('viewerBought').onchange = () => {
+el('viewerBuy').onclick = () => {
   const g = gifts.find(item => item.id === viewing);
   if (!g) return;
-  el('viewerBought').disabled = true;
-  el('viewerBoughtText').textContent = 'salvando…';
-  void setPurchased(g, el('viewerBought').checked);
+  pendingPurchases.add(g.id);
+  paintPurchase(el('viewerBuy'), g);
+  pendingPurchases.delete(g.id);
+  void setPurchased(g, !g.bought);
 };
 el('viewerEdit').onclick = () => {
   const g = gifts.find(item => item.id === viewing);
