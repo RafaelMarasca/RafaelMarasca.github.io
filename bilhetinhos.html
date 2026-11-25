@@ -4,13 +4,13 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="./site-acesso.css?v=1">
-  <script src="./site-acesso.js?v=1"></script>
+  <script src="./site-acesso.js?v=2"></script>
   <meta name="theme-color" content="#111820">
   <title>Bilhetinhos</title>
   <link rel="stylesheet" href="./site-nav.css?v=3">
   <link rel="stylesheet" href="./ceu.css?v=3">
-  <link rel="stylesheet" href="./bilhetinhos.css?v=16">
-  <script src="./bilhetinhos-acesso.js?v=4" defer></script>
+  <link rel="stylesheet" href="./bilhetinhos.css?v=17">
+  <script src="./bilhetinhos-acesso.js?v=5" defer></script>
 </head>
 <body class="site-page">
   <div class="sky" aria-hidden="true"></div>
@@ -45,6 +45,7 @@
       <div class="daily-actions">
         <button id="go-today" type="button" hidden>Voltar para hoje</button>
         <button id="copy-link" type="button">Copiar link deste bilhetinho</button>
+        <button id="delete-note" type="button" class="quiet-danger">Excluir</button>
       </div>
     </section>
     <p id="public-status" role="status"></p>
@@ -193,7 +194,7 @@
         <div class="pin-actions">
           <label for="pin-date">Data do bilhetinho</label>
           <input id="pin-date" type="date" required>
-          <button id="pin-note" type="button" disabled>Publicar como bilhetinho do dia</button>
+          <button id="pin-note" type="button" disabled>Publicar bilhetinho</button>
         </div>
         <p id="status" role="status"></p>
         <p id="save-status" role="status"></p>
@@ -211,7 +212,8 @@
       <h2 id="publish-title">Publicar bilhetinho</h2>
       <p id="publish-detail"></p>
       <p id="publish-error" role="status"></p>
-      <button type="submit">Confirmar publicação</button>
+      <button type="submit" id="update-publish" hidden>Atualizar o publicado</button>
+      <button type="submit" id="confirm-publish">Confirmar publicação</button>
       <button type="button" id="cancel-publish">Cancelar</button>
     </form>
   </dialog>

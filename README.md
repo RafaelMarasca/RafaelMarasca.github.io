@@ -76,9 +76,13 @@ As três páginas publicadas usam o mesmo fundo e a navegação superior “iní
 
 ## Acesso ao site
 
-Todas as páginas pedem a mesma frase de cinco palavras da lista de presentes. A entrada fica em `site-acesso.js` e `site-acesso.css`, carregados no `<head>` de cada página. Com **Lembrar neste aparelho** marcado, a frase fica guardada no navegador para renovar a entrada sozinha; sem marcar, vale só até fechar a aba. O link **sair** na navegação apaga tudo neste aparelho.
+Todas as páginas pedem a mesma frase de cinco palavras. A entrada fica em `site-acesso.js` e `site-acesso.css`, carregados no `<head>` de cada página. Com **Lembrar neste aparelho** marcado, o aparelho recebe uma entrada de 30 dias que se renova sozinha enquanto o site é usado; sem marcar, vale só até fechar a aba (no máximo 12 horas). A frase nunca fica guardada no aparelho. O link **sair** na navegação apaga a entrada deste aparelho.
 
 O portão esconde as páginas, mas textos e fotos estáticos (poemas, álbum) continuam no código público do GitHub Pages. Só a lista de presentes e os bilhetinhos ficam protegidos no servidor.
+
+## Servidor
+
+A lista de presentes e os bilhetinhos ficam num Cloudflare Worker com banco D1, cujo código está em [`backend/`](backend/). Como montar, publicar e cuidar dele está em [`backend/LEIA-ME.md`](backend/LEIA-ME.md). A página `migrar.html` copia, uma única vez, os dados do servidor antigo.
 
 ## GitHub Pages
 

@@ -3,13 +3,12 @@
 // Uma única frase abre o site inteiro. Carregado no <head> de cada página, sem
 // defer, para esconder o conteúdo antes da primeira pintura.
 window.siteAccess = (() => {
-  const api = 'https://presentes-lulu-e-rafo.rafaelmarascamartins.chatgpt.site';
+  // Endereço do Worker na Cloudflare (veja backend/LEIA-ME.md).
+  const api = 'https://lulu-e-rafo-api.SEU-SUBDOMINIO.workers.dev';
   const key = 'lulu.site.acesso';
   const root = document.documentElement;
-  const scopes = {
-    presentes: code => ({code}),
-    bilhetinhos: code => ({scope:'bilhetinhos', code})
-  };
+  // Uma sessão vale para todas as áreas; os nomes ficam para ler entradas já salvas.
+  const scopes = ['presentes', 'bilhetinhos'];
 
   function read(storage) {
     try { return JSON.parse(window[storage].getItem(key)) || null; } catch { return null; }
@@ -35,7 +34,9 @@ window.siteAccess = (() => {
   } catch {}
 
   let state = read('localStorage') || read('sessionStorage');
-  const usable = state && (state.code || Object.keys(scopes).every(scope => !expired(state.sessions?.[scope])));
+  // Entradas antigas guardavam a frase; ela é usada uma última vez para trocar por uma sessão.
+  const legacyCode = state?.code;
+  const usable = state && (legacyCode || scopes.every(scope => !expired(state.sessions?.[scope])));
   if (!usable) { state = null; write(null); }
 
   let resolveReady;
@@ -56,27 +57,29 @@ window.siteAccess = (() => {
     error.status = response.status;
     return error;
   }
-  async function unlock(scope, code, remember) {
-    const response = await call('/unlock', {method:'POST', headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({...scopes[scope](code), remember})});
-    if (!response.ok) throw await failure(response, 'Não foi possível entrar.');
-    return (await response.json()).session;
-  }
   async function signIn(code, remember) {
-    const names = Object.keys(scopes);
-    const tokens = await Promise.all(names.map(scope => unlock(scope, code, remember)));
-    const sessions = Object.fromEntries(names.map((scope, i) => [scope, tokens[i]]));
-    return {sessions, remember, code: remember ? code : undefined};
+    const response = await call('/unlock', {method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({code, remember})});
+    if (!response.ok) throw await failure(response, 'Não foi possível entrar.');
+    const {session} = await response.json();
+    return withSession(session, remember);
   }
+  const withSession = (session, remember) => ({sessions: Object.fromEntries(scopes.map(scope => [scope, session])), remember});
 
+  // A remembered device swaps its login for a fresh 30-day one about once a day,
+  // so it stays signed in while it's used, without ever storing the phrase.
+  const DAY = 864e5;
   let renewing = null;
   function renew() {
-    if (!state?.code) return Promise.reject(new Error('Sua entrada terminou. Digite a frase novamente.'));
-    renewing ||= signIn(state.code, true)
-      .then(next => { state = next; write(state); })
-      .finally(() => { renewing = null; });
+    renewing ||= (async () => {
+      const response = await call('/session/renew', {method:'POST'}, state?.sessions?.presentes);
+      if (!response.ok) throw await failure(response, 'Sua entrada terminou. Digite a frase novamente.');
+      state = withSession((await response.json()).session, true);
+      write(state);
+    })().finally(() => { renewing = null; });
     return renewing;
   }
+  const remaining = () => Number(String(state?.sessions?.presentes || '').split('.')[0]) - Date.now();
 
   function lock(message) {
     state = null;
@@ -91,11 +94,7 @@ window.siteAccess = (() => {
 
   async function request(path, options = {}, scope = 'presentes') {
     await ready;
-    let response = await call(path, options, state?.sessions?.[scope]);
-    if (response.status === 401 && state?.code) {
-      try { await renew(); } catch { lock('Digite a frase novamente para continuar.'); throw new Error('Sua entrada terminou.'); }
-      response = await call(path, options, state.sessions[scope]);
-    }
+    const response = await call(path, options, state?.sessions?.[scope]);
     if (!response.ok) {
       if (response.status === 401) lock('Sua entrada terminou. Digite a frase novamente.');
       throw await failure(response, 'Não foi possível concluir.');
@@ -252,9 +251,15 @@ window.siteAccess = (() => {
 
   if (state) {
     whenBody(addExit);
-    const current = Object.keys(scopes).every(scope => !expired(state.sessions?.[scope]));
-    if (current) resolveReady();
-    else renew().then(resolveReady, () => lock('Digite a frase novamente para continuar.'));
+    if (legacyCode) {
+      signIn(legacyCode, true).then(next => { state = next; write(state); resolveReady(); },
+        () => lock('Digite a frase novamente para continuar.'));
+    } else {
+      resolveReady();
+      if (state.remember && remaining() < 29 * DAY) {
+        renew().catch(error => { if (error.status === 401 || error.status === 403) lock('Digite a frase novamente para continuar.'); });
+      }
+    }
   } else {
     root.classList.add('site-locked');
     holdMedia();

@@ -277,3 +277,12 @@ figure { margin: 0; min-width: 0; padding-bottom: 1rem; }
 .paper-actions small { margin-left: .8rem; }
 #count[data-level="near"] { color: #e8c98a; }
 #count[data-level="full"] { color: #ffc1b9; font-weight: 600; }
+
+/* ---------- Excluir e publicar ---------- */
+.daily-actions .quiet-danger { color: #ffc1b9; border-color: #8a5f5c; background: transparent; }
+.daily-actions .quiet-danger:enabled:hover { background: #3a2a2a; }
+#publish-form { display: grid; gap: .6rem; }
+#publish-form h2 { margin: 0; font: 400 2rem/1.1 Carta, Georgia, serif; }
+#publish-form p { margin: 0; color: #d0d6d0; }
+#publish-error:empty { display: none; }
+#update-publish { background: #223039; color: #ede8d9; border: 1px solid #677372; }

@@ -33,7 +33,7 @@ function restoreText(html) {
   const today = () => new Intl.DateTimeFormat('sv-SE', {timeZone:'America/Sao_Paulo'}).format(new Date());
   const formatDate = date => new Intl.DateTimeFormat('pt-BR', {dateStyle:'long'}).format(new Date(date + 'T12:00:00'));
   dateInput.value = today();
-  let editingId, revision, busy = false, publications = [], publicToday;
+  let editingId, revision, busy = false, publications = [], publicToday, published = null;
   let dbPromise;
   const imageIds = new WeakMap();
   let serial = 0;
@@ -114,7 +114,7 @@ function restoreText(html) {
     const title = [...textBoxes.map(box => editorText(box.editor).trim()).filter(Boolean).join(' ').replace(/\s+/g, ' ')].slice(0, 100).join('') || 'Bilhetinho com foto';
     const blobs = await Promise.all(photos.map(png));
     const version = crypto.randomUUID();
-    const record = await sealDraft({id, version, ...draft, blobs, date:dateInput.value});
+    const record = await sealDraft({id, version, ...draft, blobs, date:dateInput.value, published});
     await writePair(db, record, {id, updated, version, sealed:await sealJSON(title)}, revision);
     editingId = id;
     revision = version;
@@ -153,6 +153,7 @@ function restoreText(html) {
     editingId = id;
     revision = record?.version;
     dateInput.value = record?.date || today();
+    published = record?.published || null;
     saveNote.textContent = id ? 'Salvar alterações' : 'Salvar bilhetinho';
     feedback.textContent = photoStatus.textContent = '';
     baseline = JSON.stringify(layout());
@@ -167,7 +168,10 @@ function restoreText(html) {
     const summaries = await requestResult(db.transaction('summaries').objectStore('summaries').getAll());
     for (const summary of summaries) {
       if (summary.sealed) {
-        summary.title = await openJSON(summary.sealed);
+        // A draft sealed with another key (say, from before a server change) stays
+        // listed but closed, instead of breaking the whole list and every save.
+        try { summary.title = await openJSON(summary.sealed); }
+        catch { summary.title = 'Rascunho que não abre com a chave atual'; summary.unreadable = true; }
       } else {
         // Upgrade the original plaintext pair atomically, keeping its ID and revision.
         const {id, version, updated, title} = summary;
@@ -185,6 +189,7 @@ function restoreText(html) {
       button.textContent = 'Editar';
       button.setAttribute('aria-label', 'Editar ' + note.title);
       button.onclick = () => switchTo(note.id);
+      button.disabled = Boolean(note.unreadable);
       li.append(title, button);
       list.append(li);
     }
@@ -314,66 +319,78 @@ function restoreText(html) {
   const publicStatus = byId('public-status');
   let selected, when = 'all';
 
-  function noteLink(date) {
+  // Each note has its own id; ?dia= links from before still open that day's first note.
+  function noteLink(id) {
     const url = new URL(location.href);
-    url.searchParams.set('dia', date);
+    url.searchParams.delete('dia');
+    url.searchParams.set('bilhete', id);
     url.hash = '';
     return url;
   }
   const isFuture = item => item.date > publicToday;
+  const findNote = id => publications.find(item => item.id === id);
+  const sameDay = item => publications.filter(other => other.date === item.date);
+  const titleOf = item => item.locked ? 'Surpresa ♡' : item.title;
   const latest = () => publications.find(item => item.date === publicToday) ||
     publications.find(item => !isFuture(item)) || publications[publications.length - 1];
 
-  let previewUrl, imageRequest = 0;
-  async function showPublication(date, {scroll = false} = {}) {
+  let previewShown = false, imageRequest = 0;
+  async function showPublication(id, {scroll = false} = {}) {
     const generation = ++imageRequest;
     const img = byId('daily-preview');
     const wait = byId('daily-wait');
     img.hidden = wait.hidden = true;
     img.removeAttribute('src');
-    if (previewUrl) URL.revokeObjectURL(previewUrl);
-    previewUrl = null;
-    const index = publications.findIndex(item => item.date === date);
+    previewShown = false;
+    const index = publications.findIndex(item => item.id === id);
     const item = publications[index];
     byId('daily-note').hidden = !item;
-    selected = item?.date;
+    selected = item?.id;
     renderArchive();
     if (!item) return;
+    const {date} = item;
     const time = byId('daily-date');
     time.textContent = dayMonth.format(at(date));
     time.dateTime = date;
     const kicker = byId('daily-kicker');
     kicker.textContent = whenLabel(date);
     kicker.classList.toggle('is-today', date === publicToday);
-    byId('daily-weekday').textContent = weekday.format(at(date)) + ' · ' + date.slice(0, 4);
+    const siblings = sameDay(item);
+    byId('daily-weekday').textContent = weekday.format(at(date)) + ' · ' + date.slice(0, 4) +
+      (siblings.length > 1 ? ' · ' + (siblings.indexOf(item) + 1) + ' de ' + siblings.length + ' neste dia' : '');
     byId('older-note').disabled = index === publications.length - 1;
     byId('newer-note').disabled = index === 0;
     const home = latest();
     byId('go-today').hidden = !home || home.date === date;
     byId('go-today').textContent = home?.date === publicToday ? 'Voltar para hoje' : 'Ir para o mais recente';
-    img.alt = item.title;
+    img.alt = titleOf(item);
     if (scroll) byId('daily-note').scrollIntoView({behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block:'start'});
+    if (item.locked) {
+      wait.textContent = 'Este bilhetinho abre em ' + formatDate(date) + '. ♡';
+      wait.hidden = false;
+      return;
+    }
     try {
-      const blob = await (await noteAccess.request('/bilhetinhos/' + date)).blob();
+      const source = await (await noteAccess.request('/bilhetinhos/' + id + '/imagem')).text();
       if (generation !== imageRequest) return;
-      previewUrl = URL.createObjectURL(blob);
-      img.src = previewUrl;
+      img.src = source;
       img.hidden = false;
+      previewShown = true;
     } catch {
       if (generation !== imageRequest) return;
-      wait.textContent = isFuture(item) ? 'Este bilhetinho abre em ' + formatDate(date) + '. ♡' : 'Não foi possível abrir este bilhetinho.';
+      wait.textContent = 'Não foi possível abrir este bilhetinho.';
       wait.hidden = false;
     }
   }
-  function select(date, options) {
-    history.replaceState(null, '', noteLink(date));
+  function select(id, options) {
+    history.replaceState(null, '', noteLink(id));
     publicStatus.textContent = '';
-    showPublication(date, options);
+    showPublication(id, options);
   }
   function step(offset) {
-    const index = publications.findIndex(item => item.date === selected);
+    const index = publications.findIndex(item => item.id === selected);
     const next = publications[index + offset];
-    if (next) select(next.date);
+    if (next) select(next.id);
   }
   byId('older-note').onclick = () => step(1);
   byId('newer-note').onclick = () => step(-1);
@@ -382,11 +399,23 @@ function restoreText(html) {
     if (event.key === 'ArrowLeft') { event.preventDefault(); step(1); }
     if (event.key === 'ArrowRight') { event.preventDefault(); step(-1); }
   });
-  byId('go-today').onclick = () => { const home = latest(); if (home) select(home.date); };
+  byId('go-today').onclick = () => { const home = latest(); if (home) select(home.id); };
   byId('copy-link').onclick = async () => {
     const link = noteLink(selected).href;
     try { await navigator.clipboard.writeText(link); publicStatus.textContent = 'Link copiado.'; }
     catch { publicStatus.textContent = link; }
+  };
+  byId('delete-note').onclick = async () => {
+    const item = findNote(selected);
+    if (!item || !confirm('Excluir o bilhetinho de ' + formatDate(item.date) + '? Ele some para vocês dois e não dá para desfazer.')) return;
+    try {
+      await noteAccess.request('/bilhetinhos/' + item.id, {method:'DELETE', headers:{'X-Gift-Version':item.version}});
+      publicStatus.textContent = 'Bilhetinho excluído.';
+      selected = null;
+      history.replaceState(null, '', location.pathname);
+      await refreshPublic();
+      publicStatus.textContent = 'Bilhetinho excluído.';
+    } catch (error) { publicStatus.textContent = error.message; }
   };
 
   function matches(item) {
@@ -395,7 +424,7 @@ function restoreText(html) {
     if (monthPicker.value && !item.date.startsWith(monthPicker.value)) return false;
     const query = fold(search.value.trim());
     if (!query) return true;
-    const haystack = fold([item.title, formatDate(item.date), weekday.format(at(item.date)), item.date].join(' '));
+    const haystack = fold([titleOf(item), formatDate(item.date), weekday.format(at(item.date)), item.date].join(' '));
     return query.split(/\s+/).every(word => haystack.includes(word));
   }
   const text = (tag, content, className) => Object.assign(document.createElement(tag), {textContent:content, className:className || ''});
@@ -419,20 +448,22 @@ function restoreText(html) {
         const button = document.createElement('button');
         button.type = 'button';
         button.className = 'archive-item' + (isFuture(item) ? ' is-future' : '');
-        if (item.date === selected) button.setAttribute('aria-current', 'true');
+        if (item.id === selected) button.setAttribute('aria-current', 'true');
         const tile = text('span', '', 'day-tile');
         tile.setAttribute('aria-hidden', 'true');
         tile.append(text('small', weekdayShort.format(at(item.date)).replace('.', '')),
           text('b', String(Number(item.date.slice(8)))),
           text('small', monthShort.format(at(item.date)).replace('.', '')));
         const body = text('span', '', 'archive-text');
-        const date = text('time', capital(weekday.format(at(item.date))) + ', ' + formatDate(item.date));
+        const siblings = sameDay(item);
+        const date = text('time', capital(weekday.format(at(item.date))) + ', ' + formatDate(item.date) +
+          (siblings.length > 1 ? ' · ' + (siblings.indexOf(item) + 1) + 'º' : ''));
         date.dateTime = item.date;
-        body.append(date, text('span', item.title, 'archive-title'));
+        body.append(date, text('span', titleOf(item), 'archive-title'));
         button.append(tile, body);
         if (item.date === publicToday) button.append(text('span', 'hoje', 'archive-badge'));
         else if (isFuture(item)) button.append(text('span', 'agendado', 'archive-badge'));
-        button.onclick = () => select(item.date, {scroll:true});
+        button.onclick = () => select(item.id, {scroll:true});
         const li = document.createElement('li');
         li.append(button);
         list.append(li);
@@ -463,14 +494,15 @@ function restoreText(html) {
     search.value = monthPicker.value = '';
     archive.querySelector('[data-when="all"]').click();
   };
+  const firstOn = date => [...publications].reverse().find(item => item.date === date);
   dayPicker.onchange = () => {
     const date = dayPicker.value;
     if (!date || !publications.length) return;
-    if (publications.some(item => item.date === date)) { select(date, {scroll:true}); return; }
+    if (firstOn(date)) { select(firstOn(date).id, {scroll:true}); return; }
     // Sem bilhetinho nesse dia: abre o mais próximo.
     const nearest = publications.reduce((best, item) =>
       Math.abs(daysBetween(item.date, date)) < Math.abs(daysBetween(best.date, date)) ? item : best);
-    select(nearest.date, {scroll:true});
+    select(firstOn(nearest.date).id, {scroll:true});
     publicStatus.textContent = 'Não há bilhetinho em ' + formatDate(date) + '. Mostrando o mais próximo, de ' + formatDate(nearest.date) + '.';
   };
 
@@ -482,27 +514,41 @@ function restoreText(html) {
       const result = await remote('/bilhetinhos');
       if (number !== fetchNumber) return;
       publicToday = result.today || today();
-      publications = [...result.items].sort((a, b) => b.date.localeCompare(a.date));
+      // Mais recentes primeiro; no mesmo dia, o publicado primeiro vem antes.
+      publications = [...result.items].sort((a, b) => b.date.localeCompare(a.date) || a.created - b.created);
       fillMonths();
       archive.hidden = !publications.length;
-      const param = new URL(location.href).searchParams.get('dia');
-      const asked = preferred || (/^\d{4}-\d{2}-\d{2}$/.test(param || '') ? param : null);
-      const found = publications.some(item => item.date === asked);
-      publicStatus.textContent = asked && !found ? 'Ainda não há bilhetinho para ' + formatDate(asked) + '.' :
-        (publications.length ? '' : 'Ainda não há bilhetinhos publicados.');
-      const keep = !preferred && selected && publications.some(item => item.date === selected);
-      const date = found ? asked : keep ? selected : latest()?.date;
-      if (date !== selected || !previewUrl) showPublication(date);
+      const params = new URL(location.href).searchParams;
+      const day = params.get('dia');
+      const asked = preferred || params.get('bilhete') || (/^\d{4}-\d{2}-\d{2}$/.test(day || '') ? firstOn(day)?.id : null);
+      const found = Boolean(asked && findNote(asked));
+      publicStatus.textContent = (params.get('bilhete') || day) && !found && !preferred
+        ? 'Esse bilhetinho não existe mais ou ainda não foi publicado.'
+        : (publications.length ? '' : 'Ainda não há bilhetinhos publicados.');
+      const keep = !preferred && selected && findNote(selected);
+      const id = found ? asked : keep ? selected : latest()?.id;
+      if (id !== selected || !previewShown) showPublication(id);
       else renderArchive();
     } catch { if (number === fetchNumber) publicStatus.textContent = 'Não foi possível carregar os bilhetinhos publicados.'; }
   }
   refreshPublic();
   document.addEventListener('visibilitychange', () => { if (!document.hidden) refreshPublic(); });
 
-  pinNote.onclick = () => {
+  // ---------- Publicar ----------
+  const updateButton = byId('update-publish');
+  const newButton = byId('confirm-publish');
+  pinNote.onclick = async () => {
     if (!dateInput.reportValidity()) return;
-    byId('publish-detail').textContent = 'Quem tiver a senha poderá ler o bilhetinho de ' + formatDate(dateInput.value) +
-      (dateInput.value > today() ? ', a partir desse dia (horário de Brasília).' : '.');
+    const date = dateInput.value;
+    const others = publications.filter(item => item.date === date && item.id !== published?.id).length;
+    const previous = published && findNote(published.id);
+    byId('publish-detail').textContent = 'Quem entrar no site poderá ler este bilhetinho ' +
+      (date > today() ? 'a partir de ' + formatDate(date) + ' (horário de Brasília).' : 'em ' + formatDate(date) + '.') +
+      (others ? ' Esse dia já tem ' + others + (others === 1 ? ' outro bilhetinho' : ' outros bilhetinhos') +
+        (previous ? '.' : '; este será mais um.') : '');
+    updateButton.hidden = !previous;
+    if (previous) updateButton.textContent = 'Atualizar o publicado em ' + formatDate(previous.date);
+    newButton.textContent = previous ? 'Publicar como novo' : 'Confirmar publicação';
     byId('publish-error').textContent = '';
     dialog.showModal();
   };
@@ -511,6 +557,7 @@ function restoreText(html) {
   byId('publish-form').onsubmit = async event => {
     event.preventDefault();
     const form = event.currentTarget;
+    const replace = event.submitter === updateButton;
     if (busy) return;
     form.inert = true;
     const error = byId('publish-error');
@@ -518,20 +565,21 @@ function restoreText(html) {
     try {
       await run(async () => {
         const date = dateInput.value;
-        const path = '/bilhetinhos/' + date;
-        const {version} = await remote(path + '/version');
-        if (version !== 'new' && !confirm('Substituir o bilhetinho já publicado para ' + formatDate(date) + '?')) {
-          dialog.close(); return;
-        }
         const title = await queueSave();
         await document.fonts.ready;
         renderCard();
         const image = exportCard().toDataURL('image/jpeg', .88);
-        await remote(path, {method:'PUT', headers:{'X-Gift-Version':version,'Content-Type':'application/json'},
-          body:JSON.stringify({title, image})});
+        const body = JSON.stringify({date, title, image});
+        const target = replace && published && findNote(published.id);
+        const saved = target
+          ? await remote('/bilhetinhos/' + target.id, {method:'PUT', headers:{'X-Gift-Version':target.version, 'Content-Type':'application/json'}, body})
+          : await remote('/bilhetinhos', {method:'POST', headers:{'Content-Type':'application/json'}, body});
+        // Remember which published note this draft became, so it can be updated later.
+        published = {id: saved.id, version: saved.version};
+        await queueSave();
         dialog.close();
-        feedback.textContent = (date > today() ? 'Publicação agendada para ' : 'Bilhetinho publicado para ') + formatDate(date) + '.';
-        await refreshPublic(date > today() ? undefined : date);
+        feedback.textContent = (target ? 'Bilhetinho atualizado: ' : date > today() ? 'Publicação agendada para ' : 'Bilhetinho publicado para ') + formatDate(date) + '.';
+        await refreshPublic(date > today() ? undefined : saved.id);
       }, error);
     } finally { form.inert = false; }
   };

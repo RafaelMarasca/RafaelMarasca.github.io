@@ -25,7 +25,7 @@ const noteAccess = (() => {
         'AES-GCM', false, ['encrypt', 'decrypt']);
       app.replaceChildren(document.getElementById('notes-template').content.cloneNode(true));
       await loadScript('./bilhetinhos.js?v=14');
-      await loadScript('./bilhetinhos-salvos.js?v=4');
+      await loadScript('./bilhetinhos-salvos.js?v=5');
       status.hidden = true;
       app.hidden = false;
       document.getElementById(location.hash === '#editor' ? 'editor-title' : 'collection-title').focus({preventScroll:true});
