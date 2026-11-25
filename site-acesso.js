@@ -4,7 +4,7 @@
 // defer, para esconder o conteúdo antes da primeira pintura.
 window.siteAccess = (() => {
   // Endereço do Worker na Cloudflare (veja backend/LEIA-ME.md).
-  const api = 'https://lulu-e-rafo-api.SEU-SUBDOMINIO.workers.dev';
+  const api = 'https://lulu-e-rafo-api.rafaelmartinsmarasca.workers.dev';
   const key = 'lulu.site.acesso';
   const root = document.documentElement;
   // Uma sessão vale para todas as áreas; os nomes ficam para ler entradas já salvas.
