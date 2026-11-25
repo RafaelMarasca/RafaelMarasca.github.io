@@ -7,8 +7,8 @@
   <title>Bilhetinhos · Uma lua para Lulu</title>
   <link rel="stylesheet" href="./site-nav.css?v=2">
   <link rel="stylesheet" href="./ceu.css?v=3">
-  <link rel="stylesheet" href="./bilhetinhos.css?v=3">
-  <script src="./bilhetinhos.js?v=3" defer></script>
+  <link rel="stylesheet" href="./bilhetinhos.css?v=4">
+  <script src="./bilhetinhos.js?v=4" defer></script>
 </head>
 <body class="site-page">
   <div class="sky" aria-hidden="true"></div>
@@ -55,7 +55,11 @@
       </section>
       <figure>
         <figcaption>Prévia do bilhetinho</figcaption>
-        <div class="stage"><canvas id="card" width="1080" height="744" role="img" aria-label="Exemplo de bilhetinho"></canvas></div>
+        <div class="stage"><div class="card-editor">
+          <canvas id="card" width="1080" height="744" role="img" aria-label="Exemplo de bilhetinho"></canvas>
+          <div id="photo-controls"></div>
+        </div></div>
+        <p id="gesture-help" hidden>Arraste uma foto para movê-la. Puxe o canto para mudar o tamanho. Pelo teclado, use as setas no controle selecionado.</p>
       </figure>
     </div>
   </main>

@@ -11,6 +11,11 @@ const photoList = document.querySelector('#photo-list');
 const photoStatus = document.querySelector('#photo-status');
 const photos = [];
 const maxPhotos = 4;
+const placements = new Map();
+const controls = document.querySelector('#photo-controls');
+const photoTop = 220;
+let selectedPhoto = null;
+let gesture = null;
 let loadingPhotos = false;
 const sample = 'Vi a lua hoje\ne lembrei de você.';
 const palettes = {
@@ -257,52 +262,84 @@ const styles = {
   caderno: { draw: drawCaderno, left: 145, width: 824 }
 };
 
-function layoutPhotos(width) {
-  const rows = [];
-  for (let i = 0; i < photos.length; i += 2) {
-    const pair = photos.slice(i, i + 2);
-    const maxWidth = (width - (pair.length - 1) * 28) / pair.length - 20;
-    const prints = pair.map(photo => {
-      const scale = Math.min(maxWidth / photo.width, (pair.length === 1 ? 330 : 270) / photo.height);
-      return { photo, width: photo.width * scale, height: photo.height * scale };
-    });
-    rows.push({
-      prints,
-      width: prints.reduce((sum, print) => sum + print.width + 20, 0) + (prints.length - 1) * 28,
-      height: Math.max(...prints.map(print => print.height)) + 30
-    });
-  }
-  return rows;
+function currentStyle() {
+  return styles[document.querySelector('input[name="style"]:checked').value];
 }
 
-function paint(ctx, style, palette, height, lines, size, leading, rows = [], photoSpace = 0) {
-  const textHeight = lines.length * leading;
-  const top = 222 + (height - 327 - textHeight - photoSpace) / 2;
-  const firstY = top + size;
+function frameFor(photo, style) {
+  const place = placements.get(photo);
+  const scale = Math.min(place.size / Math.max(photo.width, photo.height), (style.width - 20) / photo.width);
+  const width = photo.width * scale + 20;
+  const height = photo.height * scale + 30;
+  return { photo, x: style.left + Math.max(0, Math.min(place.x, style.width - width)), y: place.y, width, height };
+}
+
+function freeColumn(style, frames, top, bottom) {
+  const right = style.left + style.width;
+  const blocks = frames.filter(frame => frame.y - 18 < bottom && frame.y + frame.height + 18 > top)
+    .sort((a, b) => a.x - b.x);
+  let x = style.left;
+  let best = { x, width: 0 };
+  for (const frame of blocks) {
+    const width = frame.x - 20 - x;
+    if (width > best.width) best = { x, width };
+    x = Math.max(x, frame.x + frame.width + 20);
+  }
+  return right - x > best.width ? { x, width: right - x } : best;
+}
+
+// Give each line the widest clear stretch of paper at its actual height.
+function flowText(ctx, text, style, frames, size, leading) {
+  const lines = [];
+  let top = photoTop;
+  for (const paragraph of text.split('\n')) {
+    let chars = segmenter ? Array.from(segmenter.segment(paragraph), item => item.segment) : Array.from(paragraph);
+    if (!chars.length) top += leading;
+    while (chars.length) {
+      const column = freeColumn(style, frames, top - 4, top + leading + 4);
+      if (column.width < size * 3) {
+        top += leading;
+        continue;
+      }
+      let count = 0;
+      let space = 0;
+      while (count < chars.length && ctx.measureText(chars.slice(0, count + 1).join('')).width <= column.width) {
+        if (/\s/u.test(chars[count])) space = count + 1;
+        count++;
+      }
+      const take = count < chars.length && space ? space : Math.max(1, count);
+      lines.push({ text: chars.slice(0, take).join('').trimEnd(), x: column.x, y: top + size });
+      chars = chars.slice(take);
+      top += leading;
+    }
+  }
+  return { lines, bottom: top };
+}
+
+function paint(ctx, style, palette, height, lines, size, leading, frames = []) {
+  const firstY = lines[0]?.y ?? photoTop + size;
   style.draw(ctx, palette, height, firstY, leading);
   ctx.fillStyle = palette.ink;
   ctx.font = size + 'px Manuscrita, cursive';
-  lines.forEach((line, i) => ctx.fillText(line, style.left, firstY + i * leading));
-  let y = top + textHeight + (lines.length ? 24 : 0);
-  for (const row of rows) {
-    let x = style.left + (style.width - row.width) / 2;
-    for (const print of row.prints) {
-      const frameY = y + (row.height - print.height - 30) / 2;
-      ctx.save();
-      ctx.shadowColor = 'rgba(57,42,30,.25)';
-      ctx.shadowBlur = 8;
-      ctx.shadowOffsetY = 3;
-      ctx.fillStyle = '#fffcf4';
-      ctx.fillRect(x, frameY, print.width + 20, print.height + 30);
-      ctx.restore();
-      ctx.drawImage(print.photo, x + 10, frameY + 10, print.width, print.height);
-      x += print.width + 48;
-    }
-    y += row.height + 20;
+  for (const line of lines) ctx.fillText(line.text, line.x, line.y);
+  for (const frame of frames) {
+    ctx.save();
+    ctx.shadowColor = 'rgba(57,42,30,.25)';
+    ctx.shadowBlur = 8;
+    ctx.shadowOffsetY = 3;
+    ctx.fillStyle = '#fffcf4';
+    ctx.fillRect(frame.x, frame.y, frame.width, frame.height);
+    ctx.restore();
+    ctx.drawImage(frame.photo, frame.x + 10, frame.y + 10, frame.width - 20, frame.height - 30);
   }
   ctx.fillStyle = style.footer || palette.stamp;
   ctx.font = '22px monospace';
   ctx.fillText('☾  uma lua para lulu', style.left, height - (style.footer ? 40 : 65));
+}
+
+function centeredLines(texts, style, height, size, leading) {
+  const top = 222 + (height - 327 - texts.length * leading) / 2;
+  return texts.map((text, i) => ({ text, x: style.left, y: top + size + i * leading }));
 }
 
 function selectedPalette() {
@@ -314,7 +351,8 @@ function drawChoices() {
     const miniature = input.nextElementSibling;
     const pen = miniature.getContext('2d');
     pen.setTransform(miniature.width / 1080, 0, 0, miniature.height / 744, 0, 0);
-    paint(pen, styles[input.value], selectedPalette(), 744, sample.split('\n'), 78, 96);
+    const style = styles[input.value];
+    paint(pen, style, selectedPalette(), 744, centeredLines(sample.split('\n'), style, 744, 78, 96), 78, 96);
   });
 }
 
@@ -334,11 +372,27 @@ function renderCard() {
     size -= 6;
   } while (true);
   const leading = Math.ceil(size * 1.22);
-  const rows = layoutPhotos(style.width);
-  const photoSpace = rows.reduce((sum, row) => sum + row.height, 0)
-    + Math.max(0, rows.length - 1) * 20 + (rows.length && lines.length ? 24 : 0);
-  card.height = Math.ceil(Math.max(744, 365 + lines.length * leading + photoSpace));
-  paint(preview, style, selectedPalette(), card.height, lines, size, leading, rows, photoSpace);
+  const frames = photos.map(photo => frameFor(photo, style));
+  if (frames.length) {
+    const flow = flowText(preview, text, style, frames, size, leading);
+    const bottom = Math.max(flow.bottom, ...frames.map(frame => frame.y + frame.height));
+    card.height = Math.ceil(Math.max(744, bottom + 136, gesture?.cardHeight ?? 0));
+    lines = flow.lines;
+  } else {
+    card.height = Math.ceil(Math.max(744, 365 + lines.length * leading));
+    lines = centeredLines(lines, style, card.height, size, leading);
+  }
+  paint(preview, style, selectedPalette(), card.height, lines, size, leading, frames);
+  document.querySelector('#gesture-help').hidden = !frames.length;
+  frames.forEach((frame, index) => {
+    const box = placements.get(frame.photo).box;
+    box.style.left = frame.x / card.width * 100 + '%';
+    box.style.top = frame.y / card.height * 100 + '%';
+    box.style.width = frame.width / card.width * 100 + '%';
+    box.style.height = frame.height / card.height * 100 + '%';
+    box.style.zIndex = index + 1;
+    box.classList.toggle('selected', frame.photo === selectedPhoto);
+  });
   const photoNames = photos.map(photo => photo.getAttribute('aria-label'));
   card.setAttribute('aria-label', [input.labels[0].textContent.trim(), hasContent ? text : 'Exemplo. ' + text, ...photoNames].filter(Boolean).join('. '));
   document.querySelector('#count').textContent = raw.length + ' / 280';
@@ -372,22 +426,132 @@ async function readPhoto(file) {
   }
 }
 
+function selectPhoto(photo) {
+  if (selectedPhoto === photo) return;
+  selectedPhoto = photo;
+  photos.splice(photos.indexOf(photo), 1);
+  photos.push(photo);
+  renderCard();
+}
+
+function changeFrame(photo, start, resize, dx, dy, cardHeight) {
+  const place = placements.get(photo);
+  const style = currentStyle();
+  if (resize) {
+    const w = start.width - 20, h = start.height - 30;
+    const factor = 1 + (dx * w + dy * h) / (w * w + h * h);
+    const limit = Math.min((style.width - 20) / w, 760 / h) * Math.max(w, h);
+    place.size = Math.min(limit, Math.max(85, Math.max(w, h) * factor));
+    place.x = Math.min(start.x - style.left, style.width - frameFor(photo, style).width);
+  } else {
+    place.x = Math.max(0, Math.min(style.width - start.width, start.x - style.left + dx));
+    place.y = Math.max(photoTop, Math.min(cardHeight - 136 - start.height, start.y + dy));
+  }
+  renderCard();
+}
+
+function makeHandle(photo, resize) {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = resize ? 'size-photo' : 'move-photo';
+  button.textContent = resize ? '⤡' : '';
+  button.setAttribute('aria-label', (resize ? 'Redimensionar ' : 'Mover ') + photo.getAttribute('aria-label'));
+  button.setAttribute('aria-describedby', 'gesture-help');
+  button.addEventListener('focus', () => selectPhoto(photo));
+  button.addEventListener('pointerdown', event => {
+    if (event.button !== 0 || gesture) return;
+    event.preventDefault();
+    button.focus({ preventScroll: true });
+    selectPhoto(photo);
+    gesture = { id: event.pointerId, photo, resize, start: frameFor(photo, currentStyle()),
+      x: event.clientX, y: event.clientY, scale: card.width / card.getBoundingClientRect().width, cardHeight: card.height };
+    button.setPointerCapture(event.pointerId);
+  });
+  button.addEventListener('keydown', event => {
+    const steps = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] };
+    if (!Object.hasOwn(steps, event.key)) return;
+    event.preventDefault();
+    const [dx, dy] = steps[event.key];
+    const step = event.shiftKey ? 30 : 10;
+    const change = step * (dx + dy);
+    changeFrame(photo, frameFor(photo, currentStyle()), resize, resize ? change : step * dx,
+      resize ? change : step * dy, card.height);
+  });
+  return button;
+}
+
+function updateGesture(event) {
+  if (gesture?.id !== event.pointerId) return;
+  changeFrame(gesture.photo, gesture.start, gesture.resize, (event.clientX - gesture.x) * gesture.scale,
+    (event.clientY - gesture.y) * gesture.scale, gesture.cardHeight);
+}
+
+function endGesture(event) {
+  if (!gesture || (event.pointerId !== undefined && event.pointerId !== gesture.id)) return;
+  gesture = null;
+  renderCard();
+}
+
+window.addEventListener('pointermove', updateGesture);
+window.addEventListener('pointerup', event => {
+  updateGesture(event);
+  endGesture(event);
+});
+window.addEventListener('pointercancel', endGesture);
+window.addEventListener('lostpointercapture', endGesture);
+window.addEventListener('blur', endGesture);
+
+function addPhotoFrame(photo) {
+  const style = currentStyle();
+  const existing = photos.map(other => frameFor(other, style));
+  const box = document.createElement('div');
+  box.className = 'photo-box';
+  const place = { box, size: 265, x: 0, y: photoTop };
+  placements.set(photo, place);
+  const { width, height } = frameFor(photo, style);
+  // Alternate sides and start a new row once both spaces are occupied.
+  for (const y of [photoTop, ...existing.map(f => f.y + f.height + 24).sort((a, b) => a - b)]) {
+    const x = [style.width - width, 0].find(offset => existing.every(f =>
+      y >= f.y + f.height + 20 || y + height + 20 <= f.y ||
+      style.left + offset >= f.x + f.width + 20 || style.left + offset + width + 20 <= f.x));
+    if (x !== undefined) {
+      place.x = x;
+      place.y = y;
+      break;
+    }
+  }
+  box.append(makeHandle(photo, false), makeHandle(photo, true));
+  controls.append(box);
+  selectedPhoto = photo;
+}
+
 function appendPhoto(photo) {
+  addPhotoFrame(photo);
   photos.push(photo);
   const item = document.createElement('li');
+  const select = document.createElement('button');
+  select.type = 'button';
+  select.className = 'select-photo';
+  select.setAttribute('aria-label', 'Selecionar ' + photo.getAttribute('aria-label'));
+  select.addEventListener('click', () => placements.get(photo).box.firstElementChild.focus());
+  select.append(photo);
   const remove = document.createElement('button');
   const name = photo.getAttribute('aria-label');
   remove.type = 'button';
   remove.textContent = '×';
   remove.setAttribute('aria-label', 'Remover ' + name);
   remove.addEventListener('click', () => {
+    if (gesture?.photo === photo) gesture = null;
     photos.splice(photos.indexOf(photo), 1);
+    placements.get(photo).box.remove();
+    placements.delete(photo);
+    if (selectedPhoto === photo) selectedPhoto = photos.at(-1) ?? null;
     item.remove();
     renderCard();
     photoStatus.textContent = 'Imagem removida: ' + name;
     if (!loadingPhotos) addPhotos.focus();
   });
-  item.append(photo, remove);
+  item.append(select, remove);
   photoList.append(item);
 }
 

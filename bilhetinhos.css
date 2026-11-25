@@ -53,10 +53,23 @@ textarea:focus-visible, button:focus-visible, .papers label:has(:focus-visible) 
 #photo-list:empty, #photo-status:empty { display: none; }
 #photo-list li { position: relative; }
 #photo-list canvas { display: block; width: 4.5rem; height: 4.5rem; object-fit: contain; background: #263037; border: 1px solid #596261; border-radius: .3rem; }
-#photo-list button { position: absolute; top: -.4rem; right: -.35rem; width: 1.85rem; height: 1.85rem; min-height: 0; padding: 0; border: 1px solid #666e70; border-radius: 50%; color: white; background: #263037; font: 1.3rem/1 system-ui, sans-serif; }
+#photo-list .select-photo { display: block; padding: 0; background: transparent; }
+#photo-list button:not(.select-photo) { position: absolute; top: -.4rem; right: -.35rem; width: 1.85rem; height: 1.85rem; min-height: 0; padding: 0; border: 1px solid #666e70; border-radius: 50%; color: white; background: #263037; font: 1.3rem/1 system-ui, sans-serif; }
 figure { margin: 0; min-width: 0; }
 .stage { display: grid; place-items: center; padding: clamp(1.5rem, 4vw, 3.5rem); border: 1px solid #39464b; border-radius: .5rem; background-color: #1e2a30; background-image: radial-gradient(#b7c5be29 .75px, transparent .85px); background-size: 8px 8px; }
-#card { display: block; width: 100%; height: auto; transform: rotate(-1.5deg); box-shadow: 0 8px 17px #070c104d; }
+.card-editor { width: 100%; position: relative; }
+#card { display: block; width: 100%; height: auto; box-shadow: 0 8px 17px #070c104d; }
+#gesture-help { color: var(--nav-text); font-size: .9rem; margin: .6rem 0; }
+#photo-controls { position: absolute; inset: 0; pointer-events: none; }
+.photo-box { position: absolute; }
+.photo-box button { position: absolute; pointer-events: auto; touch-action: none; user-select: none; padding: 0; min-height: 0; }
+.photo-box .move-photo, .photo-box .move-photo:hover { inset: 0; width: 100%; height: 100%; border-radius: 0; background: transparent; cursor: grab; }
+.photo-box .move-photo:active { cursor: grabbing; }
+.photo-box.selected .move-photo { outline: 2px solid #735331; outline-offset: -1px; }
+.photo-box .size-photo { right: 0; bottom: 0; transform: translate(40%, 40%); width: 30px; height: 30px; display: grid; place-items: center; border: 2px solid #fff5df; border-radius: 50%; background: #48382a; color: #fff5df; font: 1.15rem/1 system-ui; cursor: nwse-resize; }
+.photo-box .size-photo:hover { background: #654d38; }
+.photo-box:not(.selected):not(:focus-within) .size-photo { opacity: 0; pointer-events: none; }
+.photo-box button:focus-visible { outline: 3px solid #3368a8; outline-offset: 1px; }
 @media (max-width: 740px) {
   .desk { grid-template-columns: 1fr; gap: 1.5rem; }
 }
