@@ -78,17 +78,45 @@ async function setPurchased(item, bought) {
     }
   }
 }
+const fold = text => text.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase();
+const recipientClass = person => ({Lulu: 'for-lulu', Rafo: 'for-rafo', 'Nós dois': 'for-nos'})[person] || '';
+const giftIcon = '<svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 11h16v9H4zM3 7h18v4H3zM12 7v13M12 7c-1.5-3-5-3.5-5.5-1.5S9 7 12 7c3 0 6-.5 5.5-1.5S13.5 4 12 7"/></svg>';
+function tags(g) {
+  const box = node('div', '', 'tags');
+  box.append(node('span', g.forWhom, 'tag ' + recipientClass(g.forWhom)),
+    node('span', 'Prioridade ' + g.priority.toLowerCase(), 'tag priority-' + fold(g.priority)));
+  return box;
+}
+function purchaseToggle(g, label) {
+  const purchase = node('label', '', 'purchase');
+  const check = node('input');
+  check.type = 'checkbox';
+  check.checked = g.bought;
+  check.disabled = pendingPurchases.has(g.id);
+  const action = g.bought ? 'Comprado' : label;
+  check.setAttribute('aria-label', (g.bought ? 'Comprado' : 'Marcar como comprado') + ': ' + g.title);
+  const caption = node('span', check.disabled ? 'Salvando…' : action);
+  check.onchange = () => {
+    check.disabled = true;
+    caption.textContent = 'Salvando…';
+    void setPurchased(g, check.checked);
+  };
+  purchase.append(check, caption);
+  return purchase;
+}
 function render() {
   const revision = ++viewRevision;
   observer.disconnect();
   const recipient = selectedFilter('recipientFilter'), status = selectedFilter('statusFilter'), order = el('sort').value;
+  const query = fold(el('search').value.trim());
   const ranks = {Alta:0,'Média':1,Baixa:2};
-  const byRecipient = gifts.filter(g => !recipient || recipient === g.forWhom);
+  const searched = gifts.filter(g => !query || query.split(/\s+/).every(word => fold(g.title + ' ' + g.forWhom).includes(word)));
+  const byRecipient = searched.filter(g => !recipient || recipient === g.forWhom);
   const bought = byRecipient.filter(g => g.bought).length;
   el('boughtCount').textContent = bought;
   el('openCount').textContent = byRecipient.length - bought;
   el('statusTotal').textContent = byRecipient.length;
-  const byStatus = gifts.filter(g => status === 'all' || (status === 'bought') === g.bought);
+  const byStatus = searched.filter(g => status === 'all' || (status === 'bought') === g.bought);
   for (const badge of el('recipientFilter').querySelectorAll('[data-recipient-count]')) {
     const person = badge.dataset.recipientCount;
     badge.textContent = person ? byStatus.filter(g => g.forWhom === person).length : byStatus.length;
@@ -101,47 +129,122 @@ function render() {
   });
   const cards = el('cards'); cards.replaceChildren();
   for (const g of shown) {
-    const card = node('article','',g.bought ? 'card is-bought' : 'card'), image = node('div','☾','card-image'), body = node('div','','card-body');
-    image.setAttribute('aria-hidden','true');
-    const meta = node('div','','meta'); meta.append(node('span','Para ' + g.forWhom),node('span','Prioridade ' + g.priority.toLowerCase()));
-    const notes = node('p','','card-note'), actions = node('div','','actions'), edit = node('button','Editar');
-    edit.onclick = () => startEdit(g); actions.append(edit);
-    body.append(meta,node('h3',g.title),notes);
-    const purchase = node('label','','purchase');
-    const check = node('input');
-    check.type = 'checkbox';
-    check.checked = g.bought;
-    check.disabled = pendingPurchases.has(g.id);
-    const action = g.bought ? 'Comprado' : 'Marcar como comprado';
-    check.setAttribute('aria-label', action + ': ' + g.title);
-    const caption = node('span',check.disabled ? 'Salvando…' : action);
-    check.onchange = () => {
-      check.disabled = true;
-      caption.textContent = 'Salvando…';
-      void setPurchased(g, check.checked);
-    };
-    purchase.append(check,caption);
-    body.append(purchase);
-    body.append(actions); card.append(image,body); cards.append(card);
+    const card = node('article', '', 'card ' + recipientClass(g.forWhom) + (g.bought ? ' is-bought' : ''));
+    // The photo and the title both open the details; the photo button is for pointer users only.
+    const photo = node('button', '', 'card-photo');
+    photo.type = 'button';
+    photo.tabIndex = -1;
+    photo.setAttribute('aria-hidden', 'true');
+    photo.innerHTML = '<span class="placeholder">' + giftIcon + '</span>';
+    if (g.bought) photo.append(node('span', 'Comprado ✓', 'bought-ribbon'));
+    photo.onclick = () => openViewer(g);
+    const body = node('div', '', 'card-body');
+    const title = node('h3');
+    const open = node('button', g.title, 'card-title');
+    open.type = 'button';
+    open.onclick = () => openViewer(g);
+    title.append(open);
+    const notes = node('p', '', 'card-note');
+    const actions = node('div', '', 'card-actions');
+    const edit = node('button', 'Editar', 'quiet');
+    edit.type = 'button';
+    edit.setAttribute('aria-label', 'Editar ' + g.title);
+    edit.onclick = () => startEdit(g);
+    actions.append(purchaseToggle(g, 'Comprar'), edit);
+    body.append(tags(g), title, notes, actions);
+    card.append(photo, body);
+    cards.append(card);
     card.loadDetails = async () => {
       try {
         const record = await readGift(g);
         if (revision !== viewRevision || !card.isConnected) return;
-        if (record.photo) { const img = node('img'); img.alt = ''; img.src = record.photo; image.replaceChildren(img); }
+        if (record.photo) {
+          const img = node('img');
+          img.alt = '';
+          img.src = record.photo;
+          photo.querySelector('.placeholder').replaceWith(img);
+        }
         notes.textContent = record.description;
         if (record.link && /^https?:\/\//i.test(record.link)) {
-          const a = node('a','Ver na loja','store-link'); a.href = record.link; a.target = '_blank'; a.rel = 'noopener noreferrer'; actions.prepend(a);
+          const a = node('a', 'Loja ↗', 'store-link');
+          a.href = record.link; a.target = '_blank'; a.rel = 'noopener noreferrer';
+          a.setAttribute('aria-label', 'Ver ' + g.title + ' na loja');
+          edit.before(a);
         }
       } catch (e) { if (revision === viewRevision) notes.textContent = e.message; }
     };
     observer.observe(card);
   }
   const purchased = shown.filter(g => g.bought).length;
-  el('counter').textContent = shown.length + (shown.length === 1 ? ' presente' : ' presentes') + ' · ' + purchased + (purchased === 1 ? ' comprado' : ' comprados');
+  el('counter').textContent = shown.length
+    ? purchased + ' de ' + shown.length + (shown.length === 1 ? ' presente comprado' : ' presentes comprados')
+    : 'Nenhum presente aqui';
+  el('progressBar').style.width = (shown.length ? purchased / shown.length * 100 : 0) + '%';
+  const filtered = Boolean(query || recipient || status !== 'all');
   el('empty').hidden = !!shown.length;
-  el('emptyTitle').textContent = gifts.length ? 'Nenhum presente neste filtro' : 'Qual vai ser o primeiro presente?';
-  el('emptyText').textContent = gifts.length ? 'Escolha outro filtro para ver mais ideias.' : 'Adicione uma ideia com uma foto, um link ou aquele detalhe que faz a diferença.';
+  el('clearFilters').hidden = !filtered;
+  el('emptyTitle').textContent = gifts.length ? 'Nenhum presente encontrado' : 'Qual vai ser o primeiro presente?';
+  el('emptyText').textContent = gifts.length ? 'Tente outro nome ou outro filtro.' : 'Adicione uma ideia com uma foto, um link ou aquele detalhe que faz a diferença.';
+  if (el('viewer').open && viewing) refreshViewer();
 }
+
+// ---------- Detalhes ----------
+let viewing = null, viewerRequest = 0;
+async function openViewer(g) {
+  viewing = g.id;
+  refreshViewer();
+  if (!el('viewer').open) el('viewer').showModal();
+}
+async function refreshViewer() {
+  const g = gifts.find(item => item.id === viewing);
+  if (!g) { el('viewer').close(); return; }
+  const request = ++viewerRequest;
+  el('viewerTitle').textContent = g.title;
+  el('viewerTags').replaceWith(Object.assign(tags(g), {id: 'viewerTags'}));
+  const check = el('viewerBought');
+  check.checked = g.bought;
+  check.disabled = pendingPurchases.has(g.id);
+  el('viewerBoughtText').textContent = check.disabled ? 'Salvando…' : g.bought ? 'Comprado' : 'Marcar como comprado';
+  el('viewer').classList.toggle('is-bought', g.bought);
+  try {
+    const record = await readGift(g);
+    if (request !== viewerRequest) return;
+    const photo = el('viewerPhoto');
+    photo.hidden = !record.photo;
+    if (record.photo) {
+      const img = photo.querySelector('img') || photo.appendChild(node('img'));
+      img.alt = 'Foto de ' + g.title;
+      if (img.src !== record.photo) img.src = record.photo;
+    } else photo.replaceChildren();
+    el('viewerText').textContent = record.description || 'Sem descrição.';
+    el('viewerText').classList.toggle('is-empty', !record.description);
+    const link = el('viewerLink');
+    link.hidden = !(record.link && /^https?:\/\//i.test(record.link));
+    if (!link.hidden) link.href = record.link;
+  } catch (e) { if (request === viewerRequest) el('viewerText').textContent = e.message; }
+}
+el('viewerBought').onchange = () => {
+  const g = gifts.find(item => item.id === viewing);
+  if (!g) return;
+  el('viewerBought').disabled = true;
+  el('viewerBoughtText').textContent = 'Salvando…';
+  void setPurchased(g, el('viewerBought').checked);
+};
+el('viewerEdit').onclick = () => {
+  const g = gifts.find(item => item.id === viewing);
+  el('viewer').close();
+  if (g) startEdit(g);
+};
+el('viewer').addEventListener('close', () => { viewing = null; });
+// Click on the dimmed backdrop closes the details.
+el('viewer').addEventListener('click', event => { if (event.target === el('viewer')) el('viewer').close(); });
+el('search').addEventListener('input', render);
+el('clearFilters').onclick = () => {
+  el('search').value = '';
+  el('recipientFilter').querySelector('input[value=""]').checked = true;
+  el('statusFilter').querySelector('input[value="all"]').checked = true;
+  render();
+};
 async function refresh(force = false) {
   const number = ++requestNumber;
   try {
@@ -211,7 +314,7 @@ el('drop').ondragover = event => {event.preventDefault();el('drop').classList.ad
 el('drop').ondragleave = () => el('drop').classList.remove('over');
 el('drop').ondrop = event => {event.preventDefault();el('drop').classList.remove('over');loadPhoto(event.dataTransfer.files[0]);};
 document.addEventListener('paste',event=>{
-  if (!session || el('shareDialog').open || el('confirmDelete').open || busy) return;
+  if (!session || el('shareDialog').open || el('confirmDelete').open || el('viewer').open || busy) return;
   const data=event.clipboardData; const image=Array.from(data?.items||[]).find(i=>i.kind==='file'&&i.type.startsWith('image/'));
   if (image) {event.preventDefault();if(!el('editor').open)openForm();loadPhoto(image.getAsFile());return;}
   if(el('editor').open || event.target.closest('input,textarea,[contenteditable]')) return;
