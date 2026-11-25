@@ -7,8 +7,9 @@
   <title>Bilhetinhos</title>
   <link rel="stylesheet" href="./site-nav.css?v=2">
   <link rel="stylesheet" href="./ceu.css?v=3">
-  <link rel="stylesheet" href="./bilhetinhos.css?v=11">
-  <script src="./bilhetinhos.js?v=11" defer></script>
+  <link rel="stylesheet" href="./bilhetinhos.css?v=12">
+  <script src="./bilhetinhos.js?v=12" defer></script>
+  <script src="./bilhetinhos-salvos.js?v=1" defer></script>
 </head>
 <body class="site-page">
   <div class="sky" aria-hidden="true"></div>
@@ -23,6 +24,15 @@
       <h1>Um <em>bilhetinho.</em></h1>
       <p id="text-help">Escreva no papel e selecione um trecho para formatar.</p>
     </header>
+    <section id="daily-note" aria-labelledby="daily-title" hidden>
+      <h2 id="daily-title">Bilhetinho do dia</h2>
+      <time id="daily-date"></time>
+      <img id="daily-preview" alt="">
+      <label for="published-dates">Bilhetinhos publicados</label>
+      <select id="published-dates"></select>
+      <a id="published-link">Link deste bilhetinho</a>
+    </section>
+    <p id="public-status" role="status"></p>
     <div class="studio">
       <section class="composer-tools" aria-label="Ferramentas da cartinha">
         <div class="tool-head">
@@ -104,10 +114,17 @@
           </div>
         </div></div>
         <div class="paper-actions">
+          <button id="save-note" type="button" disabled>Salvar bilhetinho</button>
           <button id="download" type="button" disabled>Baixar bilhetinho em PNG</button>
           <small id="count">0 / 280</small>
         </div>
+        <div class="pin-actions">
+          <label for="pin-date">Data do bilhetinho</label>
+          <input id="pin-date" type="date" required>
+          <button id="pin-note" type="button" disabled>Publicar como bilhetinho do dia</button>
+        </div>
         <p id="status" role="status"></p>
+        <p id="save-status" role="status"></p>
         <div id="size-panel" hidden>
           <label for="photo-size">Tamanho da foto</label>
           <input id="photo-size" type="range" min="85" max="760">
@@ -116,6 +133,22 @@
         <ul id="photo-list" aria-label="Imagens do bilhetinho"></ul>
       </figure>
     </div>
+    <section class="note-library" aria-labelledby="library-title">
+      <header><h2 id="library-title">Meus bilhetinhos</h2><button id="new-note" type="button">Novo bilhetinho</button></header>
+      <p>Os bilhetinhos ficam salvos neste navegador.</p>
+      <p id="library-status" role="status"></p>
+      <ul id="saved-notes"></ul>
+    </section>
   </main>
+  <dialog id="publish-dialog" aria-labelledby="publish-title">
+    <form id="publish-form">
+      <h2 id="publish-title">Publicar bilhetinho</h2>
+      <p id="publish-detail"></p>
+      <label id="phrase-label">Frase de acesso <input id="publish-phrase" type="password" maxlength="160" autocomplete="current-password"></label>
+      <p id="publish-error" role="status"></p>
+      <button type="submit">Confirmar publicação</button>
+      <button type="button" id="cancel-publish">Cancelar</button>
+    </form>
+  </dialog>
 </body>
 </html>

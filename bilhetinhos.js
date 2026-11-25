@@ -8,6 +8,8 @@ let message;
 const card = document.querySelector('#card');
 const preview = card.getContext('2d');
 const download = document.querySelector('#download');
+const saveNote = document.querySelector('#save-note');
+const pinNote = document.querySelector('#pin-note');
 const statusText = document.querySelector('#status');
 const filesInput = document.querySelector('#photo-files');
 const addPhotos = document.querySelector('#add-photos');
@@ -448,6 +450,7 @@ function renderCard() {
   });
   document.querySelector('#count').textContent = editorText().length + ' / 280';
   download.disabled = !hasContent || loadingPhotos;
+  saveNote.disabled = pinNote.disabled = download.disabled;
   addPhotos.disabled = loadingPhotos || photos.length >= maxPhotos;
   statusText.textContent = '';
 }
@@ -522,7 +525,7 @@ function activateBox(item) {
   renderCard();
 }
 
-function addTextBox(focus = true) {
+function addTextBox(focus = true, saved = null) {
   const id = ++boxSerial;
   const layer = document.createElement('div');
   layer.className = 'text-layer';
@@ -537,11 +540,15 @@ function addTextBox(focus = true) {
   editor.setAttribute('aria-multiline', 'true');
   editor.setAttribute('aria-describedby', 'text-help');
   editor.dataset.hint = 'Escreva aqui…';
+  if (saved) editor.append(restoreText(saved.html));
   layer.append(exclusions, editor);
   document.querySelector('#text-layers').append(layer);
   const bottom = Math.max(photoTop - 24, ...textBoxes.map(box => box.layout.pose.bounds.y + box.layout.pose.bounds.height));
   const item = { id, layer, editor, exclusions, left: null, top: bottom + 24, width: textBoxes.length ? 575 : null,
     minHeight: 150, angle: 0, lastBands: '' };
+  if (saved) {
+    for (const key of ['left', 'top', 'width', 'minHeight', 'angle']) item[key] = saved[key];
+  }
   textBoxes.push(item);
   boxList.add(new Option('Caixa ' + id, String(id)));
   bindEditor(item);
