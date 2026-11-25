@@ -1,6 +1,10 @@
 'use strict';
 
-const message = document.querySelector('#message');
+const textBoxes = [];
+const boxList = document.querySelector('#box-list');
+let boxSerial = 0;
+let activeBox;
+let message;
 const card = document.querySelector('#card');
 const preview = card.getContext('2d');
 const download = document.querySelector('#download');
@@ -265,32 +269,67 @@ function freeColumn(style, frames, top, bottom) {
   return right - x > best.width ? { x, width: right - x } : best;
 }
 
-const textLayer = document.querySelector('#text-layer');
-const exclusions = document.createElement('div');
-exclusions.style.display = 'contents';
-exclusions.setAttribute('aria-hidden', 'true');
-textLayer.prepend(exclusions);
-let lastBands = '';
+const textFrame = document.querySelector('#text-frame');
+const adjustText = document.querySelector('#adjust-text');
+const boxHelp = document.querySelector('#box-help');
+function poseFor(left, top, width, height, angle, bounds) {
+  const radians = angle * Math.PI / 180;
+  const cos = Math.abs(Math.cos(radians)), sin = Math.abs(Math.sin(radians));
+  const rotatedWidth = width * cos + height * sin;
+  const fit = Math.min(1, (bounds.right - bounds.left) / rotatedWidth);
+  const w = rotatedWidth * fit, h = (width * sin + height * cos) * fit;
+  const cx = Math.max(bounds.left + w / 2, Math.min(bounds.right - w / 2, left + width / 2));
+  const cy = Math.max(bounds.top + h / 2, top + height / 2);
+  return { cx, cy, fit, radians, angle, bounds: { x: cx - w / 2, y: cy - h / 2, width: w, height: h } };
+}
 
-function arrangeEditor(style, palette, frames, scale) {
-  textLayer.style.left = style.left * scale + 'px';
-  textLayer.style.top = photoTop * scale + 'px';
-  textLayer.style.width = style.width + 'px';
+function photoPose(frame, style) {
+  return poseFor(frame.x, frame.y, frame.width, frame.height, placements.get(frame.photo).angle, textBounds(style));
+}
+
+function placeOutline(element, pose, width, height) {
+  const w = width * pose.fit, h = height * pose.fit;
+  element.style.left = (pose.cx - w / 2) / paperWidth * 100 + '%';
+  element.style.top = (pose.cy - h / 2) / paperHeight * 100 + '%';
+  element.style.width = w / paperWidth * 100 + '%';
+  element.style.height = h / paperHeight * 100 + '%';
+  element.style.transform = 'rotate(' + pose.angle + 'deg)';
+}
+
+function textBounds(style) {
+  return style === styles.antigo ? { left: 76, right: 1004, top: 182 } : { left: 38, right: 1042, top: 38 };
+}
+
+function textBoxFor(style, textPlacement = activeBox) {
+  const bounds = textBounds(style);
+  const width = Math.min(textPlacement.width ?? style.width, bounds.right - bounds.left);
+  const left = Math.max(bounds.left, Math.min(textPlacement.left ?? style.left, bounds.right - width));
+  return { left, width, top: Math.max(bounds.top, textPlacement.top), minHeight: textPlacement.minHeight };
+}
+
+function arrangeEditor(item, box, palette, frames, scale) {
+  const { layer: textLayer, editor: message, exclusions } = item;
+  textLayer.style.left = box.left * scale + 'px';
+  textLayer.style.top = box.top * scale + 'px';
+  textLayer.style.width = box.width + 'px';
   textLayer.style.transform = 'scale(' + scale + ')';
+  message.style.minHeight = box.minHeight + 'px';
   message.style.color = palette.ink;
 
   // Paired floats let the browser wrap editable text and selections around photos.
-  const edges = [...new Set([photoTop, ...frames.flatMap(frame =>
-    [Math.max(photoTop, frame.y - 18), frame.y + frame.height + 18])])].sort((a, b) => a - b);
+  const intersecting = frames.filter(frame => frame.x - 20 < box.left + box.width &&
+    frame.x + frame.width + 20 > box.left && frame.y + frame.height + 18 > box.top);
+  const edges = [...new Set([box.top, ...intersecting.flatMap(frame =>
+    [Math.max(box.top, frame.y - 18), frame.y + frame.height + 18])])].sort((a, b) => a - b);
   const bands = edges.slice(1).map((edge, i) => {
-    const column = freeColumn(style, frames, edges[i], edge);
-    const left = column.width < 145 ? style.width : column.x - style.left;
-    const right = column.width < 145 ? 0 : style.width - left - column.width;
+    const column = freeColumn(box, intersecting, edges[i], edge);
+    const left = column.width < 145 ? box.width : column.x - box.left;
+    const right = column.width < 145 ? 0 : box.width - left - column.width;
     return [edge - edges[i], left, Math.max(0, right)];
   });
   const signature = JSON.stringify(bands);
-  if (signature === lastBands) return;
-  lastBands = signature;
+  if (signature === item.lastBands) return;
+  item.lastBands = signature;
   const floats = document.createDocumentFragment();
   for (const [height, left, right] of bands) {
     for (const [side, width] of [['left', left], ['right', right]]) {
@@ -314,13 +353,20 @@ function paint(ctx, style, palette, height, lines, size, leading, frames = []) {
   for (const line of lines) ctx.fillText(line.text, line.x, line.y);
   for (const frame of frames) {
     ctx.save();
+    const pose = frame.pose;
+    ctx.translate(pose.cx, pose.cy);
+    ctx.rotate(pose.radians);
+    ctx.scale(pose.fit, pose.fit);
+    ctx.translate(-frame.width / 2, -frame.height / 2);
+    ctx.save();
     ctx.shadowColor = 'rgba(57,42,30,.25)';
     ctx.shadowBlur = 8;
     ctx.shadowOffsetY = 3;
     ctx.fillStyle = '#fffcf4';
-    ctx.fillRect(frame.x, frame.y, frame.width, frame.height);
+    ctx.fillRect(0, 0, frame.width, frame.height);
     ctx.restore();
-    ctx.drawImage(frame.photo, frame.x + 10, frame.y + 10, frame.width - 20, frame.height - 30);
+    ctx.drawImage(frame.photo, 10, 10, frame.width - 20, frame.height - 30);
+    ctx.restore();
   }
 }
 
@@ -344,15 +390,29 @@ function drawChoices() {
 }
 
 function renderCard() {
-  const raw = editorText();
-  const hasContent = Boolean(raw.trim()) || photos.length > 0;
   const style = currentStyle();
   const palette = selectedPalette();
   const frames = photos.map(photo => frameFor(photo, style));
+  for (const frame of frames) frame.pose = photoPose(frame, style);
+  const obstacles = frames.map(frame => frame.pose.bounds);
   const scale = card.getBoundingClientRect().width / paperWidth;
-  message.dataset.empty = String(!raw && !photos.length);
-  arrangeEditor(style, palette, frames, scale);
-  const bottom = Math.max(photoTop + message.offsetHeight, ...frames.map(frame => frame.y + frame.height));
+  let bottom = Math.max(0, ...obstacles.map(frame => frame.y + frame.height));
+  let hasContent = photos.length > 0;
+  for (const item of textBoxes) {
+    const raw = editorText(item.editor);
+    hasContent ||= Boolean(raw.trim());
+    item.editor.dataset.empty = String(!raw && item === activeBox && !photos.length);
+    const box = textBoxFor(style, item);
+    arrangeEditor(item, box, palette, item.angle ? [] : obstacles, scale);
+    const height = item.editor.offsetHeight;
+    const pose = poseFor(box.left, box.top, box.width, height, item.angle, textBounds(style));
+    item.layout = { ...box, height, pose };
+    item.layer.style.left = (pose.cx - box.width * pose.fit / 2) * scale + 'px';
+    item.layer.style.top = (pose.cy - height * pose.fit / 2) * scale + 'px';
+    item.layer.style.transform = 'scale(' + scale * pose.fit + ') translate(' + box.width / 2 + 'px,' + height / 2 +
+      'px) rotate(' + pose.angle + 'deg) translate(' + -box.width / 2 + 'px,' + -height / 2 + 'px)';
+    bottom = Math.max(bottom, pose.bounds.y + pose.bounds.height);
+  }
   paperHeight = Math.ceil(Math.max(744, bottom + 136, gesture?.cardHeight ?? 0));
   // Keep very tall notes exportable on mobile canvases.
   const resolution = Math.min(1, 12000 / paperHeight);
@@ -362,15 +422,16 @@ function renderCard() {
   card.style.aspectRatio = paperWidth + ' / ' + paperHeight;
   preview.setTransform(width / paperWidth, 0, 0, height / paperHeight, 0, 0);
   paint(preview, style, palette, paperHeight, [], 56, 68, frames);
+  placeOutline(textFrame, activeBox.layout.pose, activeBox.layout.width, activeBox.layout.height);
+  showAngle('text-angle', activeBox.angle);
+  document.querySelector('#photo-rotation').hidden = !selectedPhoto;
+  if (selectedPhoto) showAngle('photo-angle', placements.get(selectedPhoto).angle);
   document.querySelector('#gesture-help').hidden = !frames.length;
   if (!selectedPhoto) sizePanel.hidden = true;
   frames.forEach((frame, index) => {
     const place = placements.get(frame.photo);
     const box = place.box;
-    box.style.left = frame.x / paperWidth * 100 + '%';
-    box.style.top = frame.y / paperHeight * 100 + '%';
-    box.style.width = frame.width / paperWidth * 100 + '%';
-    box.style.height = frame.height / paperHeight * 100 + '%';
+    placeOutline(box, frame.pose, frame.width, frame.height);
     box.style.zIndex = index + 1;
     box.classList.toggle('selected', frame.photo === selectedPhoto);
     box.classList.toggle('handle-left', place.handleLeft);
@@ -381,7 +442,7 @@ function renderCard() {
       sizeInput.value = Math.round(Math.max(frame.width - 20, frame.height - 30));
     }
   });
-  document.querySelector('#count').textContent = raw.length + ' / 280';
+  document.querySelector('#count').textContent = editorText().length + ' / 280';
   download.disabled = !hasContent || loadingPhotos;
   addPhotos.disabled = loadingPhotos || photos.length >= maxPhotos;
   statusText.textContent = '';
@@ -392,18 +453,87 @@ function refreshPaper() {
   renderCard();
 }
 
-function editorText() {
-  const text = message.innerText.replace(/\r/g, '');
-  return text === '\n' && !message.textContent ? '' : text;
+function editorText(editor = message) {
+  const text = editor.innerText.replace(/\r/g, '');
+  return text === '\n' && !editor.textContent ? '' : text;
 }
 
 const fontControl = document.querySelector('#text-font');
 const sizeControl = document.querySelector('#text-size');
 const colorControl = document.querySelector('#text-color');
-const titleButton = document.querySelector('#text-title');
 let savedRange = null;
-let acceptedHTML = '';
 let typingFormat = null;
+
+function activateBox(item) {
+  if (item === activeBox) return;
+  if (activeBox) activeBox.range = savedRange;
+  if (gesture?.kind === 'text') gesture = null;
+  activeBox = item;
+  message = item.editor;
+  savedRange = item.range ?? null;
+  typingFormat = null;
+  boxList.value = String(item.id);
+  document.querySelector('#remove-box').disabled = textBoxes.length < 2;
+  renderCard();
+}
+
+function addTextBox(focus = true) {
+  const id = ++boxSerial;
+  const layer = document.createElement('div');
+  layer.className = 'text-layer';
+  const exclusions = document.createElement('div');
+  exclusions.style.display = 'contents';
+  exclusions.setAttribute('aria-hidden', 'true');
+  const editor = document.createElement('div');
+  editor.className = 'note-text';
+  editor.contentEditable = 'true';
+  editor.setAttribute('role', 'textbox');
+  editor.setAttribute('aria-label', 'Texto da caixa ' + id);
+  editor.setAttribute('aria-multiline', 'true');
+  editor.setAttribute('aria-describedby', 'text-help');
+  editor.dataset.hint = 'Escreva aqui…';
+  layer.append(exclusions, editor);
+  document.querySelector('#text-layers').append(layer);
+  const bottom = Math.max(photoTop - 24, ...textBoxes.map(box => box.layout.pose.bounds.y + box.layout.pose.bounds.height));
+  const item = { id, layer, editor, exclusions, left: null, top: bottom + 24, width: textBoxes.length ? 575 : null,
+    minHeight: 150, angle: 0, lastBands: '' };
+  textBoxes.push(item);
+  boxList.add(new Option('Caixa ' + id, String(id)));
+  bindEditor(item);
+  activateBox(item);
+  if (focus) editor.focus();
+}
+
+boxList.addEventListener('change', () => {
+  const box = textBoxes.find(item => String(item.id) === boxList.value);
+  activateBox(box);
+  if (textFrame.hidden) box.editor.focus({ preventScroll: true });
+});
+document.querySelector('#add-box').addEventListener('click', () => addTextBox());
+document.querySelector('#remove-box').addEventListener('click', () => {
+  if (textBoxes.length < 2) return;
+  const index = textBoxes.indexOf(activeBox);
+  activeBox.layer.remove();
+  boxList.remove(index);
+  textBoxes.splice(index, 1);
+  activateBox(textBoxes[Math.min(index, textBoxes.length - 1)]);
+  message.focus({ preventScroll: true });
+});
+
+function showAngle(id, angle) {
+  const input = document.getElementById(id);
+  input.value = angle;
+  input.nextElementSibling.value = angle + '°';
+}
+document.querySelector('#text-angle').addEventListener('input', event => {
+  activeBox.angle = event.target.valueAsNumber;
+  renderCard();
+});
+document.querySelector('#photo-angle').addEventListener('input', event => {
+  if (!selectedPhoto) return;
+  placements.get(selectedPhoto).angle = event.target.valueAsNumber;
+  renderCard();
+});
 
 function atTypingCaret(range) {
   return typingFormat && range.collapsed && range.startContainer === typingFormat.node &&
@@ -455,11 +585,10 @@ function formatSelection(commands) {
 }
 
 document.addEventListener('selectionchange', rememberSelection);
-document.querySelector('.text-tools').addEventListener('pointerdown', rememberSelection);
+for (const tools of document.querySelectorAll('.text-tools')) tools.addEventListener('pointerdown', rememberSelection);
 fontControl.addEventListener('change', () => formatSelection([['fontName', fontControl.value]]));
 sizeControl.addEventListener('change', () => formatSelection([['fontSize', sizeControl.value]]));
 colorControl.addEventListener('change', () => formatSelection([['foreColor', colorControl.value]]));
-titleButton.addEventListener('click', () => formatSelection([['fontName', 'Carta'], ['fontSize', '6']]));
 document.querySelector('#text-body').addEventListener('click', () =>
   formatSelection([['fontName', 'Manuscrita'], ['fontSize', '3'], ['foreColor', selectedPalette().ink]]));
 card.addEventListener('click', () => message.focus({ preventScroll: true }));
@@ -470,41 +599,49 @@ function remainingCharacters() {
     ? selection.toString().length : 0;
   return 280 - editorText().length + selected;
 }
-message.addEventListener('beforeinput', event => {
-  if (event.isComposing || !event.inputType.startsWith('insert')) return;
-  const length = event.data?.length ?? (['insertParagraph', 'insertLineBreak'].includes(event.inputType) ? 1 : 0);
-  if (length > remainingCharacters()) event.preventDefault();
-});
-message.addEventListener('paste', event => {
-  event.preventDefault();
-  const text = event.clipboardData.getData('text/plain').replace(/\r\n?/g, '\n');
-  const room = remainingCharacters();
-  let inserted = '';
-  for (const part of segmenter ? segmenter.segment(text) : Array.from(text)) {
-    const char = part.segment ?? part;
-    if (inserted.length + char.length > room) break;
-    inserted += char;
+function bindEditor(item) {
+  const editor = item.editor;
+  let acceptedHTML = editor.innerHTML;
+  editor.addEventListener('focus', () => {
+    activateBox(item);
+    setTextBoxMode(false);
+  });
+  editor.addEventListener('beforeinput', event => {
+    if (event.isComposing || !event.inputType.startsWith('insert')) return;
+    const length = event.data?.length ?? (['insertParagraph', 'insertLineBreak'].includes(event.inputType) ? 1 : 0);
+    if (length > remainingCharacters()) event.preventDefault();
+  });
+  editor.addEventListener('paste', event => {
+    event.preventDefault();
+    const text = event.clipboardData.getData('text/plain').replace(/\r\n?/g, '\n');
+    const room = remainingCharacters();
+    let inserted = '';
+    for (const part of segmenter ? segmenter.segment(text) : Array.from(text)) {
+      const char = part.segment ?? part;
+      if (inserted.length + char.length > room) break;
+      inserted += char;
+    }
+    if (inserted) document.execCommand('insertText', false, inserted);
+  });
+  editor.addEventListener('drop', event => event.preventDefault());
+  function acceptEdit() {
+    if (editorText(editor).length > 280) {
+      editor.innerHTML = acceptedHTML;
+      const range = document.createRange();
+      range.selectNodeContents(editor);
+      range.collapse(false);
+      window.getSelection().removeAllRanges();
+      window.getSelection().addRange(range);
+    }
+    acceptedHTML = editor.innerHTML;
+    renderCard();
   }
-  if (inserted) document.execCommand('insertText', false, inserted);
-});
-message.addEventListener('drop', event => event.preventDefault());
-function acceptEdit() {
-  if (editorText().length > 280) {
-    message.innerHTML = acceptedHTML;
-    const range = document.createRange();
-    range.selectNodeContents(message);
-    range.collapse(false);
-    window.getSelection().removeAllRanges();
-    window.getSelection().addRange(range);
-  }
-  acceptedHTML = message.innerHTML;
-  renderCard();
+  editor.addEventListener('input', event => {
+    if (event.isComposing) renderCard();
+    else acceptEdit();
+  });
+  editor.addEventListener('compositionend', acceptEdit);
 }
-message.addEventListener('input', event => {
-  if (event.isComposing) renderCard();
-  else acceptEdit();
-});
-message.addEventListener('compositionend', acceptEdit);
 
 let editorWidth = 0;
 new ResizeObserver(() => {
@@ -535,6 +672,7 @@ async function readPhoto(file) {
 }
 
 function selectPhoto(photo) {
+  setTextBoxMode(false);
   if (selectedPhoto === photo) return;
   sizePanel.hidden = true;
   selectedPhoto = photo;
@@ -550,11 +688,21 @@ function maxPhotoSize(frame, style) {
   return Math.min((availableWidth - 20) / w, 760 / h) * Math.max(w, h);
 }
 
+// Keep the opposite corner fixed when the local axes are rotated.
+function resizeOffset(dw, dh, angle, leftHandle) {
+  const radians = angle * Math.PI / 180;
+  const dx = leftHandle ? -dw : dw;
+  return { x: (dx * Math.cos(radians) - dh * Math.sin(radians) - dw) / 2,
+    y: (dx * Math.sin(radians) + dh * Math.cos(radians) - dh) / 2 };
+}
+
 function resizePhoto(start, size, style) {
   const place = placements.get(start.photo);
   place.size = Math.min(maxPhotoSize(start, style), Math.max(85, size));
-  const width = frameFor(start.photo, style).width;
-  place.x = start.x - style.left + (place.handleLeft ? start.width - width : 0);
+  const next = frameFor(start.photo, style);
+  const offset = resizeOffset(next.width - start.width, next.height - start.height, place.angle, place.handleLeft);
+  place.x = start.x - style.left + offset.x;
+  place.y = Math.max(photoTop, start.y + offset.y);
 }
 
 function changeFrame(photo, start, resize, dx, dy, cardHeight) {
@@ -571,6 +719,71 @@ function changeFrame(photo, start, resize, dx, dy, cardHeight) {
     place.handleLeft = place.x + start.width / 2 > style.width / 2;
   }
   renderCard();
+}
+
+const arrowSteps = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] };
+
+function beginGesture(event, button, target) {
+  draggedHandle = null;
+  gesture = { ...target, id: event.pointerId, button, x: event.clientX, y: event.clientY,
+    scale: paperWidth / card.getBoundingClientRect().width, cardHeight: paperHeight };
+  button.setPointerCapture(event.pointerId);
+}
+
+function setTextBoxMode(enabled) {
+  if (!enabled && gesture?.kind === 'text') gesture = null;
+  textFrame.hidden = boxHelp.hidden = !enabled;
+  adjustText.setAttribute('aria-pressed', String(enabled));
+  adjustText.textContent = enabled ? 'Concluir ajuste' : 'Ajustar caixa';
+}
+
+adjustText.addEventListener('click', () => {
+  setTextBoxMode(textFrame.hidden);
+  if (!textFrame.hidden) document.querySelector('#move-text').focus({ preventScroll: true });
+});
+
+function changeTextBox(start, resize, dx, dy, startPaperHeight) {
+  const bounds = textBounds(currentStyle());
+  const textPlacement = activeBox;
+  if (resize) {
+    textPlacement.left = start.left;
+    textPlacement.width = Math.max(160, Math.min(bounds.right - start.left, start.width + dx));
+    textPlacement.minHeight = dy === 0 ? start.minHeight : Math.max(82, start.height + dy);
+  } else {
+    textPlacement.left = Math.max(bounds.left, Math.min(bounds.right - start.width, start.left + dx));
+    textPlacement.top = Math.max(bounds.top, Math.min(startPaperHeight - 136, start.top + dy));
+  }
+  if (resize && activeBox.angle) {
+    renderCard();
+    const offset = resizeOffset(activeBox.layout.width - start.width,
+      activeBox.layout.height - start.height, activeBox.angle, false);
+    activeBox.left = start.left + offset.x;
+    activeBox.top = start.top + offset.y;
+  }
+  renderCard();
+}
+
+for (const button of textFrame.querySelectorAll('button')) {
+  const resize = button.id === 'resize-text';
+  const startBox = () => ({ ...textBoxFor(currentStyle()), height: message.offsetHeight });
+  button.addEventListener('pointerdown', event => {
+    if (event.button !== 0 || gesture) return;
+    event.preventDefault();
+    button.focus({ preventScroll: true });
+    beginGesture(event, button, { kind: 'text', resize, start: startBox(), pose: activeBox.layout.pose });
+  });
+  button.addEventListener('keydown', event => {
+    if (event.key === 'Escape') {
+      setTextBoxMode(false);
+      adjustText.focus({ preventScroll: true });
+      return;
+    }
+    if (!Object.hasOwn(arrowSteps, event.key)) return;
+    event.preventDefault();
+    const [dx, dy] = arrowSteps[event.key];
+    const step = event.shiftKey ? 30 : 10;
+    changeTextBox(startBox(), resize, step * dx, step * dy, paperHeight);
+  });
 }
 
 function makeHandle(photo, resize) {
@@ -595,16 +808,13 @@ function makeHandle(photo, resize) {
     event.preventDefault();
     button.focus({ preventScroll: true });
     selectPhoto(photo);
-    draggedHandle = null;
-    gesture = { id: event.pointerId, photo, resize, button, start: frameFor(photo, currentStyle()),
-      x: event.clientX, y: event.clientY, scale: paperWidth / card.getBoundingClientRect().width, cardHeight: paperHeight };
-    button.setPointerCapture(event.pointerId);
+    const start = frameFor(photo, currentStyle());
+    beginGesture(event, button, { kind: 'photo', photo, resize, start, pose: photoPose(start, currentStyle()) });
   });
   button.addEventListener('keydown', event => {
-    const steps = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] };
-    if (!Object.hasOwn(steps, event.key)) return;
+    if (!Object.hasOwn(arrowSteps, event.key)) return;
     event.preventDefault();
-    const [dx, dy] = steps[event.key];
+    const [dx, dy] = arrowSteps[event.key];
     const step = event.shiftKey ? 30 : 10;
     const style = currentStyle();
     const start = frameFor(photo, style);
@@ -622,8 +832,14 @@ function updateGesture(event) {
   if (gesture?.id !== event.pointerId) return;
   if (!draggedHandle && Math.hypot(event.clientX - gesture.x, event.clientY - gesture.y) < 3) return;
   draggedHandle = gesture.button;
-  changeFrame(gesture.photo, gesture.start, gesture.resize, (event.clientX - gesture.x) * gesture.scale,
-    (event.clientY - gesture.y) * gesture.scale, gesture.cardHeight);
+  let dx = (event.clientX - gesture.x) * gesture.scale, dy = (event.clientY - gesture.y) * gesture.scale;
+  if (gesture.resize && gesture.pose) {
+    const { radians, fit } = gesture.pose;
+    const cos = Math.cos(radians), sin = Math.sin(radians);
+    [dx, dy] = [(dx * cos + dy * sin) / fit, (dy * cos - dx * sin) / fit];
+  }
+  if (gesture.kind === 'text') changeTextBox(gesture.start, gesture.resize, dx, dy, gesture.cardHeight);
+  else changeFrame(gesture.photo, gesture.start, gesture.resize, dx, dy, gesture.cardHeight);
 }
 
 function endGesture(event) {
@@ -653,7 +869,7 @@ function addPhotoFrame(photo) {
   const existing = photos.map(other => frameFor(other, style));
   const box = document.createElement('div');
   box.className = 'photo-box';
-  const place = { box, size: 265, x: 0, y: photoTop, handleLeft: false };
+  const place = { box, size: 265, x: 0, y: photoTop, handleLeft: false, angle: 0 };
   placements.set(photo, place);
   const { width, height } = frameFor(photo, style);
   // Alternate sides and start a new row once both spaces are occupied.
@@ -744,7 +960,28 @@ function exportCard() {
   ctx.setTransform(result.width / paperWidth, 0, 0, result.height / paperHeight, 0, 0);
   const paper = card.getBoundingClientRect();
   const scale = paper.width / paperWidth;
-  const walker = document.createTreeWalker(message, NodeFilter.SHOW_TEXT);
+  for (const item of textBoxes) {
+    const { width, height, pose } = item.layout;
+    const transform = item.layer.style.transform;
+    ctx.save();
+    try {
+      item.layer.style.transform = 'scale(' + scale * pose.fit + ')';
+      const origin = item.layer.getBoundingClientRect();
+      ctx.translate(pose.cx, pose.cy);
+      ctx.rotate(pose.radians);
+      ctx.scale(pose.fit, pose.fit);
+      ctx.translate(-width / 2, -height / 2);
+      drawTextRuns(ctx, item.editor, origin, scale * pose.fit);
+    } finally {
+      item.layer.style.transform = transform;
+      ctx.restore();
+    }
+  }
+  return result;
+}
+
+function drawTextRuns(ctx, editor, paper, scale) {
+  const walker = document.createTreeWalker(editor, NodeFilter.SHOW_TEXT);
   const range = document.createRange();
   while (walker.nextNode()) {
     const node = walker.currentNode;
@@ -781,7 +1018,6 @@ function exportCard() {
     }
     drawRun();
   }
-  return result;
 }
 
 download.addEventListener('click', async () => {
@@ -801,5 +1037,6 @@ download.addEventListener('click', async () => {
     link.remove();
   }
 });
+addTextBox(false);
 refreshPaper();
 Promise.all([document.fonts.load('56px Manuscrita'), document.fonts.load('96px Carta')]).then(refreshPaper, refreshPaper);

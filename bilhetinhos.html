@@ -7,8 +7,8 @@
   <title>Bilhetinhos</title>
   <link rel="stylesheet" href="./site-nav.css?v=2">
   <link rel="stylesheet" href="./ceu.css?v=3">
-  <link rel="stylesheet" href="./bilhetinhos.css?v=7">
-  <script src="./bilhetinhos.js?v=7" defer></script>
+  <link rel="stylesheet" href="./bilhetinhos.css?v=8">
+  <script src="./bilhetinhos.js?v=8" defer></script>
 </head>
 <body class="site-page">
   <div class="sky" aria-hidden="true"></div>
@@ -53,6 +53,12 @@
       <figure>
         <figcaption>Sua cartinha</figcaption>
         <p id="text-help">Escreva no papel. Selecione um trecho para mudar a aparência dele.</p>
+        <div class="text-tools" role="group" aria-label="Caixas de texto">
+          <label>Caixa de texto<select id="box-list" aria-label="Selecionar caixa de texto"></select></label>
+          <button type="button" id="add-box">Adicionar caixa</button>
+          <button type="button" id="remove-box" disabled>Remover caixa</button>
+          <button type="button" id="adjust-text" aria-controls="text-frame" aria-pressed="false">Ajustar caixa</button>
+        </div>
         <div class="text-tools" role="group" aria-label="Formatação do recado">
           <label>Fonte<select id="text-font">
             <option value="Manuscrita">Manuscrita</option><option value="Carta">Serifada</option>
@@ -63,15 +69,26 @@
             <option value="4">68</option><option value="5">80</option><option value="6">96</option><option value="7">112</option>
           </select></label>
           <label>Cor<input id="text-color" type="color" value="#393a35"></label>
-          <button type="button" id="text-title">Título</button>
           <button type="button" id="text-body">Texto normal</button>
+        </div>
+        <div id="box-help" hidden><p>Arraste a caixa para mover o texto ou puxe o canto inferior direito para ajustar a largura e a altura. Pelo teclado, use as setas.</p>
+          <label class="rotation">Girar caixa <input type="range" id="text-angle" min="-180" max="180" value="0"><output for="text-angle">0°</output></label>
         </div>
         <div class="stage"><div class="card-editor">
           <canvas id="card" width="1080" height="744" aria-hidden="true"></canvas>
-          <div id="text-layer"><div id="message" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Texto da cartinha" aria-describedby="text-help count" data-hint="Escreva aqui…"></div></div>
+          <div id="text-layers"></div>
           <div id="photo-controls"></div>
+          <div id="text-frame" hidden>
+            <button type="button" id="move-text" aria-label="Mover caixa de texto" aria-describedby="box-help">
+              <span aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3v18M3 12h18M8 7l4-4 4 4M8 17l4 4 4-4M7 8l-4 4 4 4m10-8 4 4-4 4"/></svg></span>
+            </button>
+            <button type="button" id="resize-text" aria-label="Redimensionar caixa de texto" aria-describedby="box-help">
+              <span aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 5l14 14M5 12V5h7m0 14h7v-7"/></svg></span>
+            </button>
+          </div>
         </div></div>
         <small id="count">0 / 280</small>
+        <label class="rotation" id="photo-rotation" hidden>Girar foto <input type="range" id="photo-angle" min="-180" max="180" value="0"><output for="photo-angle">0°</output></label>
         <div id="size-panel" hidden>
           <label for="photo-size">Tamanho da foto</label>
           <input id="photo-size" type="range" min="85" max="760">
