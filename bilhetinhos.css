@@ -186,3 +186,10 @@ figure { margin: 0; min-width: 0; padding-bottom: 1rem; }
 #publish-dialog::backdrop { background: #070c10bb; }
 #publish-phrase { display: block; width: 100%; }
 #cancel-publish { background: transparent; color: #ede8d9; }
+[hidden] { display: none !important; }
+#note-gate { margin: 3rem auto; max-width: 24rem; }
+#note-login { display: grid; gap: .65rem; margin-top: 1.5rem; }
+#note-password { padding: .75rem; font: inherit; color: inherit; background: #18222b; border: 1px solid #677372; border-radius: .4rem; }
+.note-navigation { display: flex; justify-content: flex-end; gap: .75rem; margin-bottom: 1.5rem; }
+#lock-notes { color: var(--nav-text); background: transparent; }
+#collection-title { text-align: center; }

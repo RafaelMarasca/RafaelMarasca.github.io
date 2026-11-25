@@ -24,7 +24,6 @@ function restoreText(html) {
 
 (() => {
   const byId = id => document.getElementById(id);
-  const api = 'https://presentes-lulu-e-rafo.rafaelmarascamartins.chatgpt.site';
   const dateInput = byId('pin-date');
   const feedback = byId('save-status');
   const libraryStatus = byId('library-status');
@@ -33,7 +32,7 @@ function restoreText(html) {
   const today = () => new Intl.DateTimeFormat('sv-SE', {timeZone:'America/Sao_Paulo'}).format(new Date());
   const formatDate = date => new Intl.DateTimeFormat('pt-BR', {dateStyle:'long'}).format(new Date(date + 'T12:00:00'));
   dateInput.value = today();
-  let editingId, revision, busy = false, session = '', publications = [], publicToday;
+  let editingId, revision, busy = false, publications = [], publicToday;
   let dbPromise;
   const imageIds = new WeakMap();
   let serial = 0;
@@ -72,6 +71,40 @@ function restoreText(html) {
   const png = canvas => new Promise((resolve, reject) => canvas.toBlob(blob =>
     blob ? resolve(blob) : reject(new Error('Não foi possível salvar a imagem.')), 'image/png'));
 
+  async function encrypt(bytes) {
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    return {iv, data:await crypto.subtle.encrypt({name:'AES-GCM', iv}, noteAccess.draftKey, bytes)};
+  }
+  function decrypt(sealed) {
+    return crypto.subtle.decrypt({name:'AES-GCM', iv:sealed.iv}, noteAccess.draftKey, sealed.data);
+  }
+  const sealJSON = value => encrypt(new TextEncoder().encode(JSON.stringify(value)));
+  const openJSON = async value => JSON.parse(new TextDecoder().decode(await decrypt(value)));
+  async function sealDraft({id, version, blobs, ...layout}) {
+    return {id, version, sealed:await sealJSON(layout),
+      blobs:await Promise.all(blobs.map(async blob => encrypt(await blob.arrayBuffer())))};
+  }
+  async function readDraft(db, id) {
+    const entry = await requestResult(db.transaction('drafts').objectStore('drafts').get(id));
+    if (!entry?.sealed) return entry;
+    return {id, version:entry.version, ...await openJSON(entry.sealed),
+      blobs:await Promise.all(entry.blobs.map(async blob => new Blob([await decrypt(blob)], {type:'image/png'})))};
+  }
+  async function writePair(db, record, summary, expectedVersion) {
+    const tx = db.transaction(['drafts', 'summaries'], 'readwrite');
+    const summaries = tx.objectStore('summaries');
+    let conflict = false;
+    await new Promise((resolve, reject) => {
+      tx.oncomplete = resolve;
+      tx.onabort = () => reject(conflict ? new Error('Este bilhetinho mudou em outra aba. Abra a versão salva para continuar.') : tx.error);
+      const check = summaries.get(record.id);
+      check.onsuccess = () => {
+        if (check.result?.version !== expectedVersion) { conflict = true; tx.abort(); return; }
+        tx.objectStore('drafts').put(record);
+        summaries.put(summary);
+      };
+    });
+  }
   async function saveDraft() {
     const db = await database();
     const draft = layout();
@@ -80,19 +113,8 @@ function restoreText(html) {
     const title = [...textBoxes.map(box => editorText(box.editor).trim()).filter(Boolean).join(' ').replace(/\s+/g, ' ')].slice(0, 100).join('') || 'Bilhetinho com foto';
     const blobs = await Promise.all(photos.map(png));
     const version = crypto.randomUUID();
-    const tx = db.transaction(['drafts', 'summaries'], 'readwrite');
-    const summaries = tx.objectStore('summaries');
-    let conflict = false;
-    await new Promise((resolve, reject) => {
-      tx.oncomplete = resolve;
-      tx.onabort = () => reject(conflict ? new Error('Este bilhetinho mudou em outra aba. Abra a versão salva para continuar.') : tx.error);
-      const check = summaries.get(id);
-      check.onsuccess = () => {
-        if (check.result?.version !== revision) { conflict = true; tx.abort(); return; }
-        tx.objectStore('drafts').put({id, version, ...draft, blobs, date:dateInput.value});
-        summaries.put({id, title, updated, version});
-      };
-    });
+    const record = await sealDraft({id, version, ...draft, blobs, date:dateInput.value});
+    await writePair(db, record, {id, updated, version, sealed:await sealJSON(title)}, revision);
     editingId = id;
     revision = version;
     baseline = JSON.stringify(draft);
@@ -108,7 +130,7 @@ function restoreText(html) {
     if (!confirmSwitch()) return;
     let record, images = [];
     if (id) {
-      record = await requestResult((await database()).transaction('drafts').objectStore('drafts').get(id));
+      record = await readDraft(await database(), id);
       if (!record) throw new Error('Bilhetinho indisponível.');
       images = await Promise.all(record.blobs.map((blob, index) => readPhoto(new File([blob], record.photos[index].name))));
     }
@@ -132,10 +154,22 @@ function restoreText(html) {
     saveNote.textContent = id ? 'Salvar alterações' : 'Salvar bilhetinho';
     feedback.textContent = photoStatus.textContent = '';
     baseline = JSON.stringify(layout());
+    return true;
   }
 
   async function listDrafts() {
-    const summaries = await requestResult((await database()).transaction('summaries').objectStore('summaries').getAll());
+    const db = await database();
+    const summaries = await requestResult(db.transaction('summaries').objectStore('summaries').getAll());
+    for (const summary of summaries) {
+      if (summary.sealed) {
+        summary.title = await openJSON(summary.sealed);
+      } else {
+        // Upgrade the original plaintext pair atomically, keeping its ID and revision.
+        const {id, version, updated, title} = summary;
+        const old = await readDraft(db, id);
+        if (old?.version === version) await writePair(db, await sealDraft(old), {id, version, updated, sealed:await sealJSON(title)}, version);
+      }
+    }
     const list = byId('saved-notes');
     list.replaceChildren();
     for (const note of summaries.sort((a, b) => b.updated - a.updated)) {
@@ -161,9 +195,28 @@ function restoreText(html) {
     finally { busy = main.inert = false; }
   }
   async function switchTo(id) {
-    await run(() => openDraft(id), libraryStatus);
-    if (editingId === id) message.focus();
+    if (await run(() => openDraft(id), libraryStatus)) {
+      changeView(true);
+      message.focus();
+    }
   }
+  function showView() {
+    const editing = location.hash === '#editor';
+    byId('collection-view').hidden = editing;
+    byId('editor-view').hidden = !editing;
+    byId('toggle-notes').textContent = editing ? 'Ver bilhetinhos' : 'Abrir editor';
+    if (editing) renderCard();
+  }
+  function changeView(editing) {
+    const url = new URL(location.href);
+    url.hash = editing ? 'editor' : 'bilhetinhos';
+    if (url.href !== location.href) history.pushState(null, '', url);
+    showView();
+    byId(editing ? 'editor-title' : 'collection-title').focus();
+  }
+  byId('toggle-notes').onclick = () => changeView(byId('editor-view').hidden);
+  window.addEventListener('hashchange', showView);
+  showView();
   saveNote.onclick = () => run(async () => {
     await saveDraft();
     feedback.textContent = 'Salvo em Meus bilhetinhos.';
@@ -174,9 +227,16 @@ function restoreText(html) {
   function noteLink(date) {
     const url = new URL(location.href);
     url.searchParams.set('dia', date);
+    url.hash = '';
     return url;
   }
-  function showPublication(date) {
+  let previewUrl, imageRequest = 0;
+  async function showPublication(date) {
+    const generation = ++imageRequest;
+    const img = byId('daily-preview');
+    img.hidden = true;
+    img.removeAttribute('src');
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
     const item = publications.find(item => item.date === date);
     byId('daily-note').hidden = !item;
     if (!item) return;
@@ -185,23 +245,21 @@ function restoreText(html) {
     time.textContent = formatDate(date);
     time.dateTime = date;
     time.hidden = date !== publicToday;
-    byId('daily-preview').alt = item.title;
-    byId('daily-preview').src = api + '/bilhetinhos/' + date + '?v=' + item.version;
+    img.alt = item.title;
     byId('published-link').href = noteLink(date);
     datePicker.value = date;
+    try {
+      const blob = await (await noteAccess.request('/bilhetinhos/' + date)).blob();
+      if (generation !== imageRequest) return;
+      previewUrl = URL.createObjectURL(blob);
+      img.src = previewUrl;
+      img.hidden = false;
+    } catch {
+      if (generation === imageRequest) byId('public-status').textContent = 'Não foi possível abrir este bilhetinho.';
+    }
   }
   datePicker.onchange = () => { history.replaceState(null, '', noteLink(datePicker.value)); showPublication(datePicker.value); };
-  async function remote(path, options) {
-    let response;
-    try { response = await fetch(api + path, {cache:'no-store', credentials:'omit', ...options}); }
-    catch { throw new Error('Confira sua conexão e tente novamente.'); }
-    const data = await response.json();
-    if (!response.ok) {
-      if (response.status === 401) session = '';
-      throw new Error(data.error || 'Não foi possível acessar os bilhetinhos.');
-    }
-    return data;
-  }
+  const remote = async (path, options) => (await noteAccess.request(path, options)).json();
   let fetchNumber = 0;
   async function refreshPublic(preferred) {
     const number = ++fetchNumber;
@@ -213,7 +271,8 @@ function restoreText(html) {
       datePicker.replaceChildren(...publications.map(item => new Option(formatDate(item.date), item.date)));
       const date = preferred || new URL(location.href).searchParams.get('dia');
       const found = publications.some(item => item.date === date);
-      byId('public-status').textContent = date && !found ? 'Ainda não há publicação para esta data.' : '';
+      byId('public-status').textContent = date && !found ? 'Ainda não há publicação para esta data.' :
+        (publications.length ? '' : 'Ainda não há bilhetinhos publicados.');
       showPublication(found ? date : publications[0]?.date);
     } catch { if (number === fetchNumber) byId('public-status').textContent = 'Não foi possível carregar os bilhetinhos publicados.'; }
   }
@@ -222,14 +281,12 @@ function restoreText(html) {
 
   pinNote.onclick = () => {
     if (!dateInput.reportValidity()) return;
-    byId('publish-detail').textContent = 'O bilhetinho ficará público com a data de ' + formatDate(dateInput.value) +
+    byId('publish-detail').textContent = 'Quem tiver a senha poderá ler o bilhetinho de ' + formatDate(dateInput.value) +
       (dateInput.value > today() ? ', a partir desse dia (horário de Brasília).' : '.');
-    byId('phrase-label').hidden = Boolean(session);
     byId('publish-error').textContent = '';
     dialog.showModal();
   };
   byId('cancel-publish').onclick = () => dialog.close();
-  dialog.onclose = () => { byId('publish-phrase').value = ''; };
   dialog.oncancel = event => { if (busy) event.preventDefault(); };
   byId('publish-form').onsubmit = async event => {
     event.preventDefault();
@@ -240,16 +297,9 @@ function restoreText(html) {
     error.textContent = 'Preparando a publicação…';
     try {
       await run(async () => {
-        if (!session) {
-          const result = await remote('/unlock', {method:'POST', headers:{'Content-Type':'application/json'},
-            body:JSON.stringify({scope:'bilhetinhos', code:byId('publish-phrase').value})});
-          session = result.session;
-          byId('publish-phrase').value = '';
-        }
         const date = dateInput.value;
         const path = '/bilhetinhos/' + date;
-        const headers = {'X-Gift-Session':session};
-        const {version} = await remote(path + '/version', {headers});
+        const {version} = await remote(path + '/version');
         if (version !== 'new' && !confirm('Substituir o bilhetinho já publicado para ' + formatDate(date) + '?')) {
           dialog.close(); return;
         }
@@ -257,12 +307,12 @@ function restoreText(html) {
         await document.fonts.ready;
         renderCard();
         const image = exportCard().toDataURL('image/jpeg', .88);
-        await remote(path, {method:'PUT', headers:{...headers,'X-Gift-Version':version,'Content-Type':'application/json'},
+        await remote(path, {method:'PUT', headers:{'X-Gift-Version':version,'Content-Type':'application/json'},
           body:JSON.stringify({title, image})});
         dialog.close();
         feedback.textContent = (date > today() ? 'Publicação agendada para ' : 'Bilhetinho publicado para ') + formatDate(date) + '.';
         await refreshPublic(date > today() ? undefined : date);
       }, error);
-    } finally { form.inert = false; byId('phrase-label').hidden = Boolean(session); }
+    } finally { form.inert = false; }
   };
 })();
