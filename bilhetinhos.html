@@ -7,8 +7,8 @@
   <title>Bilhetinhos · Uma lua para Lulu</title>
   <link rel="stylesheet" href="./site-nav.css?v=2">
   <link rel="stylesheet" href="./ceu.css?v=3">
-  <link rel="stylesheet" href="./bilhetinhos.css?v=2">
-  <script src="./bilhetinhos.js?v=2" defer></script>
+  <link rel="stylesheet" href="./bilhetinhos.css?v=3">
+  <script src="./bilhetinhos.js?v=3" defer></script>
 </head>
 <body class="site-page">
   <div class="sky" aria-hidden="true"></div>
@@ -25,6 +25,14 @@
         <label for="message">Seu recado</label>
         <textarea id="message" rows="5" maxlength="280" placeholder="O que você quer dizer?" aria-describedby="count"></textarea>
         <small id="count">0 / 280</small>
+        <fieldset>
+          <legend>Imagens</legend>
+          <input id="photo-files" type="file" accept="image/jpeg,image/png,image/webp" multiple hidden>
+          <button id="add-photos" type="button" aria-describedby="photo-help">Adicionar imagens</button>
+          <p id="photo-help">Até 4 imagens em JPG, PNG ou WebP.</p>
+          <ul id="photo-list" aria-label="Imagens do bilhetinho"></ul>
+          <p id="photo-status" role="status"></p>
+        </fieldset>
         <fieldset>
           <legend>Estilo do bilhetinho</legend>
           <div class="styles">

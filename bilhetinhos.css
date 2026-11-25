@@ -46,6 +46,14 @@ button:disabled { opacity: .55; cursor: default; }
 button:enabled:hover { background: #f5e6ba; }
 textarea:focus-visible, button:focus-visible, .papers label:has(:focus-visible) { outline: 2px solid var(--nav-accent); outline-offset: 4px; }
 #status { color: var(--nav-text); font-size: .9rem; margin: .6rem 0 0; }
+#add-photos { min-height: 44px; color: var(--nav-accent); background: transparent; border: 1px solid #77796d; }
+#add-photos:enabled:hover { background: #293033; }
+#photo-help, #photo-status { margin: .4rem 0 0; color: var(--nav-text); font-size: .875rem; }
+#photo-list { display: flex; flex-wrap: wrap; gap: .65rem; padding: 0; margin: .8rem 0 0; list-style: none; }
+#photo-list:empty, #photo-status:empty { display: none; }
+#photo-list li { position: relative; }
+#photo-list canvas { display: block; width: 4.5rem; height: 4.5rem; object-fit: contain; background: #263037; border: 1px solid #596261; border-radius: .3rem; }
+#photo-list button { position: absolute; top: -.4rem; right: -.35rem; width: 1.85rem; height: 1.85rem; min-height: 0; padding: 0; border: 1px solid #666e70; border-radius: 50%; color: white; background: #263037; font: 1.3rem/1 system-ui, sans-serif; }
 figure { margin: 0; min-width: 0; }
 .stage { display: grid; place-items: center; padding: clamp(1.5rem, 4vw, 3.5rem); border: 1px solid #39464b; border-radius: .5rem; background-color: #1e2a30; background-image: radial-gradient(#b7c5be29 .75px, transparent .85px); background-size: 8px 8px; }
 #card { display: block; width: 100%; height: auto; transform: rotate(-1.5deg); box-shadow: 0 8px 17px #070c104d; }

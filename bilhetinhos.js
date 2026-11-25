@@ -5,6 +5,13 @@ const card = document.querySelector('#card');
 const preview = card.getContext('2d');
 const download = document.querySelector('#download');
 const statusText = document.querySelector('#status');
+const filesInput = document.querySelector('#photo-files');
+const addPhotos = document.querySelector('#add-photos');
+const photoList = document.querySelector('#photo-list');
+const photoStatus = document.querySelector('#photo-status');
+const photos = [];
+const maxPhotos = 4;
+let loadingPhotos = false;
 const sample = 'Vi a lua hoje\ne lembrei de você.';
 const palettes = {
   creme: { paper: '#f6ead0', ink: '#393a35', stamp: '#646e55' },
@@ -250,12 +257,49 @@ const styles = {
   caderno: { draw: drawCaderno, left: 145, width: 824 }
 };
 
-function paint(ctx, style, palette, height, lines, size, leading) {
-  const firstY = 222 + (height - 327 - lines.length * leading) / 2 + size;
+function layoutPhotos(width) {
+  const rows = [];
+  for (let i = 0; i < photos.length; i += 2) {
+    const pair = photos.slice(i, i + 2);
+    const maxWidth = (width - (pair.length - 1) * 28) / pair.length - 20;
+    const prints = pair.map(photo => {
+      const scale = Math.min(maxWidth / photo.width, (pair.length === 1 ? 330 : 270) / photo.height);
+      return { photo, width: photo.width * scale, height: photo.height * scale };
+    });
+    rows.push({
+      prints,
+      width: prints.reduce((sum, print) => sum + print.width + 20, 0) + (prints.length - 1) * 28,
+      height: Math.max(...prints.map(print => print.height)) + 30
+    });
+  }
+  return rows;
+}
+
+function paint(ctx, style, palette, height, lines, size, leading, rows = [], photoSpace = 0) {
+  const textHeight = lines.length * leading;
+  const top = 222 + (height - 327 - textHeight - photoSpace) / 2;
+  const firstY = top + size;
   style.draw(ctx, palette, height, firstY, leading);
   ctx.fillStyle = palette.ink;
   ctx.font = size + 'px Manuscrita, cursive';
   lines.forEach((line, i) => ctx.fillText(line, style.left, firstY + i * leading));
+  let y = top + textHeight + (lines.length ? 24 : 0);
+  for (const row of rows) {
+    let x = style.left + (style.width - row.width) / 2;
+    for (const print of row.prints) {
+      const frameY = y + (row.height - print.height - 30) / 2;
+      ctx.save();
+      ctx.shadowColor = 'rgba(57,42,30,.25)';
+      ctx.shadowBlur = 8;
+      ctx.shadowOffsetY = 3;
+      ctx.fillStyle = '#fffcf4';
+      ctx.fillRect(x, frameY, print.width + 20, print.height + 30);
+      ctx.restore();
+      ctx.drawImage(print.photo, x + 10, frameY + 10, print.width, print.height);
+      x += print.width + 48;
+    }
+    y += row.height + 20;
+  }
   ctx.fillStyle = style.footer || palette.stamp;
   ctx.font = '22px monospace';
   ctx.fillText('☾  uma lua para lulu', style.left, height - (style.footer ? 40 : 65));
@@ -277,23 +321,29 @@ function drawChoices() {
 function renderCard() {
   const raw = message.value;
   const hasMessage = Boolean(raw.trim());
-  const text = hasMessage ? raw : sample;
+  const hasContent = hasMessage || photos.length > 0;
+  const text = hasMessage ? raw : (hasContent ? '' : sample);
   const input = document.querySelector('input[name="style"]:checked');
   const style = styles[input.value];
   let size = 78;
   let lines;
   do {
     preview.font = size + 'px Manuscrita, cursive';
-    lines = wrapText(preview, text, style.width);
+    lines = text ? wrapText(preview, text, style.width) : [];
     if (lines.length * size * 1.22 <= 350 || size <= 42) break;
     size -= 6;
   } while (true);
   const leading = Math.ceil(size * 1.22);
-  card.height = Math.max(744, 365 + lines.length * leading);
-  paint(preview, style, selectedPalette(), card.height, lines, size, leading);
-  card.setAttribute('aria-label', input.labels[0].textContent.trim() + '. ' + (hasMessage ? '' : 'Exemplo. ') + text);
+  const rows = layoutPhotos(style.width);
+  const photoSpace = rows.reduce((sum, row) => sum + row.height, 0)
+    + Math.max(0, rows.length - 1) * 20 + (rows.length && lines.length ? 24 : 0);
+  card.height = Math.ceil(Math.max(744, 365 + lines.length * leading + photoSpace));
+  paint(preview, style, selectedPalette(), card.height, lines, size, leading, rows, photoSpace);
+  const photoNames = photos.map(photo => photo.getAttribute('aria-label'));
+  card.setAttribute('aria-label', [input.labels[0].textContent.trim(), hasContent ? text : 'Exemplo. ' + text, ...photoNames].filter(Boolean).join('. '));
   document.querySelector('#count').textContent = raw.length + ' / 280';
-  download.disabled = !hasMessage;
+  download.disabled = !hasContent || loadingPhotos;
+  addPhotos.disabled = loadingPhotos || photos.length >= maxPhotos;
   statusText.textContent = '';
 }
 
@@ -303,6 +353,73 @@ function refreshPaper() {
 }
 
 message.addEventListener('input', renderCard);
+async function readPhoto(file) {
+  const url = URL.createObjectURL(file);
+  try {
+    const image = new Image();
+    image.src = url;
+    await image.decode();
+    const scale = Math.min(1, 900 / Math.max(image.naturalWidth, image.naturalHeight));
+    const photo = document.createElement('canvas');
+    photo.width = Math.max(1, Math.round(image.naturalWidth * scale));
+    photo.height = Math.max(1, Math.round(image.naturalHeight * scale));
+    photo.setAttribute('role', 'img');
+    photo.setAttribute('aria-label', file.name);
+    photo.getContext('2d').drawImage(image, 0, 0, photo.width, photo.height);
+    return photo;
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
+
+function appendPhoto(photo) {
+  photos.push(photo);
+  const item = document.createElement('li');
+  const remove = document.createElement('button');
+  const name = photo.getAttribute('aria-label');
+  remove.type = 'button';
+  remove.textContent = '×';
+  remove.setAttribute('aria-label', 'Remover ' + name);
+  remove.addEventListener('click', () => {
+    photos.splice(photos.indexOf(photo), 1);
+    item.remove();
+    renderCard();
+    photoStatus.textContent = 'Imagem removida: ' + name;
+    if (!loadingPhotos) addPhotos.focus();
+  });
+  item.append(photo, remove);
+  photoList.append(item);
+}
+
+addPhotos.addEventListener('click', () => filesInput.click());
+filesInput.addEventListener('change', async () => {
+  const files = Array.from(filesInput.files);
+  filesInput.value = '';
+  if (!files.length || loadingPhotos) return;
+  loadingPhotos = true;
+  renderCard();
+  photoStatus.textContent = 'Preparando imagens…';
+  const notices = [];
+  try {
+    for (const file of files) {
+      if (photos.length >= maxPhotos) {
+        notices.push('O bilhetinho comporta até 4 imagens.');
+        break;
+      }
+      try {
+        if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)
+            && (file.type || !/\.(jpe?g|png|webp)$/i.test(file.name))) throw new Error('Formato');
+        appendPhoto(await readPhoto(file));
+      } catch {
+        notices.push('Não foi possível abrir “' + file.name + '”. Use JPG, PNG ou WebP.');
+      }
+    }
+  } finally {
+    loadingPhotos = false;
+    renderCard();
+    photoStatus.textContent = notices.join(' ') || (photos.length === 1 ? '1 imagem no bilhetinho.' : photos.length + ' imagens no bilhetinho.');
+  }
+});
 document.querySelectorAll('input[name="style"]').forEach(input => input.addEventListener('change', renderCard));
 document.querySelectorAll('input[name="paper"]').forEach(input => input.addEventListener('change', refreshPaper));
 download.addEventListener('click', () => {
