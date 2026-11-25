@@ -10,8 +10,8 @@
   <meta name="robots" content="noindex,nofollow">
   <title>Lista de presentes · Uma lua para Lulu</title>
   <link rel="stylesheet" href="./site-nav.css?v=4">
-  <link rel="stylesheet" href="./presentes.css?v=10">
-  <script src="./presentes.js?v=10" defer></script>
+  <link rel="stylesheet" href="./presentes.css?v=11">
+  <script src="./presentes.js?v=11" defer></script>
 </head>
 <body>
   <a href="#conteudo" class="skip">Pular para a lista</a>
@@ -30,7 +30,7 @@
           <p id="counter" aria-live="polite"></p>
           <div class="progress" aria-hidden="true"><span id="progressBar"></span></div>
         </div>
-        <div class="actions"><button id="share" class="quiet" type="button">Copiar link</button><button class="primary" id="add" type="button">＋ Adicionar presente</button></div>
+        <div class="actions"><button id="share" class="quiet" type="button">Copiar link</button></div>
       </div>
       <div class="toolbar" role="search">
         <label class="search"><span class="sr-only">Procurar presente</span>
@@ -63,12 +63,12 @@
     <div class="viewer-photo" id="viewerPhoto"></div>
     <div class="viewer-body">
       <div class="dialog-head"><h2 id="viewerTitle"></h2><button type="button" class="close" aria-label="Fechar">×</button></div>
-      <div class="tags" id="viewerTags"></div>
+      <p id="viewerTags"></p>
       <p id="viewerText"></p>
       <div class="viewer-actions">
-        <label class="purchase"><input type="checkbox" id="viewerBought"><span id="viewerBoughtText">Marcar como comprado</span></label>
-        <a id="viewerLink" class="store-link" target="_blank" rel="noopener noreferrer" hidden>Ver na loja ↗</a>
-        <button type="button" id="viewerEdit">Editar</button>
+        <label class="check"><input type="checkbox" id="viewerBought"><span id="viewerBoughtText">já comprei</span></label>
+        <a id="viewerLink" class="text-link" target="_blank" rel="noopener noreferrer" hidden>ver na loja</a>
+        <button type="button" id="viewerEdit" class="text-link">editar</button>
       </div>
     </div>
   </dialog>
@@ -89,6 +89,9 @@
   </dialog>
   <dialog id="confirmDelete" aria-labelledby="deleteTitle"><h2 id="deleteTitle">Excluir presente?</h2><p id="deleteText"></p><div class="actions"><button id="cancelDelete">Cancelar</button><button id="yesDelete" class="danger">Excluir presente</button></div></dialog>
   <dialog id="shareDialog" aria-labelledby="shareTitle"><h2 id="shareTitle">Link da lista</h2><p>Copie o link e envie a frase do site separadamente.</p><label>Endereço da lista<input id="shareValue" readonly></label><button class="close" type="button">Fechar</button></dialog>
+  <button id="fab" class="fab" type="button" aria-label="Adicionar presente" title="Adicionar presente" hidden>
+    <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg><span>Novo presente</span>
+  </button>
   <div id="notice" role="status"></div>
 </body>
 </html>

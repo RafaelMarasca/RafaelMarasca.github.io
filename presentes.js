@@ -80,29 +80,49 @@ async function setPurchased(item, bought) {
 }
 const fold = text => text.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase();
 const recipientClass = person => ({Lulu: 'for-lulu', Rafo: 'for-rafo', 'Nós dois': 'for-nos'})[person] || '';
-const giftIcon = '<svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 11h16v9H4zM3 7h18v4H3zM12 7v13M12 7c-1.5-3-5-3.5-5.5-1.5S9 7 12 7c3 0 6-.5 5.5-1.5S13.5 4 12 7"/></svg>';
-function tags(g) {
-  const box = node('div', '', 'tags');
-  box.append(node('span', g.forWhom, 'tag ' + recipientClass(g.forWhom)),
-    node('span', 'Prioridade ' + g.priority.toLowerCase(), 'tag priority-' + fold(g.priority)));
+const moonDrawing = '<svg aria-hidden="true" viewBox="0 0 64 64"><path d="M40 10a22 22 0 1 0 14 34A19 19 0 0 1 40 10Z"/><path class="star" d="M16 14l1.6 3.6L21 19l-3.4 1.4L16 24l-1.6-3.6L11 19l3.4-1.4Z"/><circle class="star" cx="50" cy="16" r="1.6"/></svg>';
+// Priority as hearts, like a little note: ♥♥♥ alta, ♥♥♡ média, ♥♡♡ baixa.
+function hearts(g) {
+  const filled = {Alta: 3, 'Média': 2, Baixa: 1}[g.priority] || 1;
+  const box = node('span', '', 'hearts');
+  box.setAttribute('role', 'img');
+  box.setAttribute('aria-label', 'Prioridade ' + g.priority.toLowerCase());
+  for (let i = 0; i < 3; i++) box.append(node('i', i < filled ? '♥' : '♡', i < filled ? 'on' : ''));
   return box;
 }
-function purchaseToggle(g, label) {
-  const purchase = node('label', '', 'purchase');
+function forLine(g) {
+  const line = node('p', '', 'for-line ' + recipientClass(g.forWhom));
+  line.append(node('span', 'para ' + (g.forWhom === 'Nós dois' ? 'nós dois' : g.forWhom), 'for'), hearts(g));
+  return line;
+}
+// A small, steady tilt per gift, so the board looks pinned by hand but doesn't jump around.
+function tiltFor(id) {
+  let hash = 0;
+  for (const char of id) hash = (hash * 31 + char.charCodeAt(0)) | 0;
+  return ((Math.abs(hash) % 7) - 3) * .45;
+}
+function purchaseToggle(g) {
+  const purchase = node('label', '', 'check');
   const check = node('input');
   check.type = 'checkbox';
   check.checked = g.bought;
   check.disabled = pendingPurchases.has(g.id);
-  const action = g.bought ? 'Comprado' : label;
   check.setAttribute('aria-label', (g.bought ? 'Comprado' : 'Marcar como comprado') + ': ' + g.title);
-  const caption = node('span', check.disabled ? 'Salvando…' : action);
+  const caption = node('span', check.disabled ? 'salvando…' : g.bought ? 'comprado' : 'já comprei');
   check.onchange = () => {
     check.disabled = true;
-    caption.textContent = 'Salvando…';
+    caption.textContent = 'salvando…';
     void setPurchased(g, check.checked);
   };
   purchase.append(check, caption);
   return purchase;
+}
+function textButton(label, aria, onClick) {
+  const button = node('button', label, 'text-link');
+  button.type = 'button';
+  button.setAttribute('aria-label', aria);
+  button.onclick = onClick;
+  return button;
 }
 function render() {
   const revision = ++viewRevision;
@@ -130,15 +150,18 @@ function render() {
   const cards = el('cards'); cards.replaceChildren();
   for (const g of shown) {
     const card = node('article', '', 'card ' + recipientClass(g.forWhom) + (g.bought ? ' is-bought' : ''));
-    // The photo and the title both open the details; the photo button is for pointer users only.
-    const photo = node('button', '', 'card-photo');
-    photo.type = 'button';
-    photo.tabIndex = -1;
-    photo.setAttribute('aria-hidden', 'true');
-    photo.innerHTML = '<span class="placeholder">' + giftIcon + '</span>';
-    if (g.bought) photo.append(node('span', 'Comprado ✓', 'bought-ribbon'));
-    photo.onclick = () => openViewer(g);
-    const body = node('div', '', 'card-body');
+    card.style.setProperty('--tilt', tiltFor(g.id) + 'deg');
+    // The polaroid and the title both open the details; the polaroid is for pointer users only.
+    const polaroid = node('button', '', 'polaroid');
+    polaroid.type = 'button';
+    polaroid.tabIndex = -1;
+    polaroid.setAttribute('aria-hidden', 'true');
+    const print = node('span', '', 'print');
+    print.innerHTML = '<span class="night">' + moonDrawing + '</span>';
+    if (g.bought) print.append(node('span', 'comprado', 'stamp'));
+    polaroid.append(print, forLine(g));
+    polaroid.onclick = () => openViewer(g);
+    const body = node('div', '', 'card-text');
     const title = node('h3');
     const open = node('button', g.title, 'card-title');
     open.type = 'button';
@@ -146,13 +169,10 @@ function render() {
     title.append(open);
     const notes = node('p', '', 'card-note');
     const actions = node('div', '', 'card-actions');
-    const edit = node('button', 'Editar', 'quiet');
-    edit.type = 'button';
-    edit.setAttribute('aria-label', 'Editar ' + g.title);
-    edit.onclick = () => startEdit(g);
-    actions.append(purchaseToggle(g, 'Comprar'), edit);
-    body.append(tags(g), title, notes, actions);
-    card.append(photo, body);
+    const edit = textButton('editar', 'Editar ' + g.title, () => startEdit(g));
+    actions.append(purchaseToggle(g), edit);
+    body.append(title, notes, actions);
+    card.append(polaroid, body);
     cards.append(card);
     card.loadDetails = async () => {
       try {
@@ -162,13 +182,13 @@ function render() {
           const img = node('img');
           img.alt = '';
           img.src = record.photo;
-          photo.querySelector('.placeholder').replaceWith(img);
+          print.querySelector('.night').replaceWith(img);
         }
         notes.textContent = record.description;
         if (record.link && /^https?:\/\//i.test(record.link)) {
-          const a = node('a', 'Loja ↗', 'store-link');
+          const a = node('a', 'ver na loja', 'text-link');
           a.href = record.link; a.target = '_blank'; a.rel = 'noopener noreferrer';
-          a.setAttribute('aria-label', 'Ver ' + g.title + ' na loja');
+          a.setAttribute('aria-label', 'Ver ' + g.title + ' na loja (abre em outra aba)');
           edit.before(a);
         }
       } catch (e) { if (revision === viewRevision) notes.textContent = e.message; }
@@ -200,11 +220,11 @@ async function refreshViewer() {
   if (!g) { el('viewer').close(); return; }
   const request = ++viewerRequest;
   el('viewerTitle').textContent = g.title;
-  el('viewerTags').replaceWith(Object.assign(tags(g), {id: 'viewerTags'}));
+  el('viewerTags').replaceWith(Object.assign(forLine(g), {id: 'viewerTags'}));
   const check = el('viewerBought');
   check.checked = g.bought;
   check.disabled = pendingPurchases.has(g.id);
-  el('viewerBoughtText').textContent = check.disabled ? 'Salvando…' : g.bought ? 'Comprado' : 'Marcar como comprado';
+  el('viewerBoughtText').textContent = check.disabled ? 'salvando…' : g.bought ? 'comprado' : 'já comprei';
   el('viewer').classList.toggle('is-bought', g.bought);
   try {
     const record = await readGift(g);
@@ -227,7 +247,7 @@ el('viewerBought').onchange = () => {
   const g = gifts.find(item => item.id === viewing);
   if (!g) return;
   el('viewerBought').disabled = true;
-  el('viewerBoughtText').textContent = 'Salvando…';
+  el('viewerBoughtText').textContent = 'salvando…';
   void setPurchased(g, el('viewerBought').checked);
 };
 el('viewerEdit').onclick = () => {
@@ -259,7 +279,7 @@ async function refresh(force = false) {
 }
 async function enter() {
   session = 'aberta';
-  el('loading').hidden = true; el('board').hidden = false;
+  el('loading').hidden = true; el('board').hidden = false; el('fab').hidden = false;
   el('empty').hidden = true; el('counter').textContent = 'Carregando…'; el('sync').textContent = '';
   await refresh(true);
 }
@@ -285,7 +305,7 @@ function openForm(item) {
 async function startEdit(g) {
   try { const record = await readGift(g); if (session && !el('editor').open) openForm(record); } catch(e) {notice(e.message);}
 }
-el('add').onclick = () => openForm();
+el('fab').onclick = () => openForm();
 el('editor').addEventListener('close',()=>{photoWork++;setPhoto('');});
 el('editor').addEventListener('cancel',event=>{if(busy) event.preventDefault();});
 el('choose').onclick = () => el('photoFile').click();
