@@ -88,16 +88,24 @@ html.cm-lock .site-header, html.cm-lock footer, html.cm-lock .caminho-intro, htm
 /* Controles de toque: alavanca à esquerda, pular e trocar à direita. */
 .cm-touch { position: absolute; inset: 0; display: none; pointer-events: none; }
 .is-playing .cm-touch:not([hidden]) { display: block; }
-.cm-stick { position: absolute; left: calc(max(22px, env(safe-area-inset-left)) + 68px); top: calc(100% - max(30px, env(safe-area-inset-bottom)) - 72px); width: 136px; height: 136px; margin: -68px 0 0 -68px; border: 3px solid #fff8e6b3; border-radius: 50%; background: #fff8e640; opacity: .75; transition: opacity .15s; }
+.cm-stick { position: absolute; left: calc(max(22px, env(safe-area-inset-left)) + 58px); top: calc(100% - max(30px, env(safe-area-inset-bottom)) - 62px); width: 116px; height: 116px; margin: -58px 0 0 -58px; border: 3px solid #fff8e6b3; border-radius: 50%; background: #fff8e640; opacity: .75; transition: opacity .15s; }
 .cm-stick.is-on { opacity: 1; }
 .cm-stick i { position: absolute; top: 50%; left: 50%; width: 52px; height: 52px; margin: -26px; border-radius: 50%; background: var(--cm-cream); box-shadow: 0 3px 0 #6b4a3a55; transform: translate(var(--kx, 0px), var(--ky, 0px)); }
 .cm-pad { position: absolute; right: max(20px, env(safe-area-inset-right)); display: grid; place-items: center; border: 0; border-radius: 50%; color: var(--cm-brown); font: 13px var(--mono); pointer-events: auto; touch-action: manipulation; }
 .cm-jump { bottom: max(30px, env(safe-area-inset-bottom)); width: 86px; height: 86px; background: var(--cm-gold); box-shadow: 0 5px 0 #b98a3a; }
-.cm-swap { bottom: calc(max(30px, env(safe-area-inset-bottom)) + 104px); right: max(28px, env(safe-area-inset-right)); width: 70px; height: 70px; background: var(--cm-cream); box-shadow: 0 5px 0 #6b4a3a55; font: italic 17px var(--serif); }
+.cm-swap { bottom: calc(max(30px, env(safe-area-inset-bottom)) + 106px); right: max(24px, env(safe-area-inset-right)); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; width: 78px; height: 78px; background: var(--cm-cream); box-shadow: 0 5px 0 #6b4a3a55; }
+.cm-swap small { font: 9.5px/1 var(--mono); letter-spacing: .3px; opacity: .7; }
+.cm-swap b { font: italic 400 18px/1.1 var(--serif); }
 .cm-swap::after { content: "⇄"; position: absolute; top: -8px; right: -4px; display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: #f58aa0; color: #fff; font: 13px var(--mono); }
 .is-glued .cm-swap { display: none; }
 .is-glued .cm-jump { opacity: .45; }
-.cm-pad:active, .cm-jump.is-tap { transform: translateY(4px); box-shadow: 0 1px 0 #b98a3a; }
+/* o afundar do botão é disparado pelo jogo (classe is-tap), não pelo :active, que no iPhone fica preso */
+.cm-jump.is-tap { animation: cm-press-gold .22s; }
+.cm-swap.is-tap { animation: cm-press-cream .22s; }
+.cm-tools button.is-tap, .cm-switch.is-tap { animation: cm-press-flat .2s; }
+@keyframes cm-press-gold { 40% { transform: translateY(4px); box-shadow: 0 1px 0 #b98a3a; } }
+@keyframes cm-press-cream { 40% { transform: translateY(4px); box-shadow: 0 1px 0 #6b4a3a55; } }
+@keyframes cm-press-flat { 40% { filter: brightness(.9); } }
 
 /* Cartões */
 .cm-card { position: absolute; inset: 0; z-index: 3; display: flex; flex-direction: column; align-items: center; gap: 12px; padding: max(24px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left)); overflow: hidden auto; -webkit-overflow-scrolling: touch; background: #1b2147d9; text-align: center; }
@@ -121,6 +129,7 @@ html.cm-lock .site-header, html.cm-lock footer, html.cm-lock .caminho-intro, htm
 .cm-chapters { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
 .cm-chip { width: 44px; height: 44px; border: 0; border-radius: 50%; background: #fff8e626; color: #fbf5e6; font: 15px var(--mono); }
 .cm-chip:hover { background: #fff8e64d; }
+.cm-chip.is-won { background: #ffe08a40; color: var(--cm-gold); }
 .cm-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 8px; }
 .cm-button { min-height: 50px; padding: 0 28px; border: 0; border-radius: 999px; background: var(--cm-gold); color: var(--cm-brown); font: 14px var(--mono); box-shadow: 0 4px 0 #b98a3a; }
 .cm-button.is-quiet { background: #fff8e626; color: #fbf5e6; box-shadow: none; }
@@ -155,8 +164,9 @@ html.cm-lock .site-header, html.cm-lock footer, html.cm-lock .caminho-intro, htm
 @media (max-height: 460px) {
   /* celular deitado */
   .cm-jump { width: 72px; height: 72px; }
-  .cm-swap { width: 58px; height: 58px; bottom: calc(max(30px, env(safe-area-inset-bottom)) + 86px); }
-  .cm-stick { width: 120px; height: 120px; margin: -60px 0 0 -60px; }
+  .cm-swap { width: 64px; height: 64px; bottom: calc(max(30px, env(safe-area-inset-bottom)) + 86px); }
+  .cm-swap b { font-size: 15px; }
+  .cm-stick { width: 100px; height: 100px; margin: -50px 0 0 -50px; }
   .is-touch .cm-caption { top: max(10px, env(safe-area-inset-top)); width: min(380px, 46%); }
   .cm-card { gap: 8px; padding: 14px 16px; }
 }

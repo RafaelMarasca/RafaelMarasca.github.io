@@ -930,7 +930,6 @@ const LEVELS = [
 
 // ---------- Estado ----------
 const R = .28, H = 1.3;
-const STICK_SPEED = .62; // fração da velocidade máxima quando se anda pela alavanca do celular
 let state = 'title'; // title | play | card | ending
 let level = null;
 let clock = 0;
@@ -1307,8 +1306,7 @@ function makeTiles(L, specs, { cell = 1.15, gap = 1.1, layout = '' } = {}) {
     if (!dir) { T.held = ''; T.holdTime = 0; return ''; }
     if (dir !== T.held) { T.held = dir; T.holdTime = 0; return dir; }
     T.holdTime += dt;
-    const slow = !!input.stick; // no celular, segurar a alavanca repete mais devagar
-    if (T.holdTime > (slow ? .55 : .32)) { T.holdTime = slow ? .15 : .08; return dir; }
+    if (T.holdTime > .32) { T.holdTime = .08; return dir; }
     return '';
   };
   T.layout();
@@ -1495,7 +1493,7 @@ function collideSide(body, axis, wantX, wantZ) {
     body[axis] = centre + sign * half;
     body[axis === 'x' ? 'vx' : 'vz'] = 0;
     const want = axis === 'x' ? wantX : wantZ;
-    if (block.crate && !block.crate.locked && clock >= body.noStick && body.ground && -sign * want > .28 && Math.abs(body[cross] - centreCross) < .52)
+    if (block.crate && !block.crate.locked && clock >= body.noStick && body.ground && -sign * want > .5 && Math.abs(body[cross] - centreCross) < .52)
       body.pushNow = { crate: block.crate, axis, dir: -sign };
   }
 }
@@ -1506,7 +1504,7 @@ function stepBody(body, dt, controlled) {
   // direção na tela -> direção no chão (câmera isométrica)
   let ix = 0, iy = 0;
   if (controlled) {
-    ix = input.sx * STICK_SPEED; iy = input.sy * STICK_SPEED; // na alavanca o boneco anda mais devagar que no teclado
+    ix = input.sx; iy = input.sy;
     if (input.keys.has('left')) ix -= 1;
     if (input.keys.has('right')) ix += 1;
     if (input.keys.has('up')) iy += 1;
@@ -1517,7 +1515,7 @@ function stepBody(body, dt, controlled) {
   let wantX = (ix - iy) * Math.SQRT1_2, wantZ = (-ix - iy) * Math.SQRT1_2;
   // encostado numa caixa, empurra reto em vez de escorregar para o lado
   if (body.pushLast) { if (body.pushLast.axis === 'x') wantZ *= .1; else wantX *= .1; }
-  const SPEED = 4.2;
+  const SPEED = 3.5; // velocidade de andar (era 4.2)
   const rate = Math.min(1, (body.ground ? 16 : 8) * dt);
   body.vx += (wantX * SPEED - body.vx) * rate;
   body.vz += (wantZ * SPEED - body.vz) * rate;
@@ -1584,7 +1582,11 @@ function stepBody(body, dt, controlled) {
 function step(dt) {
   if (level.mode) { level.tiles?.tick(dt); level.mode.step?.(dt); return; }
   moveBlocks(dt);
-  if (cut > 0) { cut -= dt; return; }
+  if (cut > 0) {
+    cut -= dt;
+    if (cut <= 0 && pendingSwitch) { pendingSwitch = false; switchPlayer(); }
+    return;
+  }
   bodies.forEach((body, i) => stepBody(body, dt, i === active));
   collect();
 }
@@ -1665,7 +1667,7 @@ function updateHud() {
       node.hidden = !lines[i];
     });
     switchButton.textContent = who === 'rafo' ? `jogar com a ${D.lulu.nome} ⇄` : `jogar com o ${D.rafo.nome} ⇄`;
-    swapButton.textContent = D[other(who)].nome;
+    swapLabel(D[other(who)].nome);
     return;
   }
   first.hidden = false;
@@ -1681,11 +1683,20 @@ function updateHud() {
   second.classList.toggle('is-done', locked === plates.length);
   second.hidden = !plates.length;
   switchButton.textContent = who === 'rafo' ? `jogar com a ${D.lulu.nome} ⇄` : `jogar com o ${D.rafo.nome} ⇄`;
-  swapButton.textContent = D[other(who)].nome;
+  swapLabel(D[other(who)].nome);
+}
+let pendingSwitch = false;
+// Botão de trocar (celular): diz "trocar" e para quem.
+function swapLabel(name) {
+  if (swapButton.dataset.name === name) return;
+  swapButton.dataset.name = name;
+  swapButton.replaceChildren(el('small', '', 'trocar'), el('b', '', name));
+  swapButton.setAttribute('aria-label', `Trocar para ${name}`);
 }
 function switchPlayer() {
-  if (state !== 'play' || cut > 0) return;
+  if (state !== 'play') return;
   if (level.glued) return say(D.recados.grudados, 2600);
+  if (cut > 0) { pendingSwitch = true; return; } // a câmera está mostrando uma ponte: troca quando ela voltar
   active = 1 - active;
   const body = bodies[active];
   body.squash = .2;
@@ -1778,15 +1789,16 @@ function showTitle() {
     ? 'arraste o dedo do lado esquerdo para andar · botões à direita para pular e trocar de personagem · ande contra a caixa para empurrar'
     : 'setas ou WASD para andar · espaço para pular · Tab troca de personagem · ande contra a caixa para empurrar');
   const extra = [missions, help];
-  if (save.fase > 0) {
+  {
+    // todas as fases ficam liberadas desde o começo; as já vencidas aparecem marcadas
     const picker = el('div', 'cm-chapters');
     picker.setAttribute('role', 'group');
     picker.setAttribute('aria-label', 'Escolher fase');
-    for (let i = 0; i <= Math.min(save.fase, LEVELS.length - 1); i++) {
-      const chip = el('button', 'cm-chip', String(i + 1));
+    for (let i = 0; i < LEVELS.length; i++) {
+      const chip = el('button', i < save.fase ? 'cm-chip is-won' : 'cm-chip', String(i + 1));
       chip.type = 'button';
       chip.title = D.fases[i].nome;
-      chip.setAttribute('aria-label', `Fase ${i + 1}: ${D.fases[i].nome}`);
+      chip.setAttribute('aria-label', `Fase ${i + 1}: ${D.fases[i].nome}${i < save.fase ? ' (já vencida)' : ''}`);
       chip.addEventListener('click', () => begin(i));
       picker.append(chip);
     }
@@ -1983,24 +1995,16 @@ canvas.addEventListener('pointerdown', event => {
 });
 canvas.addEventListener('pointermove', event => {
   if (!input.stick || event.pointerId !== input.stick.id) return;
-  // Alavanca calma: curso comprido, folga no meio e resposta que começa devagar.
-  const reach = 64, dead = .28;
+  const reach = 48;
   let dx = (event.clientX - input.stick.x) / reach, dy = (event.clientY - input.stick.y) / reach;
   const length = Math.hypot(dx, dy);
   if (length > 1) { dx /= length; dy /= length; }
   stickEl.style.setProperty('--kx', dx * reach + 'px');
   stickEl.style.setProperty('--ky', dy * reach + 'px');
-  if (Math.min(length, 1) < dead) { input.sx = input.sy = 0; input.stick.angle = null; return; }
-  // encaixa em 8 direções, para dar para empurrar a caixa reto; só troca de direção
-  // quando o dedo passa bem da divisa, para não ficar tremendo entre duas
-  const raw = Math.atan2(-dy, dx);
-  let away = Math.abs(raw - (input.stick.angle ?? 0)) % TAU;
-  if (away > Math.PI) away = TAU - away;
-  if (input.stick.angle == null || away > Math.PI / 8 + .14) input.stick.angle = Math.round(raw / (Math.PI / 4)) * (Math.PI / 4);
-  const angle = input.stick.angle;
-  // pouco empurrão, passo curto; a velocidade toda só com a alavanca no fim do curso
-  const push = (Math.min(1, length) - dead) / (1 - dead);
-  const amount = .22 + .78 * push * push;
+  if (Math.min(length, 1) < .2) { input.sx = input.sy = 0; return; }
+  // encaixa em 8 direções, para dar para empurrar a caixa reto
+  const angle = Math.round(Math.atan2(-dy, dx) / (Math.PI / 4)) * (Math.PI / 4);
+  const amount = Math.min(1, length * 1.25);
   input.sx = Math.cos(angle) * amount;
   input.sy = Math.sin(angle) * amount;
 });
@@ -2008,11 +2012,28 @@ for (const type of ['pointerup', 'pointercancel', 'lostpointercapture'])
   canvas.addEventListener(type, event => { if (input.stick && event.pointerId === input.stick.id) releaseStick(); });
 canvas.addEventListener('contextmenu', event => event.preventDefault());
 jumpButton.addEventListener('pointerdown', event => { event.preventDefault(); jump(); });
-swapButton.addEventListener('click', switchPlayer);
-switchButton.addEventListener('click', () => { switchPlayer(); canvas.focus({ preventScroll: true }); });
-$('cm-pause').addEventListener('click', pause);
-$('cm-mute').addEventListener('click', () => setMuted(!muted));
-$('cm-full').addEventListener('click', () => { setFull(!stage.classList.contains('is-full')); if (state === 'play') canvas.focus({ preventScroll: true }); });
+jumpButton.addEventListener('click', event => { if (event.detail === 0) jump(); });
+// Botões de tocar: reagem na hora em que o dedo encosta. No celular o "click" não chega
+// quando outro dedo já está segurando a alavanca, e às vezes chega duas vezes.
+function onTap(button, run) {
+  let last = -1000;
+  const fire = event => {
+    const now = performance.now();
+    if (now - last < 180) return;
+    last = now;
+    run(event);
+    button.classList.remove('is-tap');
+    void button.offsetWidth;
+    button.classList.add('is-tap');
+  };
+  button.addEventListener('pointerdown', event => { if (event.pointerType !== 'mouse' || event.button === 0) { event.preventDefault(); fire(event); } });
+  button.addEventListener('click', event => { if (event.detail === 0) fire(event); }); // teclado e leitores de tela
+}
+onTap(swapButton, switchPlayer);
+onTap(switchButton, () => { switchPlayer(); canvas.focus({ preventScroll: true }); });
+onTap($('cm-pause'), pause);
+onTap($('cm-mute'), () => setMuted(!muted));
+onTap($('cm-full'), () => { setFull(!stage.classList.contains('is-full')); if (state === 'play') canvas.focus({ preventScroll: true }); });
 if (touchDevice) { touchEl.hidden = false; stage.classList.add('is-touch'); $('cm-mute').textContent = 'som'; $('cm-full').textContent = 'tela'; }
 
 // ---------- Animação ----------
