@@ -1,6 +1,6 @@
 # Servidor do site (Cloudflare Worker)
 
-Guarda a lista de presentes e os bilhetinhos publicados. É um arquivo só, [`worker.js`](worker.js), que roda de graça na Cloudflare com um banco D1. Não precisa instalar nada: tudo se faz pelo site da Cloudflare.
+Guarda a lista de presentes, os bilhetinhos publicados e os poemas escritos pelo site. É um arquivo só, [`worker.js`](worker.js), que roda de graça na Cloudflare com um banco D1. Não precisa instalar nada: tudo se faz pelo site da Cloudflare.
 
 ## Montar pela primeira vez (uns 15 minutos)
 
@@ -37,7 +37,7 @@ Quem preferir o terminal pode usar `npx wrangler deploy` nesta pasta (precisa de
   - Com “lembrar”, vale 30 dias e se renova sozinha quando o site é usado. O aparelho guarda só a sessão, nunca a frase.
 - **Origem:** o servidor só responde a páginas de `rafaelmarasca.github.io`. Para liberar outro endereço, crie a variável `ALLOWED_ORIGINS` com os endereços separados por vírgula.
 - **Rascunhos:** os rascunhos dos bilhetinhos ficam só no navegador, cifrados com uma chave que o servidor entrega a quem entrou.
-- **O que não fica protegido:** os poemas e o álbum continuam públicos no repositório do GitHub. Quem souber a frase vê e altera tudo; não há contas separadas.
+- **O que não fica protegido:** os poemas de `poemas-data.js` e o álbum continuam públicos no repositório do GitHub. Quem souber a frase vê e altera tudo; não há contas separadas.
 
 ## Tarefas de manutenção
 
@@ -71,3 +71,7 @@ Toda chamada, exceto `/unlock`, envia a sessão no cabeçalho `X-Gift-Session`. 
 | `DELETE /bilhetinhos/:id` | Exclui um bilhetinho (`X-Gift-Version`) |
 | `GET /bilhetinhos/acesso` | A chave que cifra os rascunhos no navegador |
 | `PUT /bilhetinhos/acesso` | Só na migração: grava a chave antiga, se ainda não houver uma |
+| `GET /poemas` | `{items}` com os poemas escritos pelo site, completos |
+| `POST /poemas` `{title, date, body}` | Publica um poema (texto simples; linha em branco separa estrofes) |
+| `PUT /poemas/:id` | Altera um poema (`X-Gift-Version`) |
+| `DELETE /poemas/:id` | Exclui um poema (`X-Gift-Version`) |

@@ -70,7 +70,7 @@ Depois dos jogos, fica apenas “Só volto se você não desviar dos beijinhos�
 
 ## Poemas
 
-`poemas.html` apresenta cada poema com seu próprio título, sem apresentações adicionais. O título fica em um `h2`, seguido pelo texto em um `article.poem`, com seus parágrafos preservados. Para adicionar mais poemas, acrescente outro `article.poem` dentro de `.poems`, com título e identificadores próprios. A aparência fica em `poemas.css`.
+`poemas.html` mostra, no alto, a lista de todos os poemas (com busca) e, logo abaixo, a página do poema escolhido, com setas para o anterior e o próximo. Cada poema tem endereço próprio (`poemas.html#id`). Os poemas fixos ficam em `poemas-data.js`, em texto simples: uma linha em branco separa estrofes ou parágrafos. O botão **Escrever poema** publica um poema novo no servidor (tabela `poems`), que também pode ser editado ou excluído pela página; o rascunho fica guardado no aparelho enquanto se escreve. A lógica fica em `poemas.js` e a aparência em `poemas.css`.
 
 As três páginas publicadas usam o mesmo fundo e a navegação superior “início”, “nosso álbum” e “poemas”. A cor de fundo e a navegação ficam em `site-nav.css`; as estrelas, luas e a textura compartilhadas ficam em `ceu.css`. A página de poemas inclui uma linha abaixo do título da página e separadores após cada poema. O controle de música do álbum fica abaixo da navegação. A publicação inclui os arquivos automaticamente, sem dependências.
 
@@ -84,7 +84,7 @@ O desenho inteiro é um SVG montado em `buque.js` (posições e tipos das flores
 
 Todas as páginas pedem a mesma frase de cinco palavras. A entrada fica em `site-acesso.js` e `site-acesso.css`, carregados no `<head>` de cada página. Com **Lembrar neste aparelho** marcado, o aparelho recebe uma entrada de 30 dias que se renova sozinha enquanto o site é usado; sem marcar, vale só até fechar a aba (no máximo 12 horas). A frase nunca fica guardada no aparelho. O link **sair** na navegação apaga a entrada deste aparelho.
 
-O portão esconde as páginas, mas textos e fotos estáticos (poemas, álbum) continuam no código público do GitHub Pages. Só a lista de presentes e os bilhetinhos ficam protegidos no servidor.
+O portão esconde as páginas, mas textos e fotos estáticos (poemas, álbum) continuam no código público do GitHub Pages. Só a lista de presentes, os bilhetinhos e os poemas escritos pelo site ficam protegidos no servidor.
 
 ## Servidor
 

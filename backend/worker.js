@@ -1,4 +1,4 @@
-// Backend do site "Uma lua para Lulu": lista de presentes e bilhetinhos.
+// Backend do site "Uma lua para Lulu": lista de presentes, bilhetinhos e poemas.
 // Cloudflare Worker em um arquivo só, sem dependências. Precisa de:
 //   DB              banco D1 (as tabelas são criadas sozinhas na primeira chamada)
 //   PHRASE_HASH     segredo gerado por gerar-segredos.html (a frase nunca vai para a Cloudflare)
@@ -10,6 +10,7 @@ CREATE TABLE IF NOT EXISTS gifts (id TEXT PRIMARY KEY, title TEXT NOT NULL, link
 CREATE TABLE IF NOT EXISTS notes (id TEXT PRIMARY KEY, date TEXT NOT NULL, title TEXT NOT NULL, mime TEXT NOT NULL, created INTEGER NOT NULL, updated INTEGER NOT NULL, version TEXT NOT NULL);
 CREATE INDEX IF NOT EXISTS notes_by_date ON notes (date, created);
 CREATE TABLE IF NOT EXISTS note_images (note_id TEXT NOT NULL, part INTEGER NOT NULL, data TEXT NOT NULL, PRIMARY KEY (note_id, part));
+CREATE TABLE IF NOT EXISTS poems (id TEXT PRIMARY KEY, date TEXT NOT NULL, title TEXT NOT NULL, body TEXT NOT NULL, created INTEGER NOT NULL, updated INTEGER NOT NULL, version TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS attempts (ip TEXT PRIMARY KEY, count INTEGER NOT NULL, since INTEGER NOT NULL);
 `;
@@ -22,6 +23,7 @@ const ATTEMPT_WINDOW = 15 * 60e3;    // ...a cada 15 minutos
 const CHUNK = 900_000;               // D1 guarda até 2 MB por linha; imagens são divididas
 const MAX_NOTE_IMAGE = 12_000_000;   // em caracteres base64 (~9 MB)
 const MAX_GIFT_PHOTO = 1_200_000;
+const MAX_POEM = 60_000;             // caracteres do texto de um poema
 const PEOPLE = ['Lulu', 'Rafo', 'Nós dois'];
 const PRIORITIES = ['Alta', 'Média', 'Baixa'];
 
@@ -270,6 +272,48 @@ async function deleteNote(request, env, id) {
   return {ok: true};
 }
 
+// ---------- poemas ----------
+// Texto simples: uma linha em branco separa estrofes ou parágrafos.
+const poemRecord = row => ({id: row.id, date: row.date, title: row.title, body: row.body, created: row.created, updated: row.updated, version: row.version});
+async function listPoems(env) {
+  const rows = await all(env, 'SELECT * FROM poems ORDER BY date DESC, created DESC');
+  return {items: rows.map(poemRecord)};
+}
+function poemInput(body) {
+  if (!isDate(body.date)) fail(400, 'Escolha uma data válida.');
+  const value = typeof body.body === 'string' ? body.body.replace(/\r\n?/g, '\n').replace(/[ \t]+$/gm, '').trim() : '';
+  if (!value) fail(400, 'Escreva o poema.');
+  if (value.length > MAX_POEM) fail(400, 'O poema é longo demais.');
+  return {date: body.date, title: text(body.title, 160, 'o título', {required: true}), body: value};
+}
+async function poemRow(env, id) {
+  const row = await first(env, 'SELECT * FROM poems WHERE id = ?', id);
+  if (!row) fail(404, 'Este poema não existe mais.');
+  return row;
+}
+async function createPoem(request, env) {
+  const poem = poemInput(await readJson(request));
+  const id = crypto.randomUUID(), version = newVersion(), now = Date.now();
+  await run(env, 'INSERT INTO poems (id, date, title, body, created, updated, version) VALUES (?, ?, ?, ?, ?, ?, ?)',
+    id, poem.date, poem.title, poem.body, now, now, version);
+  return poemRecord({id, ...poem, created: now, updated: now, version});
+}
+async function updatePoem(request, env, id) {
+  const expected = request.headers.get('X-Gift-Version') || '';
+  const poem = poemInput(await readJson(request));
+  const current = await poemRow(env, id);
+  const version = newVersion(), now = Date.now();
+  const result = await run(env, 'UPDATE poems SET date = ?, title = ?, body = ?, updated = ?, version = ? WHERE id = ? AND version = ?',
+    poem.date, poem.title, poem.body, now, version, id, expected);
+  if (!changed(result)) fail(409, 'Este poema mudou em outro aparelho. Atualize a página e tente de novo.');
+  return poemRecord({...current, ...poem, updated: now, version});
+}
+async function deletePoem(request, env, id) {
+  const result = await run(env, 'DELETE FROM poems WHERE id = ? AND version = ?', id, request.headers.get('X-Gift-Version') || '');
+  if (!changed(result)) fail(409, 'Este poema mudou em outro aparelho. Atualize a página e tente de novo.');
+  return {ok: true};
+}
+
 // ---------- rotas ----------
 async function route(request, env) {
   const url = new URL(request.url);
@@ -310,6 +354,16 @@ async function route(request, env) {
     if (method === 'GET') { const row = await noteRow(env, match[1]); return noteSummary(row, today()); }
     if (method === 'PUT') return updateNote(request, env, match[1]);
     if (method === 'DELETE') return deleteNote(request, env, match[1]);
+  }
+
+  if (path === '/poemas') {
+    if (method === 'GET') return listPoems(env);
+    if (method === 'POST') return createPoem(request, env);
+  }
+  match = /^\/poemas\/([\w-]{1,64})$/.exec(path);
+  if (match) {
+    if (method === 'PUT') return updatePoem(request, env, match[1]);
+    if (method === 'DELETE') return deletePoem(request, env, match[1]);
   }
   fail(404, 'Caminho não encontrado.');
 }
