@@ -14,7 +14,9 @@
   --cm-cream: #fff8e6;
   --cm-gold: #ffe08a;
   position: relative;
+  height: clamp(460px, 72vh, 700px);
   height: clamp(460px, 72svh, 700px);
+  touch-action: manipulation; /* sem zoom de toque duplo nos botões */
   overflow: hidden;
   border-radius: 26px;
   background: linear-gradient(var(--cm-sky-a), var(--cm-sky-b));
@@ -23,7 +25,8 @@
   -webkit-user-select: none;
   -webkit-touch-callout: none;
 }
-.caminho-stage.is-full { position: fixed; inset: 0; z-index: 60; height: 100dvh; border-radius: 0; box-shadow: none; }
+/* Em tela cheia o caminho.js ainda ajusta largura e altura pela área visível (fitFull). */
+.caminho-stage.is-full { position: fixed; inset: 0; z-index: 60; width: 100%; height: 100vh; height: 100dvh; border-radius: 0; box-shadow: none; }
 html.cm-lock, html.cm-lock body { overflow: hidden; }
 /* Em tela cheia, o resto da página some para não aparecer por cima do jogo. */
 html.cm-lock .site-header, html.cm-lock footer, html.cm-lock .caminho-intro, html.cm-lock .sky, html.cm-lock .celestial-backdrop, html.cm-lock .skip-link { visibility: hidden; }
@@ -85,7 +88,7 @@ html.cm-lock .site-header, html.cm-lock footer, html.cm-lock .caminho-intro, htm
 /* Controles de toque: alavanca à esquerda, pular e trocar à direita. */
 .cm-touch { position: absolute; inset: 0; display: none; pointer-events: none; }
 .is-playing .cm-touch:not([hidden]) { display: block; }
-.cm-stick { position: absolute; left: calc(max(22px, env(safe-area-inset-left)) + 58px); top: calc(100% - max(30px, env(safe-area-inset-bottom)) - 62px); width: 116px; height: 116px; margin: -58px 0 0 -58px; border: 3px solid #fff8e6b3; border-radius: 50%; background: #fff8e640; opacity: .75; transition: opacity .15s; }
+.cm-stick { position: absolute; left: calc(max(22px, env(safe-area-inset-left)) + 68px); top: calc(100% - max(30px, env(safe-area-inset-bottom)) - 72px); width: 136px; height: 136px; margin: -68px 0 0 -68px; border: 3px solid #fff8e6b3; border-radius: 50%; background: #fff8e640; opacity: .75; transition: opacity .15s; }
 .cm-stick.is-on { opacity: 1; }
 .cm-stick i { position: absolute; top: 50%; left: 50%; width: 52px; height: 52px; margin: -26px; border-radius: 50%; background: var(--cm-cream); box-shadow: 0 3px 0 #6b4a3a55; transform: translate(var(--kx, 0px), var(--ky, 0px)); }
 .cm-pad { position: absolute; right: max(20px, env(safe-area-inset-right)); display: grid; place-items: center; border: 0; border-radius: 50%; color: var(--cm-brown); font: 13px var(--mono); pointer-events: auto; touch-action: manipulation; }
@@ -97,7 +100,11 @@ html.cm-lock .site-header, html.cm-lock footer, html.cm-lock .caminho-intro, htm
 .cm-pad:active, .cm-jump.is-tap { transform: translateY(4px); box-shadow: 0 1px 0 #b98a3a; }
 
 /* Cartões */
-.cm-card { position: absolute; inset: 0; z-index: 3; display: flex; flex-direction: column; align-items: center; justify-content: safe center; gap: 12px; padding: 24px 20px; overflow-y: auto; background: #1b2147d9; text-align: center; }
+.cm-card { position: absolute; inset: 0; z-index: 3; display: flex; flex-direction: column; align-items: center; gap: 12px; padding: max(24px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left)); overflow: hidden auto; -webkit-overflow-scrolling: touch; background: #1b2147d9; text-align: center; }
+/* centraliza quando sobra espaço e não corta o topo quando falta (vale em qualquer navegador) */
+.cm-card > :first-child { margin-top: auto; }
+.cm-card > :last-child { margin-bottom: auto; }
+.cm-card > * { max-width: 100%; flex: none; }
 .cm-card.is-photo, .cm-card.is-pause, .cm-card.is-chapter { background: #1b2147b8; }
 .cm-card .eyebrow { margin: 0; font-size: 11px; letter-spacing: 1.4px; color: #cfd8c4; }
 .cm-card h2 { margin: 0; font-weight: 400; font-style: italic; font-size: clamp(32px, 5vw, 48px); line-height: 1.1; letter-spacing: -1px; color: var(--cm-gold); }
@@ -111,7 +118,7 @@ html.cm-lock .site-header, html.cm-lock footer, html.cm-lock .caminho-intro, htm
 .cm-keys dd { margin: 0; align-self: center; color: #fbf5e6; }
 .cm-who.handwritten { margin: 2px 0 0; font-size: 15px; color: #cfd8c4; transform: rotate(-2deg); }
 .cm-chapters-label { margin: 6px 0 0; color: #cfd8c4; font: 11px var(--mono); }
-.cm-chapters { display: flex; gap: 8px; }
+.cm-chapters { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
 .cm-chip { width: 44px; height: 44px; border: 0; border-radius: 50%; background: #fff8e626; color: #fbf5e6; font: 15px var(--mono); }
 .cm-chip:hover { background: #fff8e64d; }
 .cm-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 8px; }
@@ -119,10 +126,10 @@ html.cm-lock .site-header, html.cm-lock footer, html.cm-lock .caminho-intro, htm
 .cm-button.is-quiet { background: #fff8e626; color: #fbf5e6; box-shadow: none; }
 .cm-button:active { transform: translateY(3px); box-shadow: 0 1px 0 #b98a3a; }
 .cm-polaroid { margin: 0; padding: 9px 9px 0; border-radius: 4px; background: #fffaf0; color: var(--cm-brown); box-shadow: 0 8px 22px #05081366; transform: rotate(-2deg); }
-.cm-polaroid img { display: block; width: min(250px, 58vw); height: min(250px, 58vw); max-height: 38svh; object-fit: cover; background: #e6dfcd; }
+.cm-polaroid img { display: block; width: min(250px, 58vw); height: min(250px, 58vw); max-height: 38vh; max-height: 38svh; object-fit: cover; background: #e6dfcd; }
 .cm-polaroid figcaption { padding: 9px 2px 11px; font: 15px/1.3 "Segoe Print", "Comic Sans MS", cursive; }
 .cm-polaroid.is-hug { padding-bottom: 9px; transform: rotate(2deg); }
-.cm-polaroid.is-hug img { width: min(200px, 48vw); height: min(200px, 48vw); max-height: 28svh; }
+.cm-polaroid.is-hug img { width: min(200px, 48vw); height: min(200px, 48vw); max-height: 28vh; max-height: 28svh; }
 .cm-polaroid.is-small { padding: 5px 5px 14px; }
 .cm-polaroid.is-small img { width: 58px; height: 58px; }
 .cm-polaroid.is-small:nth-child(even) { transform: rotate(3deg); }
@@ -134,7 +141,7 @@ html.cm-lock .site-header, html.cm-lock footer, html.cm-lock .caminho-intro, htm
 
 @media (max-width: 740px) {
   .caminho-section { padding-block: 22px 40px; }
-  .caminho-stage { height: 74svh; border-radius: 20px; }
+  .caminho-stage { height: 74vh; height: 74svh; border-radius: 20px; }
   .cm-missions { padding: 7px 12px 9px; font-size: 12px; }
   .cm-missions strong { font-size: 18px; }
   .cm-tools { max-width: 46%; }
@@ -146,7 +153,7 @@ html.cm-lock .site-header, html.cm-lock footer, html.cm-lock .caminho-intro, htm
   /* celular deitado */
   .cm-jump { width: 72px; height: 72px; }
   .cm-swap { width: 58px; height: 58px; bottom: calc(max(30px, env(safe-area-inset-bottom)) + 86px); }
-  .cm-stick { width: 100px; height: 100px; margin: -50px 0 0 -50px; }
+  .cm-stick { width: 120px; height: 120px; margin: -60px 0 0 -60px; }
   .is-touch .cm-caption { top: max(10px, env(safe-area-inset-top)); width: min(380px, 46%); }
   .cm-card { gap: 8px; padding: 14px 16px; }
 }

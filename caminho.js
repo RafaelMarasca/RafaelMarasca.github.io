@@ -929,6 +929,7 @@ const LEVELS = [
 
 // ---------- Estado ----------
 const R = .28, H = 1.3;
+const STICK_SPEED = .62; // fração da velocidade máxima quando se anda pela alavanca do celular
 let state = 'title'; // title | play | card | ending
 let level = null;
 let clock = 0;
@@ -1305,7 +1306,8 @@ function makeTiles(L, specs, { cell = 1.15, gap = 1.1, layout = '' } = {}) {
     if (!dir) { T.held = ''; T.holdTime = 0; return ''; }
     if (dir !== T.held) { T.held = dir; T.holdTime = 0; return dir; }
     T.holdTime += dt;
-    if (T.holdTime > .32) { T.holdTime = .08; return dir; }
+    const slow = !!input.stick; // no celular, segurar a alavanca repete mais devagar
+    if (T.holdTime > (slow ? .55 : .32)) { T.holdTime = slow ? .15 : .08; return dir; }
     return '';
   };
   T.layout();
@@ -1492,7 +1494,7 @@ function collideSide(body, axis, wantX, wantZ) {
     body[axis] = centre + sign * half;
     body[axis === 'x' ? 'vx' : 'vz'] = 0;
     const want = axis === 'x' ? wantX : wantZ;
-    if (block.crate && !block.crate.locked && clock >= body.noStick && body.ground && -sign * want > .5 && Math.abs(body[cross] - centreCross) < .52)
+    if (block.crate && !block.crate.locked && clock >= body.noStick && body.ground && -sign * want > .28 && Math.abs(body[cross] - centreCross) < .52)
       body.pushNow = { crate: block.crate, axis, dir: -sign };
   }
 }
@@ -1503,7 +1505,7 @@ function stepBody(body, dt, controlled) {
   // direção na tela -> direção no chão (câmera isométrica)
   let ix = 0, iy = 0;
   if (controlled) {
-    ix = input.sx; iy = input.sy;
+    ix = input.sx * STICK_SPEED; iy = input.sy * STICK_SPEED; // na alavanca o boneco anda mais devagar que no teclado
     if (input.keys.has('left')) ix -= 1;
     if (input.keys.has('right')) ix += 1;
     if (input.keys.has('up')) iy += 1;
@@ -1910,8 +1912,22 @@ function setFull(on) {
   stage.classList.toggle('is-full', on);
   document.documentElement.classList.toggle('cm-lock', on);
   $('cm-full').textContent = on ? 'tela menor' : 'tela cheia';
+  fitFull();
+}
+// Em tela cheia o palco acompanha a área realmente visível. No Safari do iPhone as
+// barras do navegador (e o zoom da página) mudam essa área, e só o CSS deixava o jogo cortado.
+function fitFull() {
+  const view = window.visualViewport;
+  if (stage.classList.contains('is-full') && view) {
+    Object.assign(stage.style, { left: view.offsetLeft + 'px', top: view.offsetTop + 'px', width: view.width + 'px', height: view.height + 'px' });
+  } else stage.style.left = stage.style.top = stage.style.width = stage.style.height = '';
   resize();
 }
+window.visualViewport?.addEventListener('resize', fitFull);
+window.visualViewport?.addEventListener('scroll', fitFull);
+window.addEventListener('orientationchange', () => setTimeout(fitFull, 300));
+// O Safari do iPhone dá zoom com dois dedos mesmo em jogo: aqui não.
+stage.addEventListener('gesturestart', event => event.preventDefault());
 
 // ---------- Controles ----------
 const KEYS = { arrowleft: 'left', a: 'left', arrowright: 'right', d: 'right', arrowup: 'up', w: 'up', arrowdown: 'down', s: 'down' };
@@ -1960,16 +1976,24 @@ canvas.addEventListener('pointerdown', event => {
 });
 canvas.addEventListener('pointermove', event => {
   if (!input.stick || event.pointerId !== input.stick.id) return;
-  const reach = 48;
+  // Alavanca calma: curso comprido, folga no meio e resposta que começa devagar.
+  const reach = 64, dead = .28;
   let dx = (event.clientX - input.stick.x) / reach, dy = (event.clientY - input.stick.y) / reach;
   const length = Math.hypot(dx, dy);
   if (length > 1) { dx /= length; dy /= length; }
   stickEl.style.setProperty('--kx', dx * reach + 'px');
   stickEl.style.setProperty('--ky', dy * reach + 'px');
-  if (Math.min(length, 1) < .2) { input.sx = input.sy = 0; return; }
-  // encaixa em 8 direções, para dar para empurrar a caixa reto
-  const angle = Math.round(Math.atan2(-dy, dx) / (Math.PI / 4)) * (Math.PI / 4);
-  const amount = Math.min(1, length * 1.25);
+  if (Math.min(length, 1) < dead) { input.sx = input.sy = 0; input.stick.angle = null; return; }
+  // encaixa em 8 direções, para dar para empurrar a caixa reto; só troca de direção
+  // quando o dedo passa bem da divisa, para não ficar tremendo entre duas
+  const raw = Math.atan2(-dy, dx);
+  let away = Math.abs(raw - (input.stick.angle ?? 0)) % TAU;
+  if (away > Math.PI) away = TAU - away;
+  if (input.stick.angle == null || away > Math.PI / 8 + .14) input.stick.angle = Math.round(raw / (Math.PI / 4)) * (Math.PI / 4);
+  const angle = input.stick.angle;
+  // pouco empurrão, passo curto; a velocidade toda só com a alavanca no fim do curso
+  const push = (Math.min(1, length) - dead) / (1 - dead);
+  const amount = .22 + .78 * push * push;
   input.sx = Math.cos(angle) * amount;
   input.sy = Math.sin(angle) * amount;
 });
