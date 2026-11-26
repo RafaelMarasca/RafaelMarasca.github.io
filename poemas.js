@@ -162,18 +162,16 @@
     }));
   }
 
-  // O sumário inteiro abre e fecha; o aparelho lembra a escolha.
-  const INDEX_OPEN = 'lulu.poemas.sumario';
+  // O sumário inteiro abre e fecha; a página sempre começa com ele fechado.
   const indexToggle = byId('toggle-index');
   const indexPanel = byId('index-panel');
   function showIndex(show) {
     indexPanel.hidden = !show;
     indexToggle.setAttribute('aria-expanded', String(show));
     byId('toggle-search').hidden = !show;
-    try { localStorage.setItem(INDEX_OPEN, show ? '1' : '0'); } catch {}
   }
   indexToggle.onclick = () => showIndex(indexPanel.hidden);
-  try { if (localStorage.getItem(INDEX_OPEN) === '0') showIndex(false); } catch {}
+  try { localStorage.removeItem('lulu.poemas.sumario'); } catch {} // escolha guardada por versões antigas
   // Sem mudar o endereço: um #index-title faria a página voltar ao poema mais recente.
   document.querySelector('.back-to-index').addEventListener('click', event => {
     event.preventDefault();

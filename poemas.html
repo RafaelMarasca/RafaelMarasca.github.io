@@ -13,7 +13,7 @@
   <link rel="stylesheet" href="./ceu.css?v=3">
   <link rel="stylesheet" href="./site-nav.css?v=5">
   <script src="./poemas-data.js?v=1" defer></script>
-  <script src="./poemas.js?v=5" defer></script>
+  <script src="./poemas.js?v=6" defer></script>
 </head>
 <body class="site-page">
   <a class="skip-link" href="#leitura">Pular para o poema</a>
@@ -31,18 +31,18 @@
     <section class="poem-index" aria-labelledby="index-title">
       <header>
         <h2 id="index-title">
-          <button id="toggle-index" type="button" aria-expanded="true" aria-controls="index-panel">
+          <button id="toggle-index" type="button" aria-expanded="false" aria-controls="index-panel">
             <svg class="index-moon" aria-hidden="true" viewBox="0 0 24 24"><path d="M15.5 3.2a9 9 0 1 0 5.3 13.6A7.4 7.4 0 0 1 15.5 3.2z"/></svg>
             <span>Sumário</span>
             <span id="index-count"></span>
             <svg class="index-chevron" aria-hidden="true" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
           </button>
         </h2>
-        <button id="toggle-search" class="icon-button" type="button" aria-expanded="false" aria-controls="search-box" aria-label="Procurar nos poemas" title="Procurar">
+        <button id="toggle-search" class="icon-button" type="button" hidden aria-expanded="false" aria-controls="search-box" aria-label="Procurar nos poemas" title="Procurar">
           <svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>
         </button>
       </header>
-      <div id="index-panel">
+      <div id="index-panel" hidden>
         <div id="search-box" hidden>
           <label class="index-search">
             <span class="sr-only">Procurar nos poemas</span>
