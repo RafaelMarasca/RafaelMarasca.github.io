@@ -936,7 +936,7 @@ let clock = 0;
 let active = 0;
 let cut = 0;         // câmera mostrando uma ponte que subiu
 const cutAt = new THREE.Vector3();
-const input = { keys: new Set(), stick: null, sx: 0, sy: 0 };
+const input = { keys: new Set(), stick: null, sx: 0, sy: 0, step: '', swipe: null };
 const people = { rafo: makePerson(D.rafo, false), lulu: makePerson(D.lulu, true) };
 const bodies = ['rafo', 'lulu'].map(who => ({
   who, mesh: people[who], x: 0, y: 0, z: 0, vx: 0, vy: 0, vz: 0, ground: null, coyote: 0, buffer: 0,
@@ -1126,6 +1126,8 @@ function buildLevel(index) {
     L.mode.setup(L);
   }
   camTarget.set(L.tiles ? L.tiles.focus[0] : bodies[0].x, .6, L.tiles ? L.tiles.focus[1] : bodies[0].z);
+  stage.classList.toggle('is-tiles', !!L.tiles);
+  releaseStick();
   updateHud();
 }
 
@@ -1217,7 +1219,7 @@ function makeTiles(L, specs, { cell = 1.15, gap = 1.1, layout = '' } = {}) {
       } else {
         a.origin.copy(T_UP).multiplyScalar(deep / 2 - a.depth / 2);
         b.origin.copy(T_UP).multiplyScalar(-deep / 2 + b.depth / 2);
-        T.needW = tall.w; T.needH = tall.h; T.focus = [.5, .5];
+        T.needW = tall.w; T.needH = tall.h; T.focus = [1.05, 1.05]; // um pouco para cima, para sobrar lugar para os botões
       }
     }
     for (const board of T.list) {
@@ -1293,6 +1295,8 @@ function makeTiles(L, specs, { cell = 1.15, gap = 1.1, layout = '' } = {}) {
   // Direção pedida pelo teclado ou pela alavanca: 'U', 'D', 'L', 'R' ou ''.
   // Devolve uma vez por toque; segurando, repete devagar.
   T.readDir = dt => {
+    // um passo guardado (toque rápido numa seta, deslizar o dedo, tecla): vale mesmo se veio durante o pulo anterior
+    if (input.step) { const dir = input.step; input.step = ''; T.held = dir; T.holdTime = 0; return dir; }
     let ix = input.sx, iy = input.sy;
     if (input.keys.has('left')) ix -= 1;
     if (input.keys.has('right')) ix += 1;
@@ -1757,7 +1761,8 @@ function controlsLegend() {
   if (!rows) {
     rows = [];
     if (touchDevice) {
-      rows.push(['alavanca', mode ? 'andar: um toque para o lado, uma casa' : 'andar']);
+      if (mode) rows.push(['setas na tela', 'andar: um toque, uma casa'], ['deslizar o dedo', 'também anda uma casa']);
+      else rows.push(['alavanca', 'andar']);
       if (!mode) rows.push(['pular', 'pular'], ['andar contra a caixa', 'empurrar']);
       else if (mode.actionLabel) rows.push(['pular', mode.actionLabel]);
       if (!level?.glued) rows.push([`botão ${D.lulu.nome} / ${D.rafo.nome}`, 'trocar de personagem']);
@@ -1954,7 +1959,11 @@ const locked = () => document.documentElement.classList.contains('site-locked');
 window.addEventListener('keydown', event => {
   if (locked() || event.ctrlKey || event.metaKey || event.altKey || state !== 'play') return;
   const key = event.key.toLowerCase();
-  if (KEYS[key]) { input.keys.add(KEYS[key]); event.preventDefault(); }
+  if (KEYS[key]) {
+    input.keys.add(KEYS[key]);
+    if (level?.tiles && !event.repeat) input.step = STEP_OF[KEYS[key]];
+    event.preventDefault();
+  }
   else if (event.code === 'Space') { if (!event.repeat) jump(); event.preventDefault(); }
   else if (key === 'tab' || key === 'q' || key === 'e' || key === 'shift') { if (!event.repeat) switchPlayer(); event.preventDefault(); }
   else if (key === 'escape' || key === 'p') pause();
@@ -1963,9 +1972,14 @@ window.addEventListener('keyup', event => { input.keys.delete(KEYS[event.key.toL
 window.addEventListener('blur', () => { input.keys.clear(); releaseStick(); });
 document.addEventListener('visibilitychange', () => { if (document.hidden) pause(); });
 
+const STEP_OF = { up: 'U', down: 'D', left: 'L', right: 'R' };
+const dpad = $('cm-dpad');
 function releaseStick() {
   input.stick = null;
+  input.swipe = null;
+  input.step = '';
   input.sx = input.sy = 0;
+  for (const button of dpad.children) button.classList.remove('is-down');
   stickEl.classList.remove('is-on');
   stickEl.style.left = stickEl.style.top = '';
   stickEl.style.setProperty('--kx', '0px');
@@ -1985,6 +1999,14 @@ canvas.addEventListener('pointerdown', event => {
   touchEl.hidden = false;
   stage.classList.add('is-touch');
   const box = stage.getBoundingClientRect();
+  if (level?.tiles) {
+    // tabuleiro: deslizar o dedo em qualquer lugar anda uma casa; um toque parado, do lado direito, é o botão de ação
+    if (!input.swipe) {
+      input.swipe = { id: event.pointerId, x: event.clientX, y: event.clientY, moved: false, right: event.clientX - box.left >= box.width * .55 };
+      try { canvas.setPointerCapture(event.pointerId); } catch {}
+    }
+    return;
+  }
   if (event.clientX - box.left < box.width * .55 && !input.stick) {
     input.stick = { id: event.pointerId, x: event.clientX, y: event.clientY };
     stickEl.style.left = event.clientX - box.left + 'px';
@@ -1994,6 +2016,16 @@ canvas.addEventListener('pointerdown', event => {
   } else jump();
 });
 canvas.addEventListener('pointermove', event => {
+  const swipe = input.swipe;
+  if (swipe && event.pointerId === swipe.id) {
+    const dx = event.clientX - swipe.x, dy = event.clientY - swipe.y;
+    const far = swipe.moved ? 44 : 26; // o primeiro passo sai logo; os seguintes, a cada 44 px
+    if (Math.abs(dx) > far && Math.abs(dx) > Math.abs(dy) * 1.3) input.step = dx > 0 ? 'R' : 'L';
+    else if (Math.abs(dy) > far && Math.abs(dy) > Math.abs(dx) * 1.3) input.step = dy > 0 ? 'D' : 'U';
+    else return;
+    Object.assign(swipe, { x: event.clientX, y: event.clientY, moved: true });
+    return;
+  }
   if (!input.stick || event.pointerId !== input.stick.id) return;
   const reach = 48;
   let dx = (event.clientX - input.stick.x) / reach, dy = (event.clientY - input.stick.y) / reach;
@@ -2009,7 +2041,30 @@ canvas.addEventListener('pointermove', event => {
   input.sy = Math.sin(angle) * amount;
 });
 for (const type of ['pointerup', 'pointercancel', 'lostpointercapture'])
-  canvas.addEventListener(type, event => { if (input.stick && event.pointerId === input.stick.id) releaseStick(); });
+  canvas.addEventListener(type, event => {
+    if (input.swipe && event.pointerId === input.swipe.id) {
+      const tap = !input.swipe.moved && input.swipe.right && type === 'pointerup';
+      input.swipe = null;
+      if (tap) jump();
+    }
+    if (input.stick && event.pointerId === input.stick.id) releaseStick();
+  });
+// Setas na tela (fases de tabuleiro): tocar dá um passo, segurar repete.
+for (const button of dpad.children) {
+  const name = button.dataset.dir;
+  button.addEventListener('pointerdown', event => {
+    event.preventDefault();
+    if (state !== 'play') return;
+    input.keys.add(name);
+    input.step = STEP_OF[name];
+    button.classList.add('is-down');
+    try { button.setPointerCapture(event.pointerId); } catch {}
+  });
+  for (const type of ['pointerup', 'pointercancel', 'lostpointercapture'])
+    button.addEventListener(type, () => { input.keys.delete(name); button.classList.remove('is-down'); });
+  button.addEventListener('click', event => { if (event.detail === 0 && state === 'play') input.step = STEP_OF[name]; }); // teclado e leitores de tela
+  button.addEventListener('contextmenu', event => event.preventDefault());
+}
 canvas.addEventListener('contextmenu', event => event.preventDefault());
 jumpButton.addEventListener('pointerdown', event => { event.preventDefault(); jump(); });
 jumpButton.addEventListener('click', event => { if (event.detail === 0) jump(); });
