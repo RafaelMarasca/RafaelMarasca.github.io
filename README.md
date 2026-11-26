@@ -72,13 +72,49 @@ Depois dos jogos, fica apenas “Só volto se você não desviar dos beijinhos�
 
 `poemas.html` mostra, no alto, um sumário curto agrupado por mês, que começa fechado (cada mês abre e fecha; a busca fica recolhida na lupa) e, logo abaixo, o poema escolhido numa folha de papel, com setas para o anterior e o próximo. Cada poema tem endereço próprio (`poemas.html#id`). Os poemas fixos ficam em `poemas-data.js`, em texto simples: uma linha em branco separa estrofes ou parágrafos. O botão **Escrever poema** publica um poema novo no servidor (tabela `poems`), que também pode ser editado ou excluído pela página; o rascunho fica guardado no aparelho enquanto se escreve. A lógica fica em `poemas.js` e a aparência em `poemas.css`.
 
-As três páginas publicadas usam o mesmo fundo e a navegação superior “início”, “nosso álbum” e “poemas”. A cor de fundo e a navegação ficam em `site-nav.css`; as estrelas, luas e a textura compartilhadas ficam em `ceu.css`. A página de poemas inclui uma linha abaixo do título da página e separadores após cada poema. O controle de música do álbum fica abaixo da navegação. A publicação inclui os arquivos automaticamente, sem dependências.
+As páginas publicadas usam o mesmo fundo e a mesma navegação superior. A cor de fundo e a navegação ficam em `site-nav.css`; as estrelas, luas e a textura compartilhadas ficam em `ceu.css`. A página de poemas inclui uma linha abaixo do título da página e separadores após cada poema. O controle de música do álbum fica abaixo da navegação. A publicação inclui os arquivos automaticamente, sem dependências.
 
 ## Buquê
 
 `buque.html` é uma página só para o buquê “flor de lua”. Ele começa embrulhado; ao tocar, as flores sobem de dentro do papel e desabrocham: lírios, margaridas, rosinhas, uma flor de lua, florzinhas douradas, mosquitinho, eucalipto e uma lua de enfeite, com pétalas, vagalumes e uma etiqueta “para Lulu ♡”. Depois de aberto, uma das flores esconde um beijinho: cada toque numa flor responde “quente” ou “frio” até a Lulu achar, e então o beijinho se esconde em outra. Tocar fora das flores balança o buquê e mostra um recadinho.
 
 O desenho inteiro é um SVG montado em `buque.js` (posições e tipos das flores ficam na lista `stems`); a aparência e as animações ficam em `buque.css`. Funciona por toque e teclado, pausa fora da tela e, com movimento reduzido, abre direto. Nada é enviado ou salvo.
+
+## Dois caminhos (joguinho 3D)
+
+`caminho.html` é um joguinho isométrico em 3D para dois personagens. O Rafo ganha flores (cada uma mostra uma frase) e a Lulu ganha fotos; em toda fase um ajuda o outro, e no fim os dois se encontram. Os bonequinhos seguem o traço das ilustrações: cor chapada, contorno escuro, o cabelo bagunçado do Rafo com a franja caindo de lado e o cabelo comprido da Lulu repartido no meio. O final mostra a ilustração do abraço e as fotos guardadas, e deixa a escolha com a Lulu.
+
+São oito fases, nesta ordem:
+
+| Fase | Como se joga |
+| --- | --- |
+| 1 · a primeira vez | Andar e pular. Cada um empurra a sua caixa até a marca; a caixa de um ergue a ponte do outro. |
+| 2 · um espera o outro | O botão redondo só segura a ponte enquanto alguém fica em cima; uma caixa serve de degrau. |
+| 3 · a lua | Pulo mais alto; a caixa serve de degrau e depois segura o botão. |
+| 4 · grudadinhos | Tabuleiro de casas: um comando move os dois. A moita segura quem bate nela, o chiclete prende por uma jogada, e os dois têm que pisar nas marcas ao mesmo tempo. |
+| 5 · as cores da Lulu | O Rafo escolhe a tinta pisando nos potes; cada casa em que a Lulu pisa fica dessa cor, até o chão ficar igual à placa. |
+| 6 · a ordem das luzes | As luzes acendem numa ordem, e os dois repetem pisando nelas, cada um nas da sua ilha. |
+| 7 · pedacinhos | Uma foto em pedaços, para montar arrastando com o dedo ou o mouse. |
+| 8 · espelhos de luar | Duas ilhas: cada um gira os espelhos da sua para levar o luar do céu até a flor de lua. |
+
+Cada fase abre com um cartão que traz a dica e a legenda dos controles; a mesma legenda aparece na pausa. No computador: setas ou WASD, espaço, Tab (ou Q) para trocar de personagem, Esc (ou P) para pausar. No celular o jogo abre em tela cheia, com alavanca à esquerda e botões à direita. O progresso (fase liberada e fotos achadas) fica só no aparelho.
+
+Arquivos:
+
+- `caminho-data.js`: todos os textos, as frases das flores, as fotos de cada fase e as cores dos bonequinhos. As fotos que não estão no álbum do site ficam em `fotosExtras` (com `note`, o escrito à mão, e `caption`, a frase que aparece junto).
+- `caminho.js`: o motor (cena, bonequinhos, física das fases 1 a 3, cartões, e a base das fases de quebra-cabeça: o "kit" e os tabuleiros de casas).
+- `caminho-modo-<nome>.js`: uma fase de quebra-cabeça por arquivo (`grudinho`, `cores`, `luzes`, `pedacinhos`, `espelhos`). Cada um se registra em `window.CAMINHO_MODOS` e é carregado antes do `caminho.js`. A ordem das fases é a da lista `LEVELS`, em `caminho.js`, e tem que ser a mesma de `fases`, em `caminho-data.js`.
+- `caminho.css`: a aparência.
+
+Ao mexer num desses arquivos, aumente o número depois de `?v=` no `caminho.html`, senão o navegador pode continuar usando a versão antiga.
+
+O three.js é carregado de uma CDN pelo `importmap` do `caminho.html` (única dependência externa do site); para deixar tudo local, baixe o `three.module.js` e aponte o `importmap` para ele. Para testar, abra com `?debug=1`, que expõe `window.caminhoDebug` (por exemplo `caminhoDebug.startPhase(4)` abre direto a fase 5).
+
+Nas fases 1 a 3, cada lado é desenhado num mesmo "molde" (o do Rafo); o da Lulu é esse molde espelhado na tela. Em qualquer fase, tudo o que é alto (degraus, árvores, postes, placas) fica na borda do fundo, para nunca esconder uma caixa ou um personagem.
+
+A frase de acesso só funciona no site publicado. Para jogar no computador, `caminho-teste.html` é uma cópia local sem a frase (fica fora do git); ela é refeita a partir do `caminho.html`.
+
+A página aparece na navegação de todas as páginas como "dois caminhos" ("caminhos" no celular).
 
 ## Acesso ao site
 

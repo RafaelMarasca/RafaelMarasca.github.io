@@ -69,16 +69,16 @@ body { overflow-x: clip; }
   }
   .site-header .site-navigation::-webkit-scrollbar { display: none; }
   .site-header .site-navigation a { flex: none; font-size: .78rem; white-space: nowrap; }
-  /* "nosso álbum" vira "álbum" para os links caberem numa linha. */
+  /* "nosso álbum" vira "álbum" e "dois caminhos" vira "caminhos", para os links caberem. */
   .site-header .nav-extra { display: none; }
   .site-header .site-navigation .site-exit { position: absolute; top: 6px; right: 0; padding-left: 12px; }
   .album-tools { margin-block: -10px 10px; }
 }
 @media (max-width: 440px) {
-  /* Em telas estreitas os seis links não cabem numa linha: viram duas fileiras de três, sem rolar de lado. */
+  /* Em telas estreitas os sete links não cabem numa linha: viram duas fileiras (quatro e três), sem rolar de lado. */
   .site-header .site-navigation {
-    display: grid; grid-template-columns: repeat(3, auto); justify-content: space-between;
-    gap: 0 12px; overflow: visible; padding-bottom: 4px;
+    display: grid; grid-template-columns: repeat(4, auto); justify-content: space-between;
+    gap: 0 8px; overflow: visible; padding-bottom: 4px;
   }
-  .site-header .site-navigation a { min-height: 40px; font-size: .8rem; }
+  .site-header .site-navigation a { min-height: 40px; font-size: .78rem; }
 }

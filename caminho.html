@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <link rel="stylesheet" href="./site-acesso.css?v=1">
+  <script src="./site-acesso.js?v=3"></script>
+  <meta name="theme-color" content="#111820">
+  <meta name="description" content="Dois caminhos: um joguinho em que Lulu e Rafo se encontram.">
+  <title>Dois caminhos · Uma lua para Lulu</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🌙%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" href="./lua.css?v=4">
+  <link rel="stylesheet" href="./ceu.css?v=3">
+  <link rel="stylesheet" href="./caminho.css?v=5">
+  <link rel="stylesheet" href="./site-nav.css?v=6">
+  <link rel="stylesheet" href="./inicio-celular.css?v=1">
+  <!-- three.js vem de uma CDN; para deixar tudo no site, baixe o arquivo e aponte aqui. -->
+  <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"}}</script>
+  <script src="./site-config.js" defer></script>
+  <script src="./album-data.js" defer></script>
+  <script src="./caminho-data.js?v=8" defer></script>
+  <!-- Fases de quebra-cabeça: um arquivo por fase. Precisam vir antes do caminho.js. -->
+  <script src="./caminho-modo-grudinho.js?v=2" defer></script>
+  <script src="./caminho-modo-cores.js?v=2" defer></script>
+  <script src="./caminho-modo-luzes.js?v=2" defer></script>
+  <script src="./caminho-modo-pedacinhos.js?v=6" defer></script>
+  <script src="./caminho-modo-espelhos.js?v=1" defer></script>
+  <script type="module" src="./caminho.js?v=10"></script>
+</head>
+<body class="site-page caminho-page">
+  <a class="skip-link" href="#caminho">Pular para o jogo</a>
+  <div class="celestial-backdrop" aria-hidden="true"><span class="backdrop-moon backdrop-moon-one">☾</span><span class="backdrop-moon backdrop-moon-two">☽</span><span class="backdrop-moon backdrop-moon-three">☾</span></div>
+  <div class="sky" aria-hidden="true"><i class="shooting-star one"></i><i class="shooting-star two"></i><i class="sky-star s1">✦</i><i class="sky-star s2">✧</i><i class="sky-star s3">✦</i><i class="sky-star s4">·</i><i class="sky-star s5">✧</i></div>
+  <header class="site-header"><a class="brand" href="./index.html"><span aria-hidden="true">☾</span> uma lua para lulu</a><nav class="site-navigation" aria-label="Navegação principal"><a href="./index.html">início</a><a href="./nosso-album.html"><span class="nav-extra">nosso&nbsp;</span>álbum</a><a href="./poemas.html">poemas</a><a href="./buque.html">buquê</a><a href="./presentes.html">presentes</a><a href="./bilhetinhos.html">bilhetinhos</a><a href="./caminho.html" aria-current="page"><span class="nav-extra">dois&nbsp;</span>caminhos</a></nav></header>
+  <main id="inicio">
+    <section class="caminho-section wrap" aria-labelledby="caminho-title">
+      <div class="caminho-intro">
+        <p class="eyebrow">UM JOGUINHO A DOIS</p>
+        <h1 class="caminho-title" id="caminho-title">dois <em>caminhos.</em></h1>
+        <p>Cada um na sua ilha, com as suas coisinhas pra fazer. No fim, a gente se encontra.</p>
+      </div>
+      <div class="caminho-stage" id="caminho">
+        <div class="cm-sky" aria-hidden="true"><span class="cm-moon"></span><b></b><b></b><b></b><i>✦</i><i>✦</i><i>✦</i><i>✦</i><i>✦</i><i>✦</i></div>
+        <canvas id="caminho-canvas" tabindex="0" aria-label="Jogo dois caminhos. Use as setas para andar, espaço para pular e Tab para trocar entre Rafo e Lulu. Ande contra a caixa para empurrar.">Seu navegador precisa oferecer suporte a canvas para jogar.</canvas>
+        <div class="cm-mini" id="cm-mini" hidden></div>
+        <div class="cm-hud" id="cm-hud" hidden>
+          <div class="cm-missions" role="status" aria-live="polite"><small id="cm-phase"></small><strong id="cm-name"></strong><span id="cm-m1"></span><span id="cm-m2"></span></div>
+          <div class="cm-tools">
+            <button type="button" id="cm-mute" aria-pressed="false">som ligado</button>
+            <button type="button" id="cm-pause">pausa</button>
+            <button type="button" id="cm-full">tela cheia</button>
+          </div>
+        </div>
+        <p class="cm-caption" id="cm-caption" role="status" aria-live="polite"></p>
+        <button type="button" class="cm-switch" id="cm-switch" hidden></button>
+        <div class="cm-touch" id="cm-touch" hidden>
+          <span class="cm-stick" id="cm-stick" aria-hidden="true"><i></i></span>
+          <button type="button" class="cm-pad cm-swap" id="cm-swap" aria-label="Trocar de personagem"></button>
+          <button type="button" class="cm-pad cm-jump" id="cm-jump" aria-label="Pular">pular</button>
+        </div>
+        <div class="cm-card" id="cm-card" hidden></div>
+        <div class="cm-fade" id="cm-fade" aria-hidden="true"></div>
+      </div>
+      <noscript><p>Ative o JavaScript para jogar.</p></noscript>
+    </section>
+  </main>
+  <footer class="wrap"><p>para Luana Caroline de Amorim.<br><span>minha Lulu, com carinho.</span></p><a href="./index.html">voltar pra lua ↑</a></footer>
+  <audio id="cm-music" loop preload="none" aria-label="Flower Moon, trilha sonora do jogo"></audio>
+</body>
+</html>

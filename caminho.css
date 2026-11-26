@@ -1,0 +1,159 @@
+/* Dois caminhos — joguinho (caminho.html). */
+.caminho-section { padding-block: 34px 56px; border-bottom: 1px solid var(--line); }
+.caminho-intro { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 28px; margin-bottom: 20px; }
+.caminho-intro .eyebrow { width: 100%; margin: 0 0 4px; }
+.caminho-title { margin: 0; font-weight: 400; font-size: clamp(38px, 5vw, 56px); line-height: 1.05; letter-spacing: -2px; }
+.caminho-title em { font-weight: 400; color: var(--gold); }
+.caminho-intro > p:not(.eyebrow) { margin: 0; max-width: 46ch; color: var(--muted); font-size: 16px; line-height: 1.7; }
+
+/* Palco: céu desenhado atrás, canvas transparente por cima. */
+.caminho-stage {
+  --cm-sky-a: #8fcdea;
+  --cm-sky-b: #fde6c4;
+  --cm-brown: #6b4a3a;
+  --cm-cream: #fff8e6;
+  --cm-gold: #ffe08a;
+  position: relative;
+  height: clamp(460px, 72svh, 700px);
+  overflow: hidden;
+  border-radius: 26px;
+  background: linear-gradient(var(--cm-sky-a), var(--cm-sky-b));
+  box-shadow: 0 0 0 4px #fff8e61f, 0 18px 40px #05080d80;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+.caminho-stage.is-full { position: fixed; inset: 0; z-index: 60; height: 100dvh; border-radius: 0; box-shadow: none; }
+html.cm-lock, html.cm-lock body { overflow: hidden; }
+/* Em tela cheia, o resto da página some para não aparecer por cima do jogo. */
+html.cm-lock .site-header, html.cm-lock footer, html.cm-lock .caminho-intro, html.cm-lock .sky, html.cm-lock .celestial-backdrop, html.cm-lock .skip-link { visibility: hidden; }
+
+/* Céu de cada fase: tarde (sol e nuvens), entardecer (sol baixo) e lua. */
+.cm-sky { position: absolute; inset: 0; pointer-events: none; }
+.cm-moon { position: absolute; top: 9%; right: 10%; width: clamp(64px, 10vw, 110px); aspect-ratio: 1; border-radius: 50%; background: #fff6d0; box-shadow: 0 0 0 14px #fff6d033, 0 0 60px 20px #fff0b066; }
+.cm-sky b { position: absolute; height: 34px; border-radius: 999px; background: #ffffffd9; filter: blur(.4px); animation: cm-drift 60s linear infinite; }
+.cm-sky b::before, .cm-sky b::after { content: ""; position: absolute; bottom: 8px; border-radius: 50%; background: inherit; }
+.cm-sky b::before { left: 16%; width: 44%; aspect-ratio: 1; }
+.cm-sky b::after { right: 14%; width: 34%; aspect-ratio: 1; }
+.cm-sky b:nth-of-type(1) { top: 14%; left: 6%; width: 130px; }
+.cm-sky b:nth-of-type(2) { top: 34%; left: 58%; width: 96px; height: 26px; animation-duration: 80s; opacity: .8; }
+.cm-sky b:nth-of-type(3) { top: 66%; left: 3%; width: 110px; height: 28px; animation-duration: 95s; opacity: .7; }
+@keyframes cm-drift { 50% { transform: translateX(46px); } }
+.cm-sky i { position: absolute; color: #fff3c4; font-style: normal; opacity: 0; animation: cm-twinkle 5s ease-in-out infinite; }
+.cm-sky i:nth-of-type(1) { top: 12%; left: 8%; font-size: 22px; }
+.cm-sky i:nth-of-type(2) { top: 30%; left: 30%; font-size: 12px; animation-delay: -1.5s; }
+.cm-sky i:nth-of-type(3) { top: 8%; left: 52%; font-size: 16px; animation-delay: -3s; }
+.cm-sky i:nth-of-type(4) { top: 62%; left: 5%; font-size: 14px; animation-delay: -2s; }
+.cm-sky i:nth-of-type(5) { top: 44%; right: 6%; font-size: 20px; animation-delay: -4s; }
+.cm-sky i:nth-of-type(6) { top: 78%; right: 22%; font-size: 12px; animation-delay: -.8s; }
+@keyframes cm-twinkle { 50% { transform: scale(.75); filter: opacity(.45); } }
+[data-tema="entardecer"] .cm-moon { top: 20%; background: #ffd9a8; box-shadow: 0 0 0 16px #ffd9a833, 0 0 80px 30px #ffb98866; }
+[data-tema="entardecer"] .cm-sky b { background: #ffd9d0cc; }
+[data-tema="entardecer"] .cm-sky i:nth-of-type(-n+3) { opacity: .9; }
+[data-tema="lua"] .cm-moon { width: clamp(90px, 15vw, 170px); background: none; box-shadow: inset -.24em .1em 0 0 #fff0b3; font-size: clamp(90px, 15vw, 170px); transform: rotate(18deg); filter: drop-shadow(0 0 22px #fff0b355); }
+[data-tema="lua"] .cm-sky b { display: none; }
+[data-tema="lua"] .cm-sky i { opacity: 1; }
+#caminho-canvas { position: absolute; inset: 0; display: block; width: 100%; height: 100%; touch-action: none; outline: none; }
+#caminho-canvas:focus-visible { outline: 3px solid var(--cm-gold); outline-offset: -5px; border-radius: 22px; }
+
+/* Camada de HTML por cima do jogo, para os quebra-cabeças de arrastar (kit.mini). */
+.cm-mini { position: absolute; inset: 0; z-index: 1; display: grid; place-items: center; padding: max(96px, env(safe-area-inset-top)) 14px max(18px, env(safe-area-inset-bottom)); touch-action: none; }
+.cm-mini[hidden] { display: none; }
+.is-mini .cm-touch, .is-mini .cm-switch { display: none !important; }
+
+/* Missões e botões */
+.cm-hud { position: absolute; inset: 0 0 auto; display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; padding: max(12px, env(safe-area-inset-top)) max(14px, env(safe-area-inset-right)) 0 max(14px, env(safe-area-inset-left)); pointer-events: none; }
+.cm-hud[hidden], .cm-card[hidden], .cm-touch[hidden] { display: none; }
+.cm-missions { display: grid; gap: 2px; padding: 9px 16px 11px; border-radius: 18px; background: var(--cm-cream); color: var(--cm-brown); font: 13px/1.5 var(--mono); box-shadow: 0 4px 0 #6b4a3a40; }
+.cm-missions small { font-size: 10px; letter-spacing: .8px; text-transform: uppercase; opacity: .7; }
+.cm-missions strong { font: italic 21px/1.15 var(--serif); }
+.cm-hud[data-who="rafo"] .cm-missions strong { color: #3d4a6b; }
+.cm-hud[data-who="lulu"] .cm-missions strong { color: #a9743f; }
+.cm-hud[data-who="juntos"] .cm-missions strong { color: #d9628a; }
+.cm-missions .is-done { color: #4f9a55; }
+.cm-tools { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; pointer-events: auto; }
+.cm-tools button { min-height: 40px; padding: 0 13px; border: 0; border-radius: 999px; background: #fff8e6d9; color: var(--cm-brown); font: 12px var(--mono); box-shadow: 0 3px 0 #6b4a3a33; }
+.cm-tools button:hover { background: var(--cm-cream); }
+.cm-switch { display: none; position: absolute; left: 50%; bottom: max(16px, env(safe-area-inset-bottom)); transform: translateX(-50%); min-height: 48px; padding: 0 24px; border: 0; border-radius: 999px; background: var(--cm-gold); color: var(--cm-brown); font: 14px var(--mono); box-shadow: 0 4px 0 #b98a3a; white-space: nowrap; }
+.is-playing .cm-switch { display: block; }
+.is-playing.is-touch .cm-switch, .is-playing.is-glued .cm-switch { display: none; }
+.cm-switch:active { transform: translateX(-50%) translateY(3px); box-shadow: 0 1px 0 #b98a3a; }
+.cm-caption { position: absolute; left: 50%; bottom: calc(max(16px, env(safe-area-inset-bottom)) + 62px); width: min(600px, calc(100% - 28px)); margin: 0; padding: 12px 20px; border-radius: 20px; background: var(--cm-cream); color: var(--cm-brown); font: italic 17px/1.5 var(--serif); text-align: center; box-shadow: 0 4px 0 #6b4a3a40; opacity: 0; transform: translate(-50%, 10px); transition: opacity .35s, transform .35s; pointer-events: none; }
+.cm-caption.is-on { opacity: 1; transform: translate(-50%, 0); }
+.is-touch .cm-caption { bottom: auto; top: calc(max(12px, env(safe-area-inset-top)) + 104px); }
+
+/* Controles de toque: alavanca à esquerda, pular e trocar à direita. */
+.cm-touch { position: absolute; inset: 0; display: none; pointer-events: none; }
+.is-playing .cm-touch:not([hidden]) { display: block; }
+.cm-stick { position: absolute; left: calc(max(22px, env(safe-area-inset-left)) + 58px); top: calc(100% - max(30px, env(safe-area-inset-bottom)) - 62px); width: 116px; height: 116px; margin: -58px 0 0 -58px; border: 3px solid #fff8e6b3; border-radius: 50%; background: #fff8e640; opacity: .75; transition: opacity .15s; }
+.cm-stick.is-on { opacity: 1; }
+.cm-stick i { position: absolute; top: 50%; left: 50%; width: 52px; height: 52px; margin: -26px; border-radius: 50%; background: var(--cm-cream); box-shadow: 0 3px 0 #6b4a3a55; transform: translate(var(--kx, 0px), var(--ky, 0px)); }
+.cm-pad { position: absolute; right: max(20px, env(safe-area-inset-right)); display: grid; place-items: center; border: 0; border-radius: 50%; color: var(--cm-brown); font: 13px var(--mono); pointer-events: auto; touch-action: manipulation; }
+.cm-jump { bottom: max(30px, env(safe-area-inset-bottom)); width: 86px; height: 86px; background: var(--cm-gold); box-shadow: 0 5px 0 #b98a3a; }
+.cm-swap { bottom: calc(max(30px, env(safe-area-inset-bottom)) + 104px); right: max(28px, env(safe-area-inset-right)); width: 70px; height: 70px; background: var(--cm-cream); box-shadow: 0 5px 0 #6b4a3a55; font: italic 17px var(--serif); }
+.cm-swap::after { content: "⇄"; position: absolute; top: -8px; right: -4px; display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: #f58aa0; color: #fff; font: 13px var(--mono); }
+.is-glued .cm-swap { display: none; }
+.is-glued .cm-jump { opacity: .45; }
+.cm-pad:active, .cm-jump.is-tap { transform: translateY(4px); box-shadow: 0 1px 0 #b98a3a; }
+
+/* Cartões */
+.cm-card { position: absolute; inset: 0; z-index: 3; display: flex; flex-direction: column; align-items: center; justify-content: safe center; gap: 12px; padding: 24px 20px; overflow-y: auto; background: #1b2147d9; text-align: center; }
+.cm-card.is-photo, .cm-card.is-pause, .cm-card.is-chapter { background: #1b2147b8; }
+.cm-card .eyebrow { margin: 0; font-size: 11px; letter-spacing: 1.4px; color: #cfd8c4; }
+.cm-card h2 { margin: 0; font-weight: 400; font-style: italic; font-size: clamp(32px, 5vw, 48px); line-height: 1.1; letter-spacing: -1px; color: var(--cm-gold); }
+.cm-card-text { max-width: 44ch; margin: 0; color: #fbf5e6; font-size: 17px; line-height: 1.65; }
+.cm-list { max-width: 46ch; margin: 2px 0 0; padding: 0; list-style: none; color: #fbf5e6; font: 13px/1.7 var(--mono); }
+.cm-list li + li { margin-top: 4px; }
+.cm-help, .cm-tally { max-width: 52ch; margin: 2px 0 0; color: #cfd8c4; font: 12px/1.7 var(--mono); }
+/* Legenda dos controles */
+.cm-keys { display: grid; grid-template-columns: auto auto; justify-content: center; gap: 5px 12px; max-width: 52ch; margin: 4px 0 0; font: 12px/1.5 var(--mono); text-align: left; }
+.cm-keys dt { justify-self: end; padding: 1px 9px; border-radius: 999px; background: #fff8e626; color: var(--cm-gold); white-space: nowrap; }
+.cm-keys dd { margin: 0; align-self: center; color: #fbf5e6; }
+.cm-who.handwritten { margin: 2px 0 0; font-size: 15px; color: #cfd8c4; transform: rotate(-2deg); }
+.cm-chapters-label { margin: 6px 0 0; color: #cfd8c4; font: 11px var(--mono); }
+.cm-chapters { display: flex; gap: 8px; }
+.cm-chip { width: 44px; height: 44px; border: 0; border-radius: 50%; background: #fff8e626; color: #fbf5e6; font: 15px var(--mono); }
+.cm-chip:hover { background: #fff8e64d; }
+.cm-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 8px; }
+.cm-button { min-height: 50px; padding: 0 28px; border: 0; border-radius: 999px; background: var(--cm-gold); color: var(--cm-brown); font: 14px var(--mono); box-shadow: 0 4px 0 #b98a3a; }
+.cm-button.is-quiet { background: #fff8e626; color: #fbf5e6; box-shadow: none; }
+.cm-button:active { transform: translateY(3px); box-shadow: 0 1px 0 #b98a3a; }
+.cm-polaroid { margin: 0; padding: 9px 9px 0; border-radius: 4px; background: #fffaf0; color: var(--cm-brown); box-shadow: 0 8px 22px #05081366; transform: rotate(-2deg); }
+.cm-polaroid img { display: block; width: min(250px, 58vw); height: min(250px, 58vw); max-height: 38svh; object-fit: cover; background: #e6dfcd; }
+.cm-polaroid figcaption { padding: 9px 2px 11px; font: 15px/1.3 "Segoe Print", "Comic Sans MS", cursive; }
+.cm-polaroid.is-hug { padding-bottom: 9px; transform: rotate(2deg); }
+.cm-polaroid.is-hug img { width: min(200px, 48vw); height: min(200px, 48vw); max-height: 28svh; }
+.cm-polaroid.is-small { padding: 5px 5px 14px; }
+.cm-polaroid.is-small img { width: 58px; height: 58px; }
+.cm-polaroid.is-small:nth-child(even) { transform: rotate(3deg); }
+.cm-strip { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; max-width: 520px; }
+.cm-strip:empty { display: none; }
+.cm-fade { position: absolute; inset: 0; z-index: 2; background: #fff8e6; opacity: 0; pointer-events: none; }
+.cm-fade.is-flash { animation: cm-flash .55s; }
+@keyframes cm-flash { 25% { opacity: .8; } }
+
+@media (max-width: 740px) {
+  .caminho-section { padding-block: 22px 40px; }
+  .caminho-stage { height: 74svh; border-radius: 20px; }
+  .cm-missions { padding: 7px 12px 9px; font-size: 12px; }
+  .cm-missions strong { font-size: 18px; }
+  .cm-tools { max-width: 46%; }
+  .cm-tools button { min-height: 38px; padding: 0 10px; font-size: 11px; }
+  .cm-caption { font-size: 15px; padding: 10px 14px; }
+  .cm-card-text { font-size: 16px; }
+}
+@media (max-height: 460px) {
+  /* celular deitado */
+  .cm-jump { width: 72px; height: 72px; }
+  .cm-swap { width: 58px; height: 58px; bottom: calc(max(30px, env(safe-area-inset-bottom)) + 86px); }
+  .cm-stick { width: 100px; height: 100px; margin: -50px 0 0 -50px; }
+  .is-touch .cm-caption { top: max(10px, env(safe-area-inset-top)); width: min(380px, 46%); }
+  .cm-card { gap: 8px; padding: 14px 16px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cm-sky i, .cm-sky b, .cm-fade.is-flash { animation: none; }
+  .cm-caption { transition: none; }
+}
+
+/* O quadro de missões e a legenda ficam por cima da camada dos quebra-cabeças (kit.mini). */
+.cm-hud, .cm-caption { z-index: 2; }
