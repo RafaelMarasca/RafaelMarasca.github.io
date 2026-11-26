@@ -23,7 +23,6 @@
   const fold = value => String(value).normalize('NFD').replace(/\p{M}/gu, '').toLocaleLowerCase('pt-BR');
   const dateOf = iso => new Date(iso + 'T12:00:00Z');
   const longDate = iso => new Intl.DateTimeFormat('pt-BR', {day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC'}).format(dateOf(iso));
-  const shortMonth = iso => new Intl.DateTimeFormat('pt-BR', {month: 'short', timeZone: 'UTC'}).format(dateOf(iso)).replace('.', '');
   const today = () => new Intl.DateTimeFormat('sv-SE', {timeZone: 'America/Sao_Paulo'}).format(new Date());
   const stanzas = body => String(body).split(/\n\s*\n/).map(part => part.trim()).filter(Boolean);
   const words = body => (String(body).match(/\S+/g) || []).length;
@@ -38,7 +37,86 @@
   const all = () => [...fixed, ...written].sort((a, b) => b.date.localeCompare(a.date) || (b.created || 0) - (a.created || 0));
   const request = (path, options) => siteAccess.request(path, options, 'bilhetinhos');
 
+  // ---------- papel "Luar antigo" ----------
+  // O mesmo desenho do primeiro estilo de bilhetinho (drawAntigo em bilhetinhos.js):
+  // céu noturno com lua cheia, lua crescente e constelações em volta de uma folha
+  // bege lisa de borda irregular.
+  (function paintPaper() {
+    const speckle = (x, y) => { const n = Math.sin(x * 127.1 + y * 311.7) * 43758.5453; return n - Math.floor(n); };
+    const canvas = (w, h) => { const c = document.createElement('canvas'); c.width = w; c.height = h; return [c, c.getContext('2d')]; };
+    const circle = (ctx, x, y, r, color) => { ctx.fillStyle = color; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill(); };
+    function star(ctx, x, y, r, color) {
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.moveTo(x, y - r);
+      ctx.quadraticCurveTo(x + r * .14, y - r * .12, x + r * .82, y);
+      ctx.quadraticCurveTo(x + r * .14, y + r * .12, x, y + r);
+      ctx.quadraticCurveTo(x - r * .14, y + r * .12, x - r * .82, y);
+      ctx.quadraticCurveTo(x - r * .14, y - r * .12, x, y - r);
+      ctx.fill();
+    }
+    function crescent(ctx, x, y, r, color) {
+      ctx.save(); ctx.translate(x, y); ctx.scale(r, r); ctx.fillStyle = color; ctx.beginPath();
+      ctx.moveTo(.35, -.98);
+      ctx.bezierCurveTo(-1.05, -1.02, -1.35, .72, -.08, .98);
+      ctx.bezierCurveTo(.39, 1.1, .78, .82, .96, .48);
+      ctx.bezierCurveTo(-.15, .85, -.56, -.45, .35, -.98);
+      ctx.fill(); ctx.restore();
+    }
+    function constellation(ctx, points, color) {
+      ctx.strokeStyle = color; ctx.lineWidth = 1.3; ctx.beginPath();
+      ctx.moveTo(...points[0]);
+      for (const point of points.slice(1)) ctx.lineTo(...point);
+      ctx.stroke();
+      points.forEach(([x, y], i) => star(ctx, x, y, i % 3 === 0 ? 11 : 5, color));
+    }
+    const gold = '#e8d8a9';
+    // Céu estrelado que se repete em volta da folha.
+    const [sky, s] = canvas(540, 540);
+    for (let i = 0; i < 60; i++) {
+      const x = speckle(i, 4) * 540, y = speckle(i, 5) * 540;
+      if (i % 13 === 0) star(s, x, y, 4 + speckle(i, 6) * 5, gold);
+      else circle(s, x, y, .7 + speckle(i, 7) * 1.8, '#a6ab9e');
+    }
+    // Faixa de cima: constelação, lua cheia com crateras, lua crescente e estrela.
+    const [top, t] = canvas(1080, 170);
+    constellation(t, [[95, 106], [137, 62], [201, 81], [244, 42], [310, 64]], '#b2ae93');
+    circle(t, 878, 88, 58, gold);
+    t.save(); t.beginPath(); t.arc(878, 88, 58, 0, Math.PI * 2); t.clip();
+    for (let i = 0; i < 125; i++) circle(t, 817 + speckle(i, 1) * 120, 27 + speckle(i, 2) * 120, 2 + speckle(i, 3) * 8, 'rgba(102,99,75,.13)');
+    t.restore();
+    crescent(t, 748, 78, 18, '#d8cba7');
+    star(t, 974, 63, 14, gold);
+    // Faixa de baixo: a constelação do canto.
+    const [bottom, b] = canvas(1080, 90);
+    constellation(b, [[768, 45], [825, 23], [866, 47], [927, 36]], '#c7ba97');
+
+    const url = c => `url(${c.toDataURL()})`;
+    page.style.setProperty('--sky', url(sky));
+    page.style.setProperty('--sky-top', url(top));
+    page.style.setProperty('--sky-bottom', url(bottom));
+
+    // Borda irregular da folha, com os mesmos tremidos do bilhetinho.
+    const px = n => n.toFixed(1) + 'px';
+    const points = [];
+    // Na tela o bilhetinho aparece reduzido, então os tremidos ficam menores aqui.
+    const N = 90, M = 60;
+    for (let i = 0; i <= N; i++) points.push(`${(i / N * 100).toFixed(2)}% ${px(Math.sin(i / 3.5) * 1.8 + 2 + speckle(i * 8, 4) * 4.5)}`);
+    for (let i = 1; i < M; i++) points.push(`calc(100% - ${px(speckle(i * 10, 5) * 3.5)}) ${(i / M * 100).toFixed(2)}%`);
+    for (let i = N; i >= 0; i--) points.push(`${(i / N * 100).toFixed(2)}% calc(100% - ${px(Math.sin(i / 2.3) * 1.8 + 2 + speckle(i * 8, 6) * 5.5)})`);
+    for (let i = M - 1; i > 0; i--) points.push(`${px(speckle(i * 10, 7) * 3.5)} ${(i / M * 100).toFixed(2)}%`);
+    page.querySelector('.poem-sheet').style.clipPath = `polygon(${points.join(',')})`;
+  })();
+
   // ---------- índice ----------
+  // Um sumário curto, agrupado por mês. Cada mês abre e fecha; ao abrir a
+  // página ficam abertos o mês mais recente e o do poema escolhido.
+  const monthOpen = new Map();
+  const monthKey = iso => iso.slice(0, 7);
+  const monthName = iso => {
+    const name = new Intl.DateTimeFormat('pt-BR', {month: 'long', year: 'numeric', timeZone: 'UTC'}).format(dateOf(iso));
+    return name.charAt(0).toUpperCase() + name.slice(1);
+  };
   function renderIndex() {
     const poems = all();
     const query = fold(search.value.trim());
@@ -48,27 +126,75 @@
       : `${shown.length} de ${poems.length}`;
     byId('index-empty').hidden = shown.length > 0;
     const latest = poems[0];
-    list.replaceChildren(...shown.map(poem => {
-      const item = el('li');
-      const button = el('button', 'poem-card');
-      button.type = 'button';
-      button.dataset.id = poem.id;
-      if (poem === current) button.setAttribute('aria-current', 'true');
-      const tile = el('span', 'day-tile');
-      tile.setAttribute('aria-hidden', 'true');
-      tile.append(el('b', '', String(dateOf(poem.date).getUTCDate())), el('small', '', shortMonth(poem.date)));
-      const text = el('span', 'card-text');
-      const first = stanzas(poem.body)[0] || '';
-      text.append(el('span', 'card-title', poem.title), el('span', 'card-excerpt', first.replace(/\s*\n\s*/g, ' / ')),
-        el('span', 'card-meta', `${minutes(poem.body)} min de leitura`));
-      button.setAttribute('aria-label', `${poem.title}, ${longDate(poem.date)}`);
-      button.append(tile, text);
-      if (poem === latest) button.append(el('span', 'card-badge', 'novo'));
-      button.onclick = () => { picked = true; open(poem, {scroll: true}); };
-      item.append(button);
-      return item;
+    const groups = new Map();
+    for (const poem of shown) {
+      const key = monthKey(poem.date);
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key).push(poem);
+    }
+    list.replaceChildren(...[...groups].map(([key, items]) => {
+      const group = el('details', 'index-month');
+      const wanted = monthOpen.get(key);
+      group.open = query ? true : wanted ?? (key === monthKey(latest.date) || key === monthKey(current?.date || ''));
+      const summary = el('summary');
+      // Só os cliques da pessoa contam: abrir pelo código também dispara "toggle".
+      summary.onclick = () => { if (!query) monthOpen.set(key, !group.open); };
+      summary.append(el('span', 'month-name', monthName(items[0].date)), el('span', 'month-count', String(items.length)));
+      const rows = el('ol');
+      rows.append(...items.map(poem => {
+        const item = el('li');
+        const button = el('button', 'index-row');
+        button.type = 'button';
+        button.dataset.id = poem.id;
+        if (poem === current) button.setAttribute('aria-current', 'true');
+        const day = el('span', 'row-day', String(dateOf(poem.date).getUTCDate()).padStart(2, '0'));
+        day.setAttribute('aria-hidden', 'true');
+        const title = el('span', 'row-title', poem.title);
+        if (poem === latest) title.append(el('span', 'row-badge', 'novo'));
+        button.append(day, title, el('span', 'row-leader'), el('span', 'row-time', `${minutes(poem.body)} min`));
+        button.setAttribute('aria-label', `${poem.title}, ${longDate(poem.date)}, ${minutes(poem.body)} min de leitura`);
+        button.onclick = () => { picked = true; open(poem, {scroll: true}); };
+        item.append(button);
+        return item;
+      }));
+      group.append(summary, rows);
+      return group;
     }));
   }
+
+  // O sumário inteiro abre e fecha; o aparelho lembra a escolha.
+  const INDEX_OPEN = 'lulu.poemas.sumario';
+  const indexToggle = byId('toggle-index');
+  const indexPanel = byId('index-panel');
+  function showIndex(show) {
+    indexPanel.hidden = !show;
+    indexToggle.setAttribute('aria-expanded', String(show));
+    byId('toggle-search').hidden = !show;
+    try { localStorage.setItem(INDEX_OPEN, show ? '1' : '0'); } catch {}
+  }
+  indexToggle.onclick = () => showIndex(indexPanel.hidden);
+  try { if (localStorage.getItem(INDEX_OPEN) === '0') showIndex(false); } catch {}
+  // Sem mudar o endereço: um #index-title faria a página voltar ao poema mais recente.
+  document.querySelector('.back-to-index').addEventListener('click', event => {
+    event.preventDefault();
+    showIndex(true);
+    byId('index-title').scrollIntoView({block: 'start'});
+    indexToggle.focus({preventScroll: true});
+  });
+
+  // A busca fica recolhida atrás da lupa.
+  const searchToggle = byId('toggle-search');
+  const searchBox = byId('search-box');
+  function showSearch(show) {
+    searchBox.hidden = !show;
+    searchToggle.setAttribute('aria-expanded', String(show));
+    if (show) search.focus();
+    else if (search.value) { search.value = ''; renderIndex(); }
+  }
+  searchToggle.onclick = () => showSearch(searchBox.hidden);
+  search.addEventListener('keydown', event => {
+    if (event.key === 'Escape') { event.preventDefault(); showSearch(false); searchToggle.focus(); }
+  });
 
   // ---------- página ----------
   function renderPage() {

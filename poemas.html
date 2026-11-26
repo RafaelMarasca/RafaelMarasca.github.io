@@ -9,11 +9,11 @@
   <meta name="description" content="Poemas para Lulu.">
   <title>Poemas · Uma lua para Lulu</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🌙%3C/text%3E%3C/svg%3E">
-  <link rel="stylesheet" href="./poemas.css?v=5">
+  <link rel="stylesheet" href="./poemas.css?v=9">
   <link rel="stylesheet" href="./ceu.css?v=3">
   <link rel="stylesheet" href="./site-nav.css?v=5">
   <script src="./poemas-data.js?v=1" defer></script>
-  <script src="./poemas.js?v=1" defer></script>
+  <script src="./poemas.js?v=5" defer></script>
 </head>
 <body class="site-page">
   <a class="skip-link" href="#leitura">Pular para o poema</a>
@@ -30,31 +30,45 @@
 
     <section class="poem-index" aria-labelledby="index-title">
       <header>
-        <h2 id="index-title">Todos os poemas</h2>
-        <p id="index-count" role="status"></p>
+        <h2 id="index-title">
+          <button id="toggle-index" type="button" aria-expanded="true" aria-controls="index-panel">
+            <svg class="index-moon" aria-hidden="true" viewBox="0 0 24 24"><path d="M15.5 3.2a9 9 0 1 0 5.3 13.6A7.4 7.4 0 0 1 15.5 3.2z"/></svg>
+            <span>Sumário</span>
+            <span id="index-count"></span>
+            <svg class="index-chevron" aria-hidden="true" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+        </h2>
+        <button id="toggle-search" class="icon-button" type="button" aria-expanded="false" aria-controls="search-box" aria-label="Procurar nos poemas" title="Procurar">
+          <svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>
+        </button>
       </header>
-      <label class="index-search">
-        <span class="sr-only">Procurar nos poemas</span>
-        <svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>
-        <input id="poem-search" type="search" placeholder="Procurar um título ou uma palavra" autocomplete="off">
-      </label>
-      <ol id="poem-list"></ol>
-      <p id="index-empty" hidden>Nenhum poema com essa palavra. <button type="button" id="clear-search">Limpar busca</button></p>
+      <div id="index-panel">
+        <div id="search-box" hidden>
+          <label class="index-search">
+            <span class="sr-only">Procurar nos poemas</span>
+            <input id="poem-search" type="search" placeholder="Título, palavra ou mês" autocomplete="off">
+          </label>
+        </div>
+        <div id="poem-list"></div>
+        <p id="index-empty" hidden>Nenhum poema com essa palavra. <button type="button" id="clear-search">Limpar busca</button></p>
+      </div>
       <p id="server-status" role="status"></p>
     </section>
 
     <article class="poem-page" id="leitura" aria-labelledby="poem-title" tabindex="-1">
+      <div class="poem-sheet">
       <div class="poem-head">
         <button id="older-poem" class="poem-step" type="button" aria-label="Poema anterior" title="Anterior"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
         <div class="poem-heading">
           <p id="poem-kicker"></p>
           <h2 id="poem-title"></h2>
           <p class="poem-meta"><time id="poem-date"></time><span id="poem-reading"></span></p>
+          <p class="poem-divider" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 1.5l2 8.5 8.5 2-8.5 2-2 8.5-2-8.5-8.5-2 8.5-2z"/></svg><svg class="mini-moon" viewBox="0 0 24 24"><path d="M15.5 3.2a9 9 0 1 0 5.3 13.6A7.4 7.4 0 0 1 15.5 3.2z"/></svg><svg viewBox="0 0 24 24"><path d="M12 1.5l2 8.5 8.5 2-8.5 2-2 8.5-2-8.5-8.5-2 8.5-2z"/></svg></p>
         </div>
         <button id="newer-poem" class="poem-step" type="button" aria-label="Próximo poema" title="Próximo"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button>
       </div>
       <div class="poem-body" id="poem-body"></div>
-      <span class="poem-flourish" aria-hidden="true">☾</span>
+      <p class="poem-flourish" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 1.5l2 8.5 8.5 2-8.5 2-2 8.5-2-8.5-8.5-2 8.5-2z"/></svg><svg class="mini-moon" viewBox="0 0 24 24"><path d="M15.5 3.2a9 9 0 1 0 5.3 13.6A7.4 7.4 0 0 1 15.5 3.2z"/></svg><svg viewBox="0 0 24 24"><path d="M12 1.5l2 8.5 8.5 2-8.5 2-2 8.5-2-8.5-8.5-2 8.5-2z"/></svg></p>
       <footer class="poem-actions">
         <button id="copy-poem-link" type="button">Copiar link</button>
         <button id="edit-poem" type="button" hidden>Editar</button>
@@ -62,6 +76,7 @@
         <a href="#index-title" class="back-to-index">ver todos os poemas</a>
       </footer>
       <p id="poem-status" role="status"></p>
+      </div>
     </article>
   </main>
 
