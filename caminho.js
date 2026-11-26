@@ -805,7 +805,8 @@ function startMusic() {
 }
 function setMuted(next) {
   muted = next;
-  $('cm-mute').textContent = muted ? 'som desligado' : 'som ligado';
+  $('cm-mute').textContent = touchDevice ? (muted ? 'mudo' : 'som') : (muted ? 'som desligado' : 'som ligado');
+  $('cm-mute').setAttribute('aria-label', muted ? 'som desligado: ligar' : 'som ligado: desligar');
   $('cm-mute').setAttribute('aria-pressed', String(muted));
   if (muted) music?.pause(); else startMusic();
 }
@@ -1636,6 +1637,11 @@ function collect() {
 let captionTimer = 0;
 function say(text, duration = 4000) {
   clearTimeout(captionTimer);
+  if (!hud.hidden) {
+    // no celular o recado fica logo abaixo do quadro de missões, que muda de altura a cada fase
+    const box = hud.querySelector('.cm-missions').getBoundingClientRect();
+    stage.style.setProperty('--cm-hud-end', Math.round(box.bottom - stage.getBoundingClientRect().top) + 'px');
+  }
   caption.textContent = text;
   caption.classList.add('is-on');
   captionTimer = setTimeout(() => caption.classList.remove('is-on'), duration);
@@ -1911,7 +1917,8 @@ function pause() {
 function setFull(on) {
   stage.classList.toggle('is-full', on);
   document.documentElement.classList.toggle('cm-lock', on);
-  $('cm-full').textContent = on ? 'tela menor' : 'tela cheia';
+  $('cm-full').textContent = touchDevice ? 'tela' : (on ? 'tela menor' : 'tela cheia');
+  $('cm-full').setAttribute('aria-label', on ? 'sair da tela cheia' : 'tela cheia');
   fitFull();
 }
 // Em tela cheia o palco acompanha a área realmente visível. No Safari do iPhone as
@@ -2006,7 +2013,7 @@ switchButton.addEventListener('click', () => { switchPlayer(); canvas.focus({ pr
 $('cm-pause').addEventListener('click', pause);
 $('cm-mute').addEventListener('click', () => setMuted(!muted));
 $('cm-full').addEventListener('click', () => { setFull(!stage.classList.contains('is-full')); if (state === 'play') canvas.focus({ preventScroll: true }); });
-if (touchDevice) { touchEl.hidden = false; stage.classList.add('is-touch'); }
+if (touchDevice) { touchEl.hidden = false; stage.classList.add('is-touch'); $('cm-mute').textContent = 'som'; $('cm-full').textContent = 'tela'; }
 
 // ---------- Animação ----------
 function turn(from, to, amount) {

@@ -168,13 +168,14 @@
         if (me.stuck) bodies[who === 'rafo' ? 0 : 1].squash = -.12 + Math.sin(time * 12) * .04;
       }
     },
+    // Uma linha só, curtinha, para não cobrir o tabuleiro no celular:
+    // a rodada e, da rodada, se a flor e a foto já foram pegas; depois, "nas marcas".
     hud() {
-      return {
-        lines: [
-          { text: `rodada ${round + 1}/${ROUNDS.length} · ✿ ${L.gotFlowers}/${ROUNDS.length} · ▢ ${L.gotPhotos}/${ROUNDS.length}` },
-          { text: open ? '♥ ✦ agora os dois nas marcas, juntos' : '♥ ✦ peguem a flor e a foto', done: !!won }
-        ]
-      };
+      const mark = got => got ? '✓' : '–';
+      const text = open
+        ? `${round + 1}/${ROUNDS.length} · ♥ ✦ nas marcas`
+        : `rodada ${round + 1}/${ROUNDS.length} · ✿ ${mark(side.rafo.got)} ▢ ${mark(side.lulu.got)}`;
+      return { lines: [{ text, done: !!won }] };
     }
   };
 };

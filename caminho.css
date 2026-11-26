@@ -83,7 +83,7 @@ html.cm-lock .site-header, html.cm-lock footer, html.cm-lock .caminho-intro, htm
 .cm-switch:active { transform: translateX(-50%) translateY(3px); box-shadow: 0 1px 0 #b98a3a; }
 .cm-caption { position: absolute; left: 50%; bottom: calc(max(16px, env(safe-area-inset-bottom)) + 62px); width: min(600px, calc(100% - 28px)); margin: 0; padding: 12px 20px; border-radius: 20px; background: var(--cm-cream); color: var(--cm-brown); font: italic 17px/1.5 var(--serif); text-align: center; box-shadow: 0 4px 0 #6b4a3a40; opacity: 0; transform: translate(-50%, 10px); transition: opacity .35s, transform .35s; pointer-events: none; }
 .cm-caption.is-on { opacity: 1; transform: translate(-50%, 0); }
-.is-touch .cm-caption { bottom: auto; top: calc(max(12px, env(safe-area-inset-top)) + 104px); }
+.is-touch .cm-caption { bottom: auto; top: calc(var(--cm-hud-end, 104px) + 8px); }
 
 /* Controles de toque: alavanca à esquerda, pular e trocar à direita. */
 .cm-touch { position: absolute; inset: 0; display: none; pointer-events: none; }
@@ -142,11 +142,14 @@ html.cm-lock .site-header, html.cm-lock footer, html.cm-lock .caminho-intro, htm
 @media (max-width: 740px) {
   .caminho-section { padding-block: 22px 40px; }
   .caminho-stage { height: 74vh; height: 74svh; border-radius: 20px; }
-  .cm-missions { padding: 7px 12px 9px; font-size: 12px; }
-  .cm-missions strong { font-size: 18px; }
-  .cm-tools { max-width: 46%; }
-  .cm-tools button { min-height: 38px; padding: 0 10px; font-size: 11px; }
-  .cm-caption { font-size: 15px; padding: 10px 14px; }
+  /* no celular tudo do alto é menor, para sobrar tela para o jogo */
+  .cm-hud { gap: 6px; padding-top: max(8px, env(safe-area-inset-top)); }
+  .cm-missions { gap: 0; padding: 5px 11px 7px; border-radius: 14px; font-size: 11.5px; line-height: 1.4; box-shadow: 0 3px 0 #6b4a3a40; }
+  .cm-missions small { font-size: 9px; }
+  .cm-missions strong { font-size: 16px; }
+  .cm-tools { flex-wrap: nowrap; gap: 5px; }
+  .cm-tools button { min-height: 36px; padding: 0 10px; font-size: 11px; }
+  .cm-caption { width: calc(100% - 20px); font-size: 14px; line-height: 1.35; padding: 8px 13px; border-radius: 15px; box-shadow: 0 3px 0 #6b4a3a40; }
   .cm-card-text { font-size: 16px; }
 }
 @media (max-height: 460px) {
